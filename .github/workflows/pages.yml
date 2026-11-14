@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      neu:
+        description: "Eröffnung mit Musik neu bauen"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,7 +44,7 @@ jobs:
       - name: Eröffnung mit Musik bauen (nur wenn sich etwas geändert hat)
         id: intro
         continue-on-error: true
-        run: python tools/intro.py
+        run: python tools/intro.py ${{ inputs.neu && '--neu' || '' }}
 
       - name: Neue Sprachdateien ins Repository übernehmen
         run: |
