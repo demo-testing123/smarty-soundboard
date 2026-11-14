@@ -50,11 +50,11 @@
  },
  "Erzaehler_00_Eroeffnung": {
   "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",
-  "hash": "09ee2f9973",
+  "hash": "32e6b11232",
   "quelle": "c6a55fbd1c",
   "dauer": 90.88,
   "lufs": -16.2,
-  "tp": -1.7,
+  "tp": -1.9,
   "sequenz": true
  },
  "Erzaehler_01_Beginn": {
