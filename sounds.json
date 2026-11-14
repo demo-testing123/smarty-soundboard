@@ -184,7 +184,7 @@
       "id": "Probe_SMARTy_Christoph_10",
       "stimme": "smarty",
       "gruppe": "proben",
-      "titel": "Probe A · Christoph, Tonhöhe +10Hz",
+      "titel": "SMARTy-Probe 1 · Christoph, Tonhöhe +10Hz",
       "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
       "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
       "tts": {
@@ -198,7 +198,7 @@
       "id": "Probe_SMARTy_Christoph_30",
       "stimme": "smarty",
       "gruppe": "proben",
-      "titel": "Probe B · Christoph, Tonhöhe +30Hz",
+      "titel": "SMARTy-Probe 2 · Christoph, Tonhöhe +30Hz",
       "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
       "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
       "tts": {
@@ -212,7 +212,7 @@
       "id": "Probe_SMARTy_Brian",
       "stimme": "smarty",
       "gruppe": "proben",
-      "titel": "Probe C · Brian (mehrsprachig), +10Hz",
+      "titel": "SMARTy-Probe 3 · Brian (mehrsprachig), +10Hz",
       "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
       "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
       "tts": {
@@ -226,7 +226,7 @@
       "id": "Probe_SMARTy_Jonas",
       "stimme": "smarty",
       "gruppe": "proben",
-      "titel": "Probe D · Jonas (Österreich), +15Hz",
+      "titel": "SMARTy-Probe 4 · Jonas (Österreich), +15Hz",
       "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
       "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
       "tts": {
@@ -240,7 +240,7 @@
       "id": "Probe_Erzaehler_A_warm",
       "stimme": "erzaehler",
       "gruppe": "proben",
-      "titel": "Probe A · Erzähler warm",
+      "titel": "Erzähler-Probe A · warm",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
       "tts": {
@@ -262,7 +262,7 @@
       "id": "Probe_Erzaehler_B_warm_aelter",
       "stimme": "erzaehler",
       "gruppe": "proben",
-      "titel": "Probe B · Erzähler warm und älter (neuer Standard)",
+      "titel": "Erzähler-Probe B · warm und älter (neuer Standard)",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
       "tts": {
@@ -284,7 +284,7 @@
       "id": "Probe_Erzaehler_C_grossvater",
       "stimme": "erzaehler",
       "gruppe": "proben",
-      "titel": "Probe C · Erzähler wie ein Großvater",
+      "titel": "Erzähler-Probe C · wie ein Großvater",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
       "tts": {
@@ -306,7 +306,7 @@
       "id": "Probe_Erzaehler_D_natuerlich",
       "stimme": "erzaehler",
       "gruppe": "proben",
-      "titel": "Probe D · Erzähler natürlich und ruhig",
+      "titel": "Erzähler-Probe D · natürlich und ruhig",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
       "tts": {
@@ -328,7 +328,7 @@
       "id": "Probe_Erzaehler_E_andrew",
       "stimme": "erzaehler",
       "gruppe": "proben",
-      "titel": "Probe E · Erzähler Andrew warm (mehrsprachig)",
+      "titel": "Erzähler-Probe E · Andrew warm (mehrsprachig)",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
       "tts": {
