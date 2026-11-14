@@ -124,5 +124,12 @@
   "lufs": -16.7,
   "tp": -1.9,
   "dauer": 8.94
+ },
+ "Probe_Erzaehler_Christoph_tief": {
+  "datei": "audio/Probe_Erzaehler_Christoph_tief.mp3",
+  "hash": "77783413c8",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 9.62
  }
 }
