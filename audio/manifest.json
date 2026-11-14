@@ -50,196 +50,196 @@
  },
  "Erzaehler_00_Eroeffnung": {
   "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",
-  "hash": "32e6b11232",
-  "quelle": "c6a55fbd1c",
-  "dauer": 90.88,
-  "lufs": -16.2,
+  "hash": "518a3265cd",
+  "quelle": "b561c612af",
+  "dauer": 93.51,
+  "lufs": -16.3,
   "tp": -1.9,
   "sequenz": true
  },
  "Erzaehler_01_Beginn": {
   "datei": "audio/Erzaehler_01_Beginn.mp3",
-  "hash": "29c61c0a3b",
-  "lufs": -16.8,
+  "hash": "ddc9882749",
+  "lufs": -16.7,
   "tp": -1.9,
-  "dauer": 9.6,
+  "dauer": 9.97,
   "teile": [
    [
     0.04,
-    3.039
+    3.17
    ],
    [
-    3.639,
-    5.468
+    3.77,
+    5.675
    ],
    [
-    6.168,
-    9.367
+    6.375,
+    9.737
    ]
   ]
  },
  "Erzaehler_02_Technik": {
   "datei": "audio/Erzaehler_02_Technik.mp3",
-  "hash": "c06ef98680",
-  "lufs": -16.4,
+  "hash": "e0393f4cb4",
+  "lufs": -16.5,
   "tp": -1.9,
-  "dauer": 14.56,
+  "dauer": 15.14,
   "teile": [
    [
     0.04,
-    2.393
+    2.508
    ],
    [
-    2.893,
-    5.156
+    3.008,
+    5.37
    ],
    [
-    5.556,
-    8.012
+    5.77,
+    8.338
    ],
    [
-    8.412,
-    10.379
+    8.738,
+    10.798
    ],
    [
-    10.979,
-    14.333
+    11.398,
+    14.914
    ]
   ]
  },
  "Erzaehler_03_Schiefgelaufen": {
   "datei": "audio/Erzaehler_03_Schiefgelaufen.mp3",
-  "hash": "07b8ae43c3",
+  "hash": "a92ac3bb37",
   "lufs": -16.3,
   "tp": -1.9,
-  "dauer": 15.19,
+  "dauer": 15.76,
   "teile": [
    [
     0.04,
-    2.493
+    2.595
    ],
    [
-    3.493,
-    5.043
+    3.595,
+    5.208
    ],
    [
-    5.443,
-    8.161
+    5.608,
+    8.451
    ],
    [
-    8.561,
-    11.088
+    8.851,
+    11.498
    ],
    [
-    11.588,
-    14.961
+    11.998,
+    15.527
    ]
   ]
  },
  "Erzaehler_04_Hoffnung": {
   "datei": "audio/Erzaehler_04_Hoffnung.mp3",
-  "hash": "d89c8be3a6",
+  "hash": "e3bc6a6600",
   "lufs": -16.6,
   "tp": -1.9,
-  "dauer": 13.86,
+  "dauer": 14.4,
   "teile": [
    [
     0.04,
-    2.216
+    2.322
    ],
    [
-    2.816,
-    6.873
+    2.922,
+    7.155
    ],
    [
-    7.273,
-    8.641
+    7.555,
+    8.996
    ],
    [
-    8.941,
-    10.411
+    9.296,
+    10.832
    ],
    [
-    10.811,
-    13.625
+    11.232,
+    14.174
    ]
   ]
  },
  "Erzaehler_05_Euch": {
   "datei": "audio/Erzaehler_05_Euch.mp3",
-  "hash": "a46c0c9b3b",
-  "lufs": -16.7,
-  "tp": -1.8,
-  "dauer": 9.14,
+  "hash": "5cc186a387",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 9.41,
   "teile": [
    [
     0.04,
-    1.279
+    1.338
    ],
    [
-    1.779,
-    2.371
+    1.838,
+    2.443
    ],
    [
-    2.871,
-    4.471
+    2.943,
+    4.611
    ],
    [
-    5.271,
-    7.142
+    5.411,
+    7.363
    ],
    [
-    7.542,
-    8.205
+    7.763,
+    8.454
    ],
    [
-    8.555,
-    8.908
+    8.804,
+    9.179
    ]
   ]
  },
  "Erzaehler_06_Countdown": {
   "datei": "audio/Erzaehler_06_Countdown.mp3",
-  "hash": "5647678d97",
-  "lufs": -16.9,
-  "tp": -1.6,
-  "dauer": 11.0,
+  "hash": "ded7cb4ae7",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 11.28,
   "teile": [
    [
     0.04,
-    1.351
+    1.414
    ],
    [
-    1.751,
-    2.974
+    1.814,
+    3.098
    ],
    [
-    3.374,
-    4.763
+    3.498,
+    4.944
    ],
    [
-    5.463,
-    5.86
+    5.644,
+    6.056
    ],
    [
-    6.41,
-    6.773
+    6.606,
+    6.977
    ],
    [
-    7.323,
-    7.676
+    7.527,
+    7.891
    ],
    [
-    8.226,
-    8.606
+    8.441,
+    8.837
    ],
    [
-    9.156,
-    9.61
+    9.387,
+    9.866
    ],
    [
-    10.06,
-    10.767
+    10.316,
+    11.055
    ]
   ]
  },
@@ -271,102 +271,177 @@
   "tp": -1.9,
   "dauer": 6.85
  },
- "Probe_Erzaehler_ohne_Rauheit": {
-  "datei": "audio/Probe_Erzaehler_ohne_Rauheit.mp3",
-  "hash": "64c2b13463",
+ "Probe_Erzaehler_A_warm": {
+  "datei": "audio/Probe_Erzaehler_A_warm.mp3",
+  "hash": "7215eac98e",
   "lufs": -16.8,
   "tp": -1.9,
-  "dauer": 9.14,
+  "dauer": 10.29,
   "teile": [
    [
     0.04,
-    1.279
+    2.909
    ],
    [
-    1.779,
-    2.371
+    3.509,
+    5.688
    ],
    [
-    2.871,
-    4.472
+    6.288,
+    8.248
    ],
    [
-    5.272,
-    7.142
+    8.648,
+    9.334
    ],
    [
-    7.542,
-    8.205
-   ],
-   [
-    8.555,
-    8.908
+    9.684,
+    10.063
    ]
   ]
  },
- "Probe_Erzaehler_extra_tief": {
-  "datei": "audio/Probe_Erzaehler_extra_tief.mp3",
-  "hash": "0f4211bfad",
+ "Probe_Erzaehler_B_warm_aelter": {
+  "datei": "audio/Probe_Erzaehler_B_warm_aelter.mp3",
+  "hash": "4d8f05e890",
   "lufs": -16.7,
   "tp": -1.8,
-  "dauer": 9.25,
+  "dauer": 10.65,
   "teile": [
    [
     0.04,
-    1.309
+    3.035
    ],
    [
-    1.809,
-    2.397
+    3.635,
+    5.916
    ],
    [
-    2.897,
-    4.53
+    6.516,
+    8.562
    ],
    [
-    5.33,
-    7.242
+    8.962,
+    9.678
    ],
    [
-    7.642,
-    8.311
-   ],
-   [
-    8.661,
-    9.019
+    10.028,
+    10.422
    ]
   ]
  },
- "Probe_Erzaehler_natuerlich": {
-  "datei": "audio/Probe_Erzaehler_natuerlich.mp3",
-  "hash": "7c10d09b67",
-  "lufs": -17.0,
+ "Probe_Erzaehler_C_grossvater": {
+  "datei": "audio/Probe_Erzaehler_C_grossvater.mp3",
+  "hash": "64b032784f",
+  "lufs": -16.7,
   "tp": -1.9,
-  "dauer": 9.15,
+  "dauer": 10.99,
   "teile": [
    [
     0.04,
-    1.282
+    3.16
    ],
    [
-    1.782,
-    2.372
+    3.76,
+    6.131
    ],
    [
-    2.872,
-    4.466
+    6.731,
+    8.873
    ],
    [
-    5.266,
-    7.137
+    9.273,
+    10.012
    ],
    [
-    7.537,
-    8.195
+    10.362,
+    10.757
+   ]
+  ]
+ },
+ "Probe_Erzaehler_D_natuerlich": {
+  "datei": "audio/Probe_Erzaehler_D_natuerlich.mp3",
+  "hash": "7b8351c01b",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 10.47,
+  "teile": [
+   [
+    0.04,
+    2.967
    ],
    [
-    8.545,
-    8.903
+    3.567,
+    5.787
+   ],
+   [
+    6.387,
+    8.388
+   ],
+   [
+    8.788,
+    9.483
+   ],
+   [
+    9.833,
+    10.217
+   ]
+  ]
+ },
+ "Probe_Erzaehler_E_andrew": {
+  "datei": "audio/Probe_Erzaehler_E_andrew.mp3",
+  "hash": "bf54b393fa",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 10.9,
+  "teile": [
+   [
+    0.04,
+    3.374
+   ],
+   [
+    3.974,
+    6.238
+   ],
+   [
+    6.838,
+    8.816
+   ],
+   [
+    9.216,
+    9.944
+   ],
+   [
+    10.294,
+    10.672
+   ]
+  ]
+ },
+ "Probe_Erzaehler_F_trailer": {
+  "datei": "audio/Probe_Erzaehler_F_trailer.mp3",
+  "hash": "0896199d81",
+  "lufs": -16.7,
+  "tp": -1.8,
+  "dauer": 10.26,
+  "teile": [
+   [
+    0.04,
+    2.899
+   ],
+   [
+    3.499,
+    5.676
+   ],
+   [
+    6.276,
+    8.228
+   ],
+   [
+    8.628,
+    9.317
+   ],
+   [
+    9.667,
+    10.036
    ]
   ]
  }

@@ -13,8 +13,8 @@ zusammensetzen und auf -16 LUFS / -1.5 dBTP angleichen. Ergebnis: audio/<id>.mp3
 Sätze mit "datei" (eigene Aufnahme) werden nicht erzeugt, nur in die
 Manifest-Datei eingetragen, damit die Seite die aktuelle Version lädt.
 
-Optional je Stimme oder Satz: "klang": {"formant": -1.5, "tiefe": 3, "rau": 0.35}
-(tiefere Formanten = größere Stimme, Brustton in dB, rauchiger Anteil 0…1).
+Optional je Stimme oder Satz: "klang": {"formant", "tiefe", "waerme", "alter", "praesenz", "rau"}
+(Bedeutung siehe klang_filter bzw. README).
 Sätze mit "teile" (Sequenzen mit Musik) baut tools/intro.py.
 """
 from __future__ import annotations
@@ -120,13 +120,22 @@ def klang_settings(voice: dict, line: dict) -> dict:
 
 
 def klang_filter(k: dict, src: str, dst: str) -> str:
-    """Stimmfarbe: formant (Halbtöne, z. B. -1.5 = größer/tiefer), tiefe (dB Brustton),
-    rau (0…1, Anteil gesättigter Mitten = rauchig). Länge bleibt gleich."""
-    if not any(float(k.get(x, 0)) for x in ("formant", "tiefe", "rau")):
+    """Stimmfarbe (Länge bleibt gleich):
+    formant  Halbtöne, z. B. -1.5 = größerer Stimmkörper (stark negativ wirkt bedrohlich)
+    tiefe    dB Brustton (Bass)
+    waerme   dB untere Mitten (um 220 Hz) + weichere Höhen = warm, freundlich
+    alter    0…1 leichtes Zittern in Tonhöhe und Lautstärke = ältere Stimme
+    praesenz dB bei 3 kHz für Verständlichkeit (Standard 2)
+    rau      0…1 Anteil gesättigter Mitten = rauchig, kratzig"""
+    keys = ("formant", "tiefe", "rau", "waerme", "alter")
+    if not any(float(k.get(x, 0)) for x in keys) and "praesenz" not in k:
         return f"{src}anull{dst}"
     st = float(k.get("formant", 0))
     tiefe = float(k.get("tiefe", 0))
     rau = float(k.get("rau", 0))
+    waerme = float(k.get("waerme", 0))
+    alter = float(k.get("alter", 0))
+    praesenz = float(k.get("praesenz", 2))
     f = []
     if st:
         r = 2 ** (st / 12)
@@ -134,13 +143,24 @@ def klang_filter(k: dict, src: str, dst: str) -> str:
     f.append("highpass=f=60")
     if tiefe:
         f.append(f"lowshelf=f=130:g={tiefe},equalizer=f=330:t=q:w=1.2:g={-0.8 * tiefe:.1f}")
-    f.append("equalizer=f=3000:t=q:w=1:g=2")
+    if waerme:
+        f.append(f"equalizer=f=220:t=q:w=0.9:g={waerme:.1f},highshelf=f=7000:g={-0.7 * waerme:.1f}")
+    if praesenz:
+        f.append(f"equalizer=f=3000:t=q:w=1:g={praesenz:.1f}")
+    if alter:
+        f.append(f"vibrato=f=5.6:d={0.10 * alter:.3f},tremolo=f=6.3:d={0.05 * alter:.3f}")
     head = f"{src}{','.join(f)}"
+    if waerme:                                   # warm: sanft komprimieren
+        comp = "acompressor=threshold=-20dB:ratio=1.8:attack=15:release=250:makeup=1.3"
+    elif rau > 0:
+        comp = "acompressor=threshold=-22dB:ratio=3:attack=8:release=150:makeup=2,deesser"
+    else:
+        comp = "acompressor=threshold=-22dB:ratio=2.5:attack=8:release=150:makeup=1.5"
     if rau > 0:
         return (f"{head},asplit[kd][kw];[kw]highpass=f=900,lowpass=f=4500,volume=14dB,"
                 f"asoftclip=type=tanh,volume=-14dB[kg];[kd][kg]amix=inputs=2:weights='1 {rau}':normalize=0,"
-                f"acompressor=threshold=-22dB:ratio=3:attack=8:release=150:makeup=2,deesser{dst}")
-    return f"{head},acompressor=threshold=-22dB:ratio=2.5:attack=8:release=150:makeup=1.5{dst}"
+                f"{comp}{dst}")
+    return f"{head},{comp}{dst}"
 
 
 def wav_seconds(path: Path) -> float:

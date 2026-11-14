@@ -29,7 +29,9 @@ Die sechs Erzählerabschnitte laufen hier als eine Sequenz mit Pausen, Musik und
 - Die Einzelteile `W`–`U` gibt es weiterhin, ohne Musik, z. B. für Proben.
 - Ändert sich ein Erzählertext, baut GitHub die Sequenz samt Musik automatisch neu. Die Pausen zwischen den Abschnitten lassen sich am Eintrag `Erzaehler_00_Eroeffnung` mit `"pausen": [2.4, 2.0, 2.4, 2.0, 2.6]` einstellen, die Musik vor dem ersten Wort mit `"vorlauf": 3.2`.
 
-**Erzählerstimme:** tief, rau und ruhig im Stil eines Kino-Trailers. Die Grundstimme ist Christoph (−22 Hz, etwas langsamer). Dazu kommen 1,5 Halbtöne tiefere Formanten (wirkt „größer“), mehr Brustton und ein leicht rauchiger Anteil. Eingestellt wird das in `sounds.json` unter `"klang"`. Bei den Stimmproben gibt es die Varianten „ohne Rauheit“, „noch tiefer“ und „wie vorher“ zum Vergleich. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut.
+**Erzählerstimme:** warm, ruhig und etwas älter (Variante B). Die Grundstimme ist Christoph (−16 Hz, langsamer gesprochen). Dazu kommen mehr Wärme in den unteren Mitten, weichere Höhen, sanfte Kompression und ein leichtes Alterszittern. Rauheit gibt es keine, die hatte im ersten Trailer-Versuch bedrohlich gewirkt.
+
+Unter „Stimmproben“ liegen sechs Varianten mit demselben Text zum Vergleichen: A warm · B warm und älter (Standard) · C Großvater · D natürlich · E Andrew (mehrsprachig) · F bisheriger Trailer-Stil. **Zum Wechseln** die Werte `tts` und `klang` der gewünschten Probe beim Erzähler unter `"stimmen"` eintragen. GitHub erzeugt dann alle Erzählerteile und die Eröffnung samt Musik neu. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut.
 
 ## In der Turnhalle
 
@@ -69,7 +71,16 @@ Alles steht in **`sounds.json`**. Die Datei lässt sich direkt auf GitHub bearbe
 }
 ```
 
-Optional formt `"klang": { "formant": -1.5, "tiefe": 3, "rau": 0.35 }` die Stimme. `formant` in Halbtönen, negativ = größer/tiefer. `tiefe` = Brustton in dB. `rau` = rauchiger Anteil von 0 bis 1.
+Optional formt `"klang"` die Stimme, z. B. `{ "formant": -0.8, "tiefe": 2, "waerme": 3, "alter": 0.5, "praesenz": 1.5 }`:
+
+| Wert | Wirkung |
+|---|---|
+| `formant` | Halbtöne, negativ = größerer Stimmkörper. Ab etwa −1,5 wirkt es schnell bedrohlich |
+| `tiefe` | Brustton in dB |
+| `waerme` | untere Mitten in dB plus weichere Höhen: warm und freundlich |
+| `alter` | 0 bis 1, leichtes Zittern: ältere Stimme |
+| `praesenz` | dB bei 3 kHz für die Verständlichkeit (Standard 2) |
+| `rau` | 0 bis 1, rauchig und kratzig |
 
 Deutsche Grundstimmen: `de-DE-ChristophNeural`, `de-DE-TanjaNeural`, `de-AT-JonasNeural`, `de-AT-IngridNeural`, `de-CH-JanNeural`, `de-CH-LeniNeural`. Die mehrsprachigen Stimmen wie `en-US-AndrewMultilingualNeural` sprechen auch Deutsch, aber mit Akzent. `pitch` hebt oder senkt die Tonhöhe (`+20Hz`), `rate` ändert das Tempo (`-10%`).
 
