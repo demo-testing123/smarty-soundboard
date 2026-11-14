@@ -158,6 +158,14 @@
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
       "tts": { "voice": "en-US-AndrewMultilingualNeural", "pitch": "-6Hz", "rate": "-10%" },
       "einsatz": "Alternative Erzählstimme. Auf Akzent achten."
+    },
+    {
+      "id": "Probe_Erzaehler_Christoph_tief", "stimme": "erzaehler", "gruppe": "proben",
+      "titel": "Probe F · Erzähler Christoph, −16Hz (noch tiefer)",
+      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050.",
+      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
+      "tts": { "voice": "de-DE-ChristophNeural", "pitch": "-16Hz", "rate": "-12%" },
+      "einsatz": "Tiefer als Standard (−8Hz), passend zu „tief, warm, filmisch“."
     }
   ]
 }
