@@ -48,47 +48,200 @@
   "tp": -1.9,
   "dauer": 7.1
  },
+ "Erzaehler_00_Eroeffnung": {
+  "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",
+  "hash": "09ee2f9973",
+  "quelle": "c6a55fbd1c",
+  "dauer": 90.88,
+  "lufs": -16.2,
+  "tp": -1.7,
+  "sequenz": true
+ },
  "Erzaehler_01_Beginn": {
   "datei": "audio/Erzaehler_01_Beginn.mp3",
-  "hash": "2dcb622790",
-  "lufs": -17.1,
+  "hash": "29c61c0a3b",
+  "lufs": -16.8,
   "tp": -1.9,
-  "dauer": 9.62
+  "dauer": 9.6,
+  "teile": [
+   [
+    0.04,
+    3.039
+   ],
+   [
+    3.639,
+    5.468
+   ],
+   [
+    6.168,
+    9.367
+   ]
+  ]
  },
  "Erzaehler_02_Technik": {
   "datei": "audio/Erzaehler_02_Technik.mp3",
-  "hash": "35b6fd1bbf",
-  "lufs": -16.8,
+  "hash": "c06ef98680",
+  "lufs": -16.4,
   "tp": -1.9,
-  "dauer": 14.57
+  "dauer": 14.56,
+  "teile": [
+   [
+    0.04,
+    2.393
+   ],
+   [
+    2.893,
+    5.156
+   ],
+   [
+    5.556,
+    8.012
+   ],
+   [
+    8.412,
+    10.379
+   ],
+   [
+    10.979,
+    14.333
+   ]
+  ]
  },
  "Erzaehler_03_Schiefgelaufen": {
   "datei": "audio/Erzaehler_03_Schiefgelaufen.mp3",
-  "hash": "aab15f3293",
+  "hash": "07b8ae43c3",
   "lufs": -16.3,
   "tp": -1.9,
-  "dauer": 15.2
+  "dauer": 15.19,
+  "teile": [
+   [
+    0.04,
+    2.493
+   ],
+   [
+    3.493,
+    5.043
+   ],
+   [
+    5.443,
+    8.161
+   ],
+   [
+    8.561,
+    11.088
+   ],
+   [
+    11.588,
+    14.961
+   ]
+  ]
  },
  "Erzaehler_04_Hoffnung": {
   "datei": "audio/Erzaehler_04_Hoffnung.mp3",
-  "hash": "a3c8b8c95d",
-  "lufs": -16.7,
+  "hash": "d89c8be3a6",
+  "lufs": -16.6,
   "tp": -1.9,
-  "dauer": 13.86
+  "dauer": 13.86,
+  "teile": [
+   [
+    0.04,
+    2.216
+   ],
+   [
+    2.816,
+    6.873
+   ],
+   [
+    7.273,
+    8.641
+   ],
+   [
+    8.941,
+    10.411
+   ],
+   [
+    10.811,
+    13.625
+   ]
+  ]
  },
  "Erzaehler_05_Euch": {
   "datei": "audio/Erzaehler_05_Euch.mp3",
-  "hash": "d4f059a67b",
-  "lufs": -17.1,
-  "tp": -1.9,
-  "dauer": 9.15
+  "hash": "a46c0c9b3b",
+  "lufs": -16.7,
+  "tp": -1.8,
+  "dauer": 9.14,
+  "teile": [
+   [
+    0.04,
+    1.279
+   ],
+   [
+    1.779,
+    2.371
+   ],
+   [
+    2.871,
+    4.471
+   ],
+   [
+    5.271,
+    7.142
+   ],
+   [
+    7.542,
+    8.205
+   ],
+   [
+    8.555,
+    8.908
+   ]
+  ]
  },
  "Erzaehler_06_Countdown": {
   "datei": "audio/Erzaehler_06_Countdown.mp3",
-  "hash": "9d378bbe3a",
-  "lufs": -17.5,
-  "tp": -1.8,
-  "dauer": 11.02
+  "hash": "5647678d97",
+  "lufs": -16.9,
+  "tp": -1.6,
+  "dauer": 11.0,
+  "teile": [
+   [
+    0.04,
+    1.351
+   ],
+   [
+    1.751,
+    2.974
+   ],
+   [
+    3.374,
+    4.763
+   ],
+   [
+    5.463,
+    5.86
+   ],
+   [
+    6.41,
+    6.773
+   ],
+   [
+    7.323,
+    7.676
+   ],
+   [
+    8.226,
+    8.606
+   ],
+   [
+    9.156,
+    9.61
+   ],
+   [
+    10.06,
+    10.767
+   ]
+  ]
  },
  "Probe_SMARTy_Christoph_10": {
   "datei": "audio/Probe_SMARTy_Christoph_10.mp3",
@@ -118,18 +271,103 @@
   "tp": -1.9,
   "dauer": 6.85
  },
- "Probe_Erzaehler_Andrew": {
-  "datei": "audio/Probe_Erzaehler_Andrew.mp3",
-  "hash": "5e2b7f71a6",
-  "lufs": -16.7,
+ "Probe_Erzaehler_ohne_Rauheit": {
+  "datei": "audio/Probe_Erzaehler_ohne_Rauheit.mp3",
+  "hash": "64c2b13463",
+  "lufs": -16.8,
   "tp": -1.9,
-  "dauer": 8.94
+  "dauer": 9.14,
+  "teile": [
+   [
+    0.04,
+    1.279
+   ],
+   [
+    1.779,
+    2.371
+   ],
+   [
+    2.871,
+    4.472
+   ],
+   [
+    5.272,
+    7.142
+   ],
+   [
+    7.542,
+    8.205
+   ],
+   [
+    8.555,
+    8.908
+   ]
+  ]
  },
- "Probe_Erzaehler_Christoph_tief": {
-  "datei": "audio/Probe_Erzaehler_Christoph_tief.mp3",
-  "hash": "77783413c8",
-  "lufs": -17.1,
+ "Probe_Erzaehler_extra_tief": {
+  "datei": "audio/Probe_Erzaehler_extra_tief.mp3",
+  "hash": "0f4211bfad",
+  "lufs": -16.7,
+  "tp": -1.8,
+  "dauer": 9.25,
+  "teile": [
+   [
+    0.04,
+    1.309
+   ],
+   [
+    1.809,
+    2.397
+   ],
+   [
+    2.897,
+    4.53
+   ],
+   [
+    5.33,
+    7.242
+   ],
+   [
+    7.642,
+    8.311
+   ],
+   [
+    8.661,
+    9.019
+   ]
+  ]
+ },
+ "Probe_Erzaehler_natuerlich": {
+  "datei": "audio/Probe_Erzaehler_natuerlich.mp3",
+  "hash": "7c10d09b67",
+  "lufs": -17.0,
   "tp": -1.9,
-  "dauer": 9.62
+  "dauer": 9.15,
+  "teile": [
+   [
+    0.04,
+    1.282
+   ],
+   [
+    1.782,
+    2.372
+   ],
+   [
+    2.872,
+    4.466
+   ],
+   [
+    5.266,
+    7.137
+   ],
+   [
+    7.537,
+    8.195
+   ],
+   [
+    8.545,
+    8.903
+   ]
+  ]
  }
 }

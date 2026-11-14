@@ -36,6 +36,11 @@ jobs:
         continue-on-error: true
         run: python tools/generate.py
 
+      - name: Eröffnung mit Musik bauen (nur wenn sich etwas geändert hat)
+        id: intro
+        continue-on-error: true
+        run: python tools/intro.py
+
       - name: Neue Sprachdateien ins Repository übernehmen
         run: |
           if [ -n "$(git status --porcelain audio)" ]; then
@@ -54,6 +59,6 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: Hinweis bei Fehler in der Spracherzeugung
-        if: steps.generate.outcome == 'failure'
+        if: steps.generate.outcome == 'failure' || steps.intro.outcome == 'failure'
         run: |
-          echo "::warning::Mindestens ein Satz konnte nicht erzeugt werden. Details im Schritt 'Sprachdateien erzeugen'."
+          echo "::warning::Sprachdateien oder Eröffnung konnten nicht vollständig erzeugt werden. Details in den Schritten oben."

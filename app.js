@@ -118,7 +118,8 @@
     const src = ctx.createBufferSource();
     src.buffer = p.buffer;
     const g = ctx.createGain();
-    src.connect(g); g.connect(chainFor(p.voice).input);
+    src.connect(g);
+    g.connect(p.direct ? master : chainFor(p.voice).input);   // fertige Mischungen ohne Effektkette
     const t0 = ctx.currentTime + 0.005;
     src.start(t0);
     const entry = { src, g, t0, dur: p.buffer.duration };
@@ -184,6 +185,11 @@
   async function exportWav(id) {
     const p = pads.get(id);
     if (!p || !p.buffer) return;
+    if (p.direct) {                                // fertige Mischung: Originaldatei speichern
+      const a = h('a', { href: p.url, download: `${p.id}.mp3` });
+      document.body.append(a); a.click(); a.remove();
+      return;
+    }
     const v = voices.get(p.voice);
     const b = p.buffer, sr = 44100;            // feste Rate, unabhängig von der Soundkarte
     const off = new OfflineAudioContext(1, Math.ceil((b.duration + 0.3) * sr), sr);
@@ -288,13 +294,16 @@
       p.cue ? h('span', { class: 'pad-cue' }, p.cue) : null,
       h('span', { class: 'pad-foot' },
         (p.durEl = h('span', { class: 'dur' }, 'lädt …')),
-        p.local ? h('span', { class: 'tag' }, 'lokal') : null),
+        p.local ? h('span', { class: 'tag' }, 'lokal') : null,
+        p.direct ? h('span', { class: 'tag' }, 'Stimme + Musik + Effekte') : null),
       h('span', { class: 'bar' }, (p.barEl = h('i'))),
     );
     btn.addEventListener('click', () => play(p.id));
     const tools = h('div', { class: 'tools' },
       h('button', {
-        type: 'button', class: 'icon', title: 'Als WAV speichern (mit Robo-Effekt)', 'aria-label': `${p.title} als WAV speichern`,
+        type: 'button', class: 'icon',
+        title: p.direct ? 'Fertige Mischung als MP3 speichern' : 'Als WAV speichern (mit Robo-Effekt)',
+        'aria-label': `${p.title} speichern`,
         onclick: () => exportWav(p.id),
       }, '⤓'),
       p.local ? h('button', {
@@ -303,7 +312,7 @@
       }, '✕') : null,
     );
     p.el = btn;
-    p.cell = h('div', { class: 'cell', style: `--c:${v.farbe}` }, btn, tools);
+    p.cell = h('div', { class: p.direct ? 'cell wide' : 'cell', style: `--c:${v.farbe}` }, btn, tools);
     return p.cell;
   }
 
@@ -434,7 +443,7 @@
     for (const l of lines) {
       const p = {
         id: l.id, voice: l.stimme, title: l.titel || l.id, text: l.text || '', cue: l.einsatz || '',
-        key: l._key || null, url: audioUrl(l), buffer: null, local: false,
+        key: l._key || null, url: audioUrl(l), buffer: null, local: false, direct: !!l.teile,
       };
       pads.set(p.id, p);
       if (p.key) keyMap.set(p.key, p.id);

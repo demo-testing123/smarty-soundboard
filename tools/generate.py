@@ -12,6 +12,10 @@ zusammensetzen und auf -16 LUFS / -1.5 dBTP angleichen. Ergebnis: audio/<id>.mp3
 
 Sätze mit "datei" (eigene Aufnahme) werden nicht erzeugt, nur in die
 Manifest-Datei eingetragen, damit die Seite die aktuelle Version lädt.
+
+Optional je Stimme oder Satz: "klang": {"formant": -1.5, "tiefe": 3, "rau": 0.35}
+(tiefere Formanten = größere Stimme, Brustton in dB, rauchiger Anteil 0…1).
+Sätze mit "teile" (Sequenzen mit Musik) baut tools/intro.py.
 """
 from __future__ import annotations
 
@@ -24,6 +28,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -108,23 +113,65 @@ def loudnorm_measure(src: Path) -> dict:
     return json.loads(js)
 
 
+def klang_settings(voice: dict, line: dict) -> dict:
+    k = dict(voice.get("klang", {}))
+    k.update(line.get("klang", {}))
+    return k
+
+
+def klang_filter(k: dict, src: str, dst: str) -> str:
+    """Stimmfarbe: formant (Halbtöne, z. B. -1.5 = größer/tiefer), tiefe (dB Brustton),
+    rau (0…1, Anteil gesättigter Mitten = rauchig). Länge bleibt gleich."""
+    if not any(float(k.get(x, 0)) for x in ("formant", "tiefe", "rau")):
+        return f"{src}anull{dst}"
+    st = float(k.get("formant", 0))
+    tiefe = float(k.get("tiefe", 0))
+    rau = float(k.get("rau", 0))
+    f = []
+    if st:
+        r = 2 ** (st / 12)
+        f.append(f"asetrate={44100 * r:.2f},aresample=44100,atempo={1 / r:.5f}")
+    f.append("highpass=f=60")
+    if tiefe:
+        f.append(f"lowshelf=f=130:g={tiefe},equalizer=f=330:t=q:w=1.2:g={-0.8 * tiefe:.1f}")
+    f.append("equalizer=f=3000:t=q:w=1:g=2")
+    head = f"{src}{','.join(f)}"
+    if rau > 0:
+        return (f"{head},asplit[kd][kw];[kw]highpass=f=900,lowpass=f=4500,volume=14dB,"
+                f"asoftclip=type=tanh,volume=-14dB[kg];[kd][kg]amix=inputs=2:weights='1 {rau}':normalize=0,"
+                f"acompressor=threshold=-22dB:ratio=3:attack=8:release=150:makeup=2,deesser{dst}")
+    return f"{head},acompressor=threshold=-22dB:ratio=2.5:attack=8:release=150:makeup=1.5{dst}"
+
+
+def wav_seconds(path: Path) -> float:
+    with wave.open(str(path), "rb") as w:
+        return w.getnframes() / w.getframerate()
+
+
 def build(line: dict, voice: dict, out: Path) -> dict:
     s = tts_settings(voice, line)
+    k = klang_settings(voice, line)
     pieces = split_text(line.get("sprechen") or line["text"])
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
-        inputs, chain, labels = [], [], []
+        inputs, chain, labels, teile = [], [], [], []
+        pos = 0.04                                   # adelay 40 ms
         for i, (txt, pause) in enumerate(pieces):
-            mp3 = td / f"p{i}.mp3"
+            mp3, wav = td / f"p{i}.mp3", td / f"p{i}.wav"
             asyncio.run(speak(txt, s, mp3))
-            inputs += ["-i", str(mp3)]
-            chain.append(f"[{i}:a]aresample=44100,aformat=channel_layouts=mono,{TRIM}[t{i}]")
-            labels.append(f"[t{i}]")
+            ff("-i", str(mp3), "-af", f"aresample=44100,aformat=channel_layouts=mono,{TRIM}",
+               "-c:a", "pcm_s16le", str(wav))
+            d = wav_seconds(wav)
+            teile.append([round(pos, 3), round(pos + d, 3)])
+            pos += d + pause
+            inputs += ["-i", str(wav)]
+            labels.append(f"[{i}:a]")
             if pause > 0:
                 chain.append(f"anullsrc=r=44100:cl=mono,atrim=duration={pause}[s{i}]")
                 labels.append(f"[s{i}]")
         chain.append(f"{''.join(labels)}concat=n={len(labels)}:v=0:a=1,"
-                     "adelay=40,apad=pad_dur=0.25[out]")
+                     "adelay=40,apad=pad_dur=0.25[c]")
+        chain.append(klang_filter(k, "[c]", "[out]"))
         raw = td / "raw.wav"
         ff(*inputs, "-filter_complex", ";".join(chain), "-map", "[out]", str(raw))
 
@@ -137,7 +184,7 @@ def build(line: dict, voice: dict, out: Path) -> dict:
            "-ac", "1", "-c:a", "libmp3lame", "-b:a", "128k", str(out))
     m2 = loudnorm_measure(out)
     return {"lufs": round(float(m2["input_i"]), 1), "tp": round(float(m2["input_tp"]), 1),
-            "dauer": duration(out)}
+            "dauer": duration(out), "teile": teile}
 
 
 def duration(path: Path) -> float:
@@ -176,6 +223,11 @@ def main() -> None:
             fehler.append(f"{lid}: Stimme '{line['stimme']}' fehlt unter 'stimmen'")
             continue
 
+        if line.get("teile"):                      # Sequenz mit Musik -> tools/intro.py
+            if lid in old:
+                new[lid] = old[lid]
+            continue
+
         if line.get("datei"):                      # eigene Aufnahme
             f = ROOT / line["datei"]
             if not f.exists():
@@ -186,7 +238,9 @@ def main() -> None:
             continue
 
         s = tts_settings(voice, line)
-        key = json.dumps([VERSION, line.get("sprechen") or line["text"], s], ensure_ascii=False)
+        k = klang_settings(voice, line)
+        key = json.dumps([VERSION, line.get("sprechen") or line["text"], s] + ([k] if k else []),
+                         ensure_ascii=False)
         h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
         out = AUDIO / f"{lid}.mp3"
         prev = old.get(lid, {})
@@ -198,7 +252,7 @@ def main() -> None:
             new[lid] = prev
             continue
 
-        print(f"→ {lid}  ({s['voice']}, {s['pitch']}, {s['rate']})")
+        print(f"→ {lid}  ({s['voice']}, {s['pitch']}, {s['rate']}{', klang ' + json.dumps(k) if k else ''})")
         try:
             info = build(line, voice, out)
         except Exception as e:

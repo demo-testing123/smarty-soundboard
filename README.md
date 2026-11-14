@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und der Erzählertext der Eröffn
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Erzähler `Q W E R T Z`) |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung komplett `Q`, Erzähler-Einzelteile `W E R T Z U`) |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -17,6 +17,19 @@ Hier liegen die Sätze des Roboterhunds SMARTy und der Erzählertext der Eröffn
 | Satz als WAV speichern (mit Effekt) | Symbol ⤓ unten rechts auf dem Pad |
 
 Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
+
+## Eröffnung „Die Zukunft braucht euch“ (Taste `Q`)
+
+Die sechs Erzählerabschnitte laufen hier als eine Sequenz mit Pausen, Musik und Effekten. Grundlage ist die Musik- und Soundregie aus dem Intro-PDF. Die Sequenz dauert etwa 1:31.
+
+- **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
+- Unter der Sprache wird die Musik automatisch etwa 10 dB leiser, in den Pausen kommt sie wieder hoch.
+- **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
+- **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
+- Die Einzelteile `W`–`U` gibt es weiterhin, ohne Musik, z. B. für Proben.
+- Ändert sich ein Erzählertext, baut GitHub die Sequenz samt Musik automatisch neu. Die Pausen zwischen den Abschnitten lassen sich am Eintrag `Erzaehler_00_Eroeffnung` mit `"pausen": [2.4, 2.0, 2.4, 2.0, 2.6]` einstellen, die Musik vor dem ersten Wort mit `"vorlauf": 3.2`.
+
+**Erzählerstimme:** tief, rau und ruhig im Stil eines Kino-Trailers. Die Grundstimme ist Christoph (−22 Hz, etwas langsamer). Dazu kommen 1,5 Halbtöne tiefere Formanten (wirkt „größer“), mehr Brustton und ein leicht rauchiger Anteil. Eingestellt wird das in `sounds.json` unter `"klang"`. Bei den Stimmproben gibt es die Varianten „ohne Rauheit“, „noch tiefer“ und „wie vorher“ zum Vergleich. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut.
 
 ## In der Turnhalle
 
@@ -56,6 +69,8 @@ Alles steht in **`sounds.json`**. Die Datei lässt sich direkt auf GitHub bearbe
 }
 ```
 
+Optional formt `"klang": { "formant": -1.5, "tiefe": 3, "rau": 0.35 }` die Stimme. `formant` in Halbtönen, negativ = größer/tiefer. `tiefe` = Brustton in dB. `rau` = rauchiger Anteil von 0 bis 1.
+
 Deutsche Grundstimmen: `de-DE-ChristophNeural`, `de-DE-TanjaNeural`, `de-AT-JonasNeural`, `de-AT-IngridNeural`, `de-CH-JanNeural`, `de-CH-LeniNeural`. Die mehrsprachigen Stimmen wie `en-US-AndrewMultilingualNeural` sprechen auch Deutsch, aber mit Akzent. `pitch` hebt oder senkt die Tonhöhe (`+20Hz`), `rate` ändert das Tempo (`-10%`).
 
 **Stimmproben:** Sätze mit `"gruppe": "proben"` erscheinen unten im Bereich „Stimmproben“ und haben keine Taste.
@@ -72,6 +87,7 @@ Deutsche Grundstimmen: `de-DE-ChristophNeural`, `de-DE-TanjaNeural`, `de-AT-Jona
 pip install -r tools/requirements.txt
 python tools/generate.py          # nur neue oder geänderte Sätze
 python tools/generate.py --alle   # alles neu
+python tools/intro.py             # Eröffnung mit Musik (nach generate.py)
 python -m http.server 8000        # Seite unter http://localhost:8000
 ```
 
