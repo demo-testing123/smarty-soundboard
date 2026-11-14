@@ -17,7 +17,7 @@
     {
       "id": "erzaehler",
       "name": "Erzähler",
-      "rolle": "Eröffnung · warm, ruhig, etwas älter – ohne Roboterfilter",
+      "rolle": "Eröffnung · Stimme oben umschaltbar – ohne Roboterfilter",
       "farbe": "#ffb648",
       "tts": {
         "voice": "de-DE-ChristophNeural",
@@ -31,7 +31,95 @@
         "alter": 0.5,
         "praesenz": 1.5
       },
-      "robo": 0
+      "robo": 0,
+      "varianten": [
+        {
+          "id": "A",
+          "name": "warm",
+          "tts": {
+            "voice": "de-DE-ChristophNeural",
+            "pitch": "-10Hz",
+            "rate": "-8%"
+          },
+          "klang": {
+            "formant": -0.5,
+            "tiefe": 1.5,
+            "waerme": 3,
+            "alter": 0,
+            "rau": 0,
+            "praesenz": 1.5
+          }
+        },
+        {
+          "id": "B",
+          "name": "warm & älter",
+          "standard": true,
+          "tts": {
+            "voice": "de-DE-ChristophNeural",
+            "pitch": "-16Hz",
+            "rate": "-12%"
+          },
+          "klang": {
+            "formant": -0.8,
+            "tiefe": 2,
+            "waerme": 3,
+            "alter": 0.5,
+            "rau": 0,
+            "praesenz": 1.5
+          }
+        },
+        {
+          "id": "C",
+          "name": "Großvater",
+          "tts": {
+            "voice": "de-DE-ChristophNeural",
+            "pitch": "-20Hz",
+            "rate": "-16%"
+          },
+          "klang": {
+            "formant": -1.0,
+            "tiefe": 2.5,
+            "waerme": 4,
+            "alter": 0.8,
+            "rau": 0,
+            "praesenz": 1.5
+          }
+        },
+        {
+          "id": "D",
+          "name": "natürlich",
+          "tts": {
+            "voice": "de-DE-ChristophNeural",
+            "pitch": "-6Hz",
+            "rate": "-10%"
+          },
+          "klang": {
+            "formant": 0,
+            "tiefe": 0,
+            "waerme": 2,
+            "alter": 0,
+            "rau": 0,
+            "praesenz": 2
+          }
+        },
+        {
+          "id": "E",
+          "name": "Andrew (Akzent)",
+          "tts": {
+            "voice": "en-US-AndrewMultilingualNeural",
+            "pitch": "-14Hz",
+            "rate": "-10%"
+          },
+          "klang": {
+            "formant": -0.5,
+            "tiefe": 1.5,
+            "waerme": 3,
+            "alter": 0,
+            "rau": 0,
+            "praesenz": 1.5
+          }
+        }
+      ]
     }
   ],
   "saetze": [
@@ -121,10 +209,8 @@
       "titel": "E1 · Geheimnisvoller Beginn",
       "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050.",
       "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
-      "tts": {
-        "rate": "-16%"
-      },
-      "einsatz": "0–12 s · Musik: leises, tiefes Pulsieren, schwebende Fläche."
+      "einsatz": "0–12 s · Musik: leises, tiefes Pulsieren, schwebende Fläche.",
+      "tempo": -4
     },
     {
       "id": "Erzaehler_02_Technik",
@@ -142,10 +228,8 @@
       "titel": "E3 · Etwas ist schiefgelaufen",
       "text": "Doch … irgendetwas ist schiefgelaufen. Die Stadt ist voller Technik. Aber die Menschen haben kaum noch Zeit füreinander. Kinder finden nur wenige Orte zum Spielen. Und zwischen all den Maschinen ist das Leben still geworden.",
       "sprechen": "Doch … irgendetwas ist schiefgelaufen. [Pause 1.0] Die Stadt ist voller Technik. [Pause 0.4] Aber die Menschen haben kaum noch Zeit füreinander. [Pause 0.4] Kinder finden nur wenige Orte zum Spielen. [Pause 0.5] Und zwischen all den Maschinen ist das Leben still geworden.",
-      "tts": {
-        "rate": "-16%"
-      },
-      "einsatz": "30–50 s · Bei „Doch“ stoppt der Rhythmus, danach leises Summen."
+      "einsatz": "30–50 s · Bei „Doch“ stoppt der Rhythmus, danach leises Summen.",
+      "tempo": -4
     },
     {
       "id": "Erzaehler_04_Hoffnung",
@@ -163,10 +247,8 @@
       "titel": "E5 · Die Kinder sind die Lösung",
       "text": "Menschen mit Fantasie. Mit Mut. Und mit richtig guten Ideen. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
       "sprechen": "Menschen mit Fantasie. [Pause 0.5] Mit Mut. [Pause 0.5] Und mit richtig guten Ideen. [Pause 0.8] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "rate": "-8%"
-      },
-      "einsatz": "65–78 s · Trommeln setzen ein, bei „EUCH!“ kräftiger Akzent."
+      "einsatz": "65–78 s · Trommeln setzen ein, bei „EUCH!“ kräftiger Akzent.",
+      "tempo": 4
     },
     {
       "id": "Erzaehler_06_Countdown",
@@ -175,10 +257,8 @@
       "titel": "E6 · Zeitmaschine und Countdown",
       "text": "Zeitreise aktiviert! Ziel: Gegenwart! Bereit zum Zeitsprung? FÜNF! VIER! DREI! ZWEI! EINS! ZEITSPRUNG!",
       "sprechen": "Zeitreise aktiviert! [Pause 0.4] Ziel: Gegenwart! [Pause 0.4] Bereit zum Zeitsprung? [Pause 0.7] Fünf! [Pause 0.55] Vier! [Pause 0.55] Drei! [Pause 0.55] Zwei! [Pause 0.55] Eins! [Pause 0.45] Zeitsprung!",
-      "tts": {
-        "rate": "-4%"
-      },
-      "einsatz": "78–90 s · Startsignal, Countdown-Impulse, nach „ZEITSPRUNG!“ Whoosh."
+      "einsatz": "78–90 s · Startsignal, Countdown-Impulse, nach „ZEITSPRUNG!“ Whoosh.",
+      "tempo": 8
     },
     {
       "id": "Probe_SMARTy_Christoph_10",
@@ -235,138 +315,6 @@
         "rate": "+0%"
       },
       "einsatz": "Andere Klangfarbe, leicht österreichisch."
-    },
-    {
-      "id": "Probe_Erzaehler_A_warm",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe A · warm",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "de-DE-ChristophNeural",
-        "pitch": "-10Hz",
-        "rate": "-8%"
-      },
-      "klang": {
-        "formant": -0.5,
-        "tiefe": 1.5,
-        "waerme": 3,
-        "alter": 0,
-        "rau": 0,
-        "praesenz": 1.5
-      },
-      "einsatz": "Freundlich und warm, mittleres Alter."
-    },
-    {
-      "id": "Probe_Erzaehler_B_warm_aelter",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe B · warm und älter (neuer Standard)",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "de-DE-ChristophNeural",
-        "pitch": "-16Hz",
-        "rate": "-12%"
-      },
-      "klang": {
-        "formant": -0.8,
-        "tiefe": 2,
-        "waerme": 3,
-        "alter": 0.5,
-        "rau": 0,
-        "praesenz": 1.5
-      },
-      "einsatz": "Ruhiger, etwas langsamer, leichtes Alterszittern. So klingt jetzt die Eröffnung."
-    },
-    {
-      "id": "Probe_Erzaehler_C_grossvater",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe C · wie ein Großvater",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "de-DE-ChristophNeural",
-        "pitch": "-20Hz",
-        "rate": "-16%"
-      },
-      "klang": {
-        "formant": -1.0,
-        "tiefe": 2.5,
-        "waerme": 4,
-        "alter": 1.0,
-        "rau": 0.1,
-        "praesenz": 1.5
-      },
-      "einsatz": "Märchenerzähler: langsam, tief, deutliches Alterszittern."
-    },
-    {
-      "id": "Probe_Erzaehler_D_natuerlich",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe D · natürlich und ruhig",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "de-DE-ChristophNeural",
-        "pitch": "-6Hz",
-        "rate": "-10%"
-      },
-      "klang": {
-        "formant": 0,
-        "tiefe": 0,
-        "waerme": 2,
-        "alter": 0,
-        "rau": 0,
-        "praesenz": 2
-      },
-      "einsatz": "Fast ohne Bearbeitung, nur etwas wärmer."
-    },
-    {
-      "id": "Probe_Erzaehler_E_andrew",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe E · Andrew warm (mehrsprachig)",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "en-US-AndrewMultilingualNeural",
-        "pitch": "-14Hz",
-        "rate": "-10%"
-      },
-      "klang": {
-        "formant": -0.5,
-        "tiefe": 1.5,
-        "waerme": 3,
-        "alter": 0,
-        "rau": 0,
-        "praesenz": 1.5
-      },
-      "einsatz": "Andere, sehr warme Klangfarbe, aber mit leichtem Akzent."
-    },
-    {
-      "id": "Probe_Erzaehler_F_trailer",
-      "stimme": "erzaehler",
-      "gruppe": "proben",
-      "titel": "Erzähler-Probe F · bisheriger Trailer-Stil (zum Vergleich)",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Doch die Zukunft ist noch nicht entschieden. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "tts": {
-        "voice": "de-DE-ChristophNeural",
-        "pitch": "-22Hz",
-        "rate": "-8%"
-      },
-      "klang": {
-        "formant": -1.5,
-        "tiefe": 3,
-        "waerme": 0,
-        "alter": 0,
-        "rau": 0.35,
-        "praesenz": 2
-      },
-      "einsatz": "Die Version, die nach Bösewicht klang."
     }
   ]
 }

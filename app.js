@@ -185,18 +185,19 @@
   async function exportWav(id) {
     const p = pads.get(id);
     if (!p || !p.buffer) return;
+    const v = voices.get(p.voice);
+    const base = p.vary ? `${p.id}__${v.variante}` : p.id;
     if (p.direct) {                                // fertige Mischung: Originaldatei speichern
-      const a = h('a', { href: p.url, download: `${p.id}.mp3` });
+      const a = h('a', { href: p.url, download: `${base}.mp3` });
       document.body.append(a); a.click(); a.remove();
       return;
     }
-    const v = voices.get(p.voice);
     const b = p.buffer, sr = 44100;            // feste Rate, unabhängig von der Soundkarte
     const off = new OfflineAudioContext(1, Math.ceil((b.duration + 0.3) * sr), sr);
     const chain = buildChain(off, v.robo, off.destination);
     const src = off.createBufferSource(); src.buffer = b; src.connect(chain.input); src.start();
     const out = await off.startRendering();
-    const name = `${p.id}${v.robo > 0 ? '_robo' + Math.round(v.robo * 100) : ''}.wav`;
+    const name = `${base}${v.robo > 0 ? '_robo' + Math.round(v.robo * 100) : ''}.wav`;
     const url = URL.createObjectURL(encodeWav(out));
     const a = h('a', { href: url, download: name });
     document.body.append(a); a.click(); a.remove();
@@ -295,7 +296,8 @@
       h('span', { class: 'pad-foot' },
         (p.durEl = h('span', { class: 'dur' }, 'lädt …')),
         p.local ? h('span', { class: 'tag' }, 'lokal') : null,
-        p.direct ? h('span', { class: 'tag' }, 'Stimme + Musik + Effekte') : null),
+        p.direct ? h('span', { class: 'tag' }, 'Stimme + Musik + Effekte') : null,
+        p.vary ? (p.varTag = h('span', { class: 'tag' }, 'Stimme ' + v.variante)) : null),
       h('span', { class: 'bar' }, (p.barEl = h('i'))),
     );
     btn.addEventListener('click', () => play(p.id));
@@ -329,6 +331,13 @@
     });
     range.addEventListener('dblclick', () => { range.value = String(v.roboDefault); range.dispatchEvent(new Event('input')); });
     v.padsEl = h('div', { class: 'pads' });
+    v.varEl = v.varianten.length ? h('div', { class: 'variants', role: 'group', 'aria-label': `Stimme ${v.name}` },
+      h('span', { class: 'variants-label' }, 'Stimme:'),
+      v.varianten.map((x) => h('button', {
+        type: 'button', class: 'var-btn', 'data-var': x.id, 'aria-pressed': String(x.id === v.variante),
+        title: `${x.name}${x.standard ? ' (Standard)' : ''} – gilt für die Eröffnung und alle Einzelteile`,
+        onclick: () => setVariant(v.id, x.id),
+      }, h('b', {}, x.id), ' ', x.name, x.standard ? ' ★' : ''))) : null;
     return h('section', { class: 'voice', style: `--c:${v.farbe}`, 'aria-label': v.name },
       h('header', { class: 'voice-head' },
         h('div', { class: 'who' },
@@ -337,16 +346,38 @@
         h('label', { class: 'robo', title: `Robo-Anteil (Standard ${Math.round(v.roboDefault * 100)} %, Doppelklick = zurücksetzen)` },
           'Robo', range, out),
         h('button', { type: 'button', class: 'btn small', onclick: () => openAdd(v.id) }, '＋ Eigener Sound'),
+        v.varEl,
       ),
       v.padsEl,
     );
   }
 
-  function audioUrl(line) {
-    const m = manifest[line.id];
+  function audioUrl(id, datei, vid) {
+    const m = manifest[vid ? `${id}__${vid}` : id];
     if (m && m.datei) return `${m.datei}?v=${m.hash}`;
-    if (line.datei) return line.datei;
+    if (datei) return datei;
     return null;
+  }
+
+  /* Stimmvariante umschalten: alle Sätze dieser Stimme in der neuen Variante laden. */
+  async function setVariant(voiceId, vid) {
+    const v = voices.get(voiceId);
+    if (!v || v.variante === vid) return;
+    v.variante = vid;
+    store.set('var.' + voiceId, vid);
+    v.varEl.querySelectorAll('.var-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.var === vid)));
+    const list = [...pads.values()].filter((p) => p.voice === voiceId && p.vary);
+    for (const p of list) {
+      stop(p.id, 0.05);
+      p.url = audioUrl(p.id, p.datei, vid);
+      p.buffer = null;
+      p.el.classList.add('loading');
+      p.el.classList.remove('missing');
+      p.durEl.textContent = 'lädt …';
+      if (p.varTag) p.varTag.textContent = 'Stimme ' + vid;
+    }
+    await loadAll(list);
+    offlineCheck();
   }
 
   async function loadAll(list) {
@@ -357,14 +388,18 @@
     const worker = async () => {
       while (queue.length) {
         const p = queue.shift();
+        const url = p.url;
         try {
-          if (!p.url) throw new Error('keine Datei');
-          const res = await fetch(p.url);
+          if (!url) throw new Error('keine Datei');
+          const res = await fetch(url);
           if (!res.ok) throw new Error('HTTP ' + res.status);
-          p.buffer = await ensureCtx().decodeAudioData(await res.arrayBuffer());
+          const buf = await ensureCtx().decodeAudioData(await res.arrayBuffer());
+          if (p.url !== url) { done++; continue; }   // inzwischen andere Variante gewählt
+          p.buffer = buf;
           p.el.classList.remove('loading');
           p.durEl.textContent = fmt(p.buffer.duration);
         } catch (e) {
+          if (p.url !== url) { done++; continue; }
           failed++;
           p.el.classList.remove('loading');
           p.el.classList.add('missing');
@@ -381,21 +416,40 @@
 
   function status(html) { $('#status').innerHTML = html; }
 
-  async function offlineCheck(result) {
-    const base = `<span class="${result.failed ? 'warn' : 'ok'}">${result.failed ? '⚠' : '✓'}</span> ` +
-      `${result.total - result.failed}/${result.total} Sounds geladen`;
-    status(base + (result.failed ? ` · ${result.failed} fehlen` : ''));
+  /* alle Audiodateien laut Manifest – inklusive aller Stimmvarianten */
+  function manifestUrls() {
+    return Object.values(manifest).filter((m) => m && m.datei)
+      .map((m) => new URL(`${m.datei}?v=${m.hash}`, location.href).href);
+  }
+
+  async function offlineCheck() {
+    const all = [...pads.values()];
+    const failed = all.filter((p) => p.el && p.el.classList.contains('missing')).length;
+    const loading = all.filter((p) => p.el && p.el.classList.contains('loading')).length;
+    if (loading) return;
+    const base = `<span class="${failed ? 'warn' : 'ok'}">${failed ? '⚠' : '✓'}</span> ` +
+      `${all.length - failed}/${all.length} Sounds geladen` + (failed ? ` · ${failed} fehlen` : '');
+    status(base);
     if (!('serviceWorker' in navigator) || !window.caches) return;
     try {
       await navigator.serviceWorker.ready;
-      const urls = [...pads.values()].filter((p) => p.url && !p.local).map((p) => new URL(p.url, location.href).href);
+      const urls = manifestUrls();
       const hits = await Promise.all(urls.map((u) => caches.match(u)));
       const n = hits.filter(Boolean).length;
-      status(base + (result.failed ? ` · ${result.failed} fehlen` : '') +
-        (n === urls.length
-          ? ' · <span class="ok">offline bereit</span> (Seite funktioniert jetzt auch ohne Internet)'
-          : ` · offline: ${n}/${urls.length} gespeichert, Seite einmal neu laden`));
+      const vars = Math.max(0, ...[...voices.values()].map((v) => v.varianten.length));
+      status(base + (n === urls.length
+        ? ` · <span class="ok">offline bereit</span>${vars > 1 ? ' (alle Stimmvarianten)' : ''} – funktioniert jetzt auch ohne Internet`
+        : ` · offline: ${n}/${urls.length} Dateien gespeichert …`));
+      return n === urls.length;
     } catch { /* kein Offline-Cache */ }
+  }
+
+  /* Im Hintergrund alle Dateien (auch andere Stimmvarianten) in den Offline-Speicher holen. */
+  async function warmCache() {
+    if (!window.caches || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+    for (const u of manifestUrls()) {
+      try { if (!(await caches.match(u))) await fetch(u); } catch { /* später erneut */ }
+    }
   }
 
   async function getJSON(url) {
@@ -425,9 +479,14 @@
 
     for (const s of cfg.stimmen || []) {
       const def = typeof s.robo === 'number' ? s.robo : 0;
+      const vars = (s.varianten || []).map((x) => ({ id: x.id, name: x.name || x.id, standard: !!x.standard }));
+      const std = (vars.find((x) => x.standard) || vars[0] || {}).id || null;
+      let cur = store.get('var.' + s.id, std);
+      if (!vars.some((x) => x.id === cur)) cur = std;
       voices.set(s.id, {
         id: s.id, name: s.name || s.id, rolle: s.rolle || '', farbe: s.farbe || '#2ee6d6',
         roboDefault: def, robo: store.get('robo.' + s.id, def), chain: null, padsEl: null,
+        varianten: vars, variante: cur, varEl: null,
       });
     }
 
@@ -441,9 +500,12 @@
 
     const probenEl = $('#proben');
     for (const l of lines) {
+      const v = voices.get(l.stimme);
+      const vary = v.varianten.length > 0 && l.gruppe !== 'proben';
       const p = {
         id: l.id, voice: l.stimme, title: l.titel || l.id, text: l.text || '', cue: l.einsatz || '',
-        key: l._key || null, url: audioUrl(l), buffer: null, local: false, direct: !!l.teile,
+        key: l._key || null, datei: l.datei || null, vary,
+        url: audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!l.teile,
       };
       pads.set(p.id, p);
       if (p.key) keyMap.set(p.key, p.id);
@@ -453,9 +515,10 @@
     }
     $('#probenWrap').hidden = !probenEl.children.length;
 
-    const r = await loadAll([...pads.values()]);
+    await loadAll([...pads.values()]);
     await loadLocal();
-    offlineCheck(r);
+    await offlineCheck();
+    warmCache().then(offlineCheck);
   }
 
   async function loadLocal() {

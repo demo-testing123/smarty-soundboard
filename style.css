@@ -114,6 +114,19 @@ main {
 .robo input { width: 110px; }
 .robo output { min-width: 3em; color: var(--text); font-variant-numeric: tabular-nums; }
 
+.variants { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.variants-label { font-size: .85rem; color: var(--muted); margin-right: 2px; }
+.var-btn {
+  appearance: none; border: 1px solid var(--line); background: var(--pad); color: var(--text);
+  font: inherit; font-size: .85rem; padding: .38em .8em; border-radius: 999px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.var-btn:hover { border-color: color-mix(in srgb, var(--c) 60%, var(--line)); }
+.var-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.var-btn b { color: var(--c); }
+.var-btn[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #1a1205; font-weight: 600; }
+.var-btn[aria-pressed="true"] b { color: inherit; }
+
 .pads { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 
 .cell { position: relative; min-width: 0; }

@@ -20,18 +20,28 @@ Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 
 ## Eröffnung „Die Zukunft braucht euch“ (Taste `Q`)
 
-Die sechs Erzählerabschnitte laufen hier als eine Sequenz mit Pausen, Musik und Effekten. Grundlage ist die Musik- und Soundregie aus dem Intro-PDF. Die Sequenz dauert etwa 1:31.
+Die sechs Erzählerabschnitte laufen hier als eine Sequenz mit Pausen, Musik und Effekten. Grundlage ist die Musik- und Soundregie aus dem Intro-PDF. Je nach Stimme dauert sie etwa 1:30 bis 1:37.
 
 - **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
 - Unter der Sprache wird die Musik automatisch etwa 10 dB leiser, in den Pausen kommt sie wieder hoch.
-- **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
+- **`audio/intro/Regie_<Stimme>.md`** (z. B. [`Regie_B.md`](audio/intro/Regie_B.md)) listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
 - **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
 - Die Einzelteile `W`–`U` gibt es weiterhin, ohne Musik, z. B. für Proben.
 - Ändert sich ein Erzählertext, baut GitHub die Sequenz samt Musik automatisch neu. Die Pausen zwischen den Abschnitten lassen sich am Eintrag `Erzaehler_00_Eroeffnung` mit `"pausen": [2.4, 2.0, 2.4, 2.0, 2.6]` einstellen, die Musik vor dem ersten Wort mit `"vorlauf": 3.2`.
 
-**Erzählerstimme:** warm, ruhig und etwas älter (Variante B). Die Grundstimme ist Christoph (−16 Hz, langsamer gesprochen). Dazu kommen mehr Wärme in den unteren Mitten, weichere Höhen, sanfte Kompression und ein leichtes Alterszittern. Rauheit gibt es keine, die hatte im ersten Trailer-Versuch bedrohlich gewirkt.
+**Erzählerstimme umschalten:** Im Erzähler-Bereich wählst du oben mit **Stimme: A–E**, wer spricht. Das gilt für die Eröffnung mit Musik (Q) und für alle Einzelteile (W–U). Die Wahl bleibt im Browser gespeichert. Es gibt fünf Varianten:
 
-Unter „Stimmproben“ liegen sechs Varianten mit demselben Text zum Vergleichen: A warm · B warm und älter (Standard) · C Großvater · D natürlich · E Andrew (mehrsprachig) · F bisheriger Trailer-Stil. **Zum Wechseln** die Werte `tts` und `klang` der gewünschten Probe beim Erzähler unter `"stimmen"` eintragen. GitHub erzeugt dann alle Erzählerteile und die Eröffnung samt Musik neu. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut.
+| | Variante | Charakter |
+|---|---|---|
+| A | warm | freundlich, mittleres Alter |
+| B ★ | warm & älter | ruhig, etwas langsamer, leichtes Alterszittern (Standard) |
+| C | Großvater | Märchenerzähler: langsam, tief, deutliches Zittern |
+| D | natürlich | fast unbearbeitet, nur etwas wärmer |
+| E | Andrew | sehr warme, andere Klangfarbe, mit leichtem Akzent |
+
+Jede Variante hat ihre eigene fertige Mischung, die Musik ist auf ihr Sprechtempo abgestimmt. Die Zeitmarken stehen in `audio/intro/Regie_A.md` bis `Regie_E.md`. Getrennte Spuren gibt es für die Standardvariante (★). Welche das ist, legt `"standard": true` in `sounds.json` fest.
+
+Die Varianten stehen in `sounds.json` beim Erzähler unter `"varianten"`, jeweils mit `tts` und `klang`. Zum Ergänzen oder Löschen einfach dort bearbeiten, GitHub erzeugt den Rest. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut. Ein erster Versuch im Kino-Trailer-Stil, tief und rau, wirkte bedrohlich und wurde verworfen.
 
 ## In der Turnhalle
 

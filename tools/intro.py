@@ -7,10 +7,10 @@ Aufruf (nach generate.py):
     python tools/intro.py          # nur wenn sich Erzählerteile oder Einstellungen geändert haben
     python tools/intro.py --neu    # immer neu bauen
 
-Ergebnis in audio/intro/:
-    Eroeffnung_mit_Musik.mp3       fertige Mischung (Stereo)
-    Spur_Sprecher.mp3 / Spur_Musik.mp3 / Spur_Effekte.mp3   getrennte Spuren, z. B. für Audacity
-    Regie.md                       tatsächliche Zeitmarken aller Einsätze
+Ergebnis in audio/intro/ (je Stimmvariante des Erzählers, z. B. B):
+    Eroeffnung_mit_Musik__B.mp3    fertige Mischung (Stereo)
+    Regie_B.md                     tatsächliche Zeitmarken aller Einsätze
+    Spur_Sprecher.mp3 / Spur_Musik.mp3 / Spur_Effekte.mp3   getrennte Spuren der Standardstimme
 
 Optionen am Sequenz-Eintrag in sounds.json:
     "vorlauf": 3.2                 Musik vor dem ersten Wort (s)
@@ -322,15 +322,40 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = json.loads(G.SOUNDS.read_text(encoding="utf-8"))
-    manifest = json.loads(G.MANIFEST.read_text(encoding="utf-8"))
-    lines = {l["id"]: l for l in cfg["saetze"]}
     seqs = [l for l in cfg["saetze"] if l.get("teile")]
     if not seqs:
         print("Keine Sequenz in sounds.json – nichts zu tun.")
         return
     seq = seqs[0]
-    sid = seq["id"]
-    teile = seq["teile"]
+    voice = {v["id"]: v for v in cfg["stimmen"]}[seq["stimme"]]
+    std = G.standard_variant(voice)
+    fehler = []
+    vlist = G.variants(voice)
+    for vid, var in vlist:                     # je Stimmvariante eine eigene Mischung
+        try:
+            build_sequence(cfg, seq, vid, var.get("name", ""), vid == std, args.neu)
+        except SystemExit as e:
+            fehler.append(str(e))
+    # Dateien entfernter Varianten (oder der Version ohne Varianten) aufräumen
+    keep = {f"Eroeffnung_mit_Musik__{v}.mp3" if v else MIX_NAME for v, _ in vlist}
+    keep |= {f"Regie_{v}.md" if v else "Regie.md" for v, _ in vlist}
+    if OUTDIR.exists() and not fehler:
+        for f in list(OUTDIR.glob("Eroeffnung_mit_Musik*.mp3")) + list(OUTDIR.glob("Regie*.md")):
+            if f.name not in keep:
+                print(f"✗ entferne {f.relative_to(ROOT)}")
+                f.unlink()
+    if fehler:
+        sys.exit("\n".join(fehler))
+
+
+def build_sequence(cfg: dict, seq: dict, vid: str | None, vname: str, standard: bool, force: bool) -> None:
+    global rng
+    rng = np.random.default_rng(2050)            # gleiche Musik, egal welche Variante zuerst gebaut wird
+    manifest = json.loads(G.MANIFEST.read_text(encoding="utf-8"))
+    lines = {l["id"]: l for l in cfg["saetze"]}
+    sid = G.vkey(seq["id"], vid)
+    teile_ids = seq["teile"]
+    teile = [G.vkey(t, vid) for t in teile_ids]
     if len(teile) != 6:
         sys.exit(f"{sid}: Die Musik ist für genau 6 Abschnitte geschrieben (gefunden: {len(teile)}).")
     fehlt = [t for t in teile if t not in manifest or "teile" not in manifest[t]]
@@ -340,10 +365,11 @@ def main() -> None:
     vorlauf = float(seq.get("vorlauf", 3.2))
     pausen = [float(p) for p in seq.get("pausen", [2.4, 2.0, 2.4, 2.0, 2.6])]
     quelle = hashlib.sha1(json.dumps([MUSIK_VERSION, [manifest[t]["hash"] for t in teile],
-                                      vorlauf, pausen]).encode()).hexdigest()[:10]
-    mix_path = OUTDIR / MIX_NAME
+                                      vorlauf, pausen, standard]).encode()).hexdigest()[:10]
+    mix_path = OUTDIR / (f"Eroeffnung_mit_Musik__{vid}.mp3" if vid else MIX_NAME)
+    regie_path = OUTDIR / (f"Regie_{vid}.md" if vid else "Regie.md")
     prev = manifest.get(sid, {})
-    if not args.neu and prev.get("quelle") == quelle and mix_path.exists():
+    if not force and prev.get("quelle") == quelle and mix_path.exists() and regie_path.exists():
         print(f"{sid}: aktuell, nichts zu tun.")
         return
 
@@ -353,7 +379,7 @@ def main() -> None:
     # --- Stimme auf die Zeitachse legen
     audio = [load_mono(ROOT / manifest[t]["datei"]) for t in teile]
     rel = [manifest[t]["teile"] for t in teile]
-    texts = [[p[0] for p in G.split_text(lines[t].get("sprechen") or lines[t]["text"])] for t in teile]
+    texts = [[p[0] for p in G.split_text(lines[t].get("sprechen") or lines[t]["text"])] for t in teile_ids]
     starts, pos = [], None
     for i in range(6):
         if i == 0:
@@ -600,8 +626,9 @@ def main() -> None:
     limit = 10 ** (G.TRUE_PEAK / 20)
     write_mp3(mix * g, mix_path, 192,
               f"alimiter=limit={limit:.4f}:level=0:attack=4:release=60")
-    for name, x in (("Spur_Sprecher.mp3", voice2), ("Spur_Musik.mp3", mus), ("Spur_Effekte.mp3", sfx)):
-        write_mp3(x * g, OUTDIR / name, 128)
+    if standard or vid is None:                  # getrennte Spuren nur für die Standardstimme
+        for name, x in (("Spur_Sprecher.mp3", voice2), ("Spur_Musik.mp3", mus), ("Spur_Effekte.mp3", sfx)):
+            write_mp3(x * g, OUTDIR / name, 128)
 
     m2 = G.loudnorm_measure(mix_path)
     dauer = G.duration(mix_path)
@@ -610,18 +637,23 @@ def main() -> None:
     for i in range(6):
         regie.append((onset[i], "Sprecher", f"Abschnitt {i + 1}: „{texts[i][0]}“"))
     regie.sort(key=lambda r: r[0])
-    md = ["# Eröffnung „Die Zukunft braucht euch“ – tatsächliche Zeitmarken", "",
-          f"Gesamtdauer {mmss(dauer)} · erzeugt von `tools/intro.py` aus den Erzählerteilen in `sounds.json`.", "",
-          "Spuren zum Weiterbearbeiten (z. B. Audacity): `Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3` – "
-          "gleiche Länge, zusammen ergeben sie die Mischung.", "",
+    stimme = f"Erzählerstimme {vid} · {vname}" if vid else "Erzählerstimme"
+    spuren = ("Spuren zum Weiterbearbeiten (z. B. Audacity): `Spur_Sprecher.mp3`, `Spur_Musik.mp3`, "
+              "`Spur_Effekte.mp3` – gleiche Länge, zusammen ergeben sie die Mischung."
+              if standard or vid is None else
+              "Getrennte Spuren gibt es nur für die Standardstimme. Für diese Stimme: in `sounds.json` "
+              "bei der Variante `\"standard\": true` setzen.")
+    md = [f"# Eröffnung „Die Zukunft braucht euch“ – {stimme}", "",
+          f"Gesamtdauer {mmss(dauer)} · Datei `{mix_path.name}` · erzeugt von `tools/intro.py`.", "",
+          spuren, "",
           "| Zeit | Spur | Einsatz |", "|---|---|---|"]
     md += [f"| {mmss(t)} | {spur} | {txt} |" for t, spur, txt in regie]
     md += ["", "Bühnen-Cue: direkt nach dem Impact Leinwand-Blitz; die zwei Zeitreisenden erscheinen. "
            "SMARTy folgt erst auf ein separates Zeichen.", ""]
-    (OUTDIR / "Regie.md").write_text("\n".join(md), encoding="utf-8")
+    regie_path.write_text("\n".join(md), encoding="utf-8")
 
     manifest = json.loads(G.MANIFEST.read_text(encoding="utf-8"))
-    manifest[sid] = {"datei": f"audio/intro/{MIX_NAME}", "hash": G.file_hash(mix_path)[:10],
+    manifest[sid] = {"datei": f"audio/intro/{mix_path.name}", "hash": G.file_hash(mix_path)[:10],
                      "quelle": quelle, "dauer": dauer, "lufs": round(float(m2["input_i"]), 1),
                      "tp": round(float(m2["input_tp"]), 1), "sequenz": True}
     G.MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

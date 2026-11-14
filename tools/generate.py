@@ -79,10 +79,33 @@ def split_text(text: str) -> list[tuple[str, float]]:
     return out
 
 
-def tts_settings(voice: dict, line: dict) -> dict:
+def variants(voice: dict) -> list[tuple[str | None, dict]]:
+    """Stimmvarianten einer Stimme: [(id, variante), …] oder [(None, {})] ohne Varianten."""
+    vs = voice.get("varianten") or []
+    return [(v["id"], v) for v in vs] or [(None, {})]
+
+
+def standard_variant(voice: dict) -> str | None:
+    vs = voice.get("varianten") or []
+    for v in vs:
+        if v.get("standard"):
+            return v["id"]
+    return vs[0]["id"] if vs else None
+
+
+def vkey(lid: str, vid: str | None) -> str:
+    """Manifest-Schlüssel und Dateiname eines Satzes in einer Stimmvariante."""
+    return f"{lid}__{vid}" if vid else lid
+
+
+def tts_settings(voice: dict, line: dict, variant: dict | None = None) -> dict:
     s = {"voice": "de-DE-ChristophNeural", "rate": "+0%", "pitch": "+0Hz", "volume": "+0%"}
     s.update(voice.get("tts", {}))
+    s.update((variant or {}).get("tts", {}))
     s.update(line.get("tts", {}))
+    if line.get("tempo"):                   # relativ zur Stimme, z. B. -4 = 4 Prozentpunkte langsamer
+        r = int(round(float(s["rate"].rstrip("%")) + float(line["tempo"])))
+        s["rate"] = f"{r:+d}%"
     return s
 
 
@@ -113,8 +136,10 @@ def loudnorm_measure(src: Path) -> dict:
     return json.loads(js)
 
 
-def klang_settings(voice: dict, line: dict) -> dict:
+def klang_settings(voice: dict, line: dict, variant: dict | None = None) -> dict:
     k = dict(voice.get("klang", {}))
+    if variant and "klang" in variant:
+        k = dict(variant["klang"])
     k.update(line.get("klang", {}))
     return k
 
@@ -168,9 +193,7 @@ def wav_seconds(path: Path) -> float:
         return w.getnframes() / w.getframerate()
 
 
-def build(line: dict, voice: dict, out: Path) -> dict:
-    s = tts_settings(voice, line)
-    k = klang_settings(voice, line)
+def build(line: dict, s: dict, k: dict, out: Path) -> dict:
     pieces = split_text(line.get("sprechen") or line["text"])
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
@@ -244,8 +267,9 @@ def main() -> None:
             continue
 
         if line.get("teile"):                      # Sequenz mit Musik -> tools/intro.py
-            if lid in old:
-                new[lid] = old[lid]
+            for vid, _ in variants(voice):
+                if vkey(lid, vid) in old:
+                    new[vkey(lid, vid)] = old[vkey(lid, vid)]
             continue
 
         if line.get("datei"):                      # eigene Aufnahme
@@ -257,36 +281,39 @@ def main() -> None:
                         "dauer": duration(f), "eigen": True}
             continue
 
-        s = tts_settings(voice, line)
-        k = klang_settings(voice, line)
-        key = json.dumps([VERSION, line.get("sprechen") or line["text"], s] + ([k] if k else []),
-                         ensure_ascii=False)
-        h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
-        out = AUDIO / f"{lid}.mp3"
-        prev = old.get(lid, {})
-        aktuell = prev.get("hash") == h and out.exists() and not prev.get("eigen")
-        if aktuell and not args.alle and lid not in args.nur:
-            new[lid] = prev
-            continue
-        if args.nur and lid not in args.nur and out.exists() and prev:
-            new[lid] = prev
-            continue
+        vlist = [(None, {})] if line.get("gruppe") == "proben" else variants(voice)
+        for vid, var in vlist:
+            key_id = vkey(lid, vid)
+            s = tts_settings(voice, line, var)
+            k = klang_settings(voice, line, var)
+            key = json.dumps([VERSION, line.get("sprechen") or line["text"], s] + ([k] if k else []),
+                             ensure_ascii=False)
+            h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
+            out = AUDIO / f"{key_id}.mp3"
+            prev = old.get(key_id, {})
+            aktuell = prev.get("hash") == h and out.exists() and not prev.get("eigen")
+            if aktuell and not args.alle and lid not in args.nur:
+                new[key_id] = prev
+                continue
+            if args.nur and lid not in args.nur and out.exists() and prev:
+                new[key_id] = prev
+                continue
 
-        print(f"→ {lid}  ({s['voice']}, {s['pitch']}, {s['rate']}{', klang ' + json.dumps(k) if k else ''})")
-        try:
-            info = build(line, voice, out)
-        except Exception as e:
-            fehler.append(f"{lid}: {e}")
-            if prev:
-                new[lid] = prev
-            continue
-        new[lid] = {"datei": f"audio/{lid}.mp3", "hash": h, **info}
-        print(f"   {info['dauer']:.1f} s · {info['lufs']} LUFS · TP {info['tp']} dBTP")
+            print(f"→ {key_id}  ({s['voice']}, {s['pitch']}, {s['rate']}{', klang ' + json.dumps(k) if k else ''})")
+            try:
+                info = build(line, s, k, out)
+            except Exception as e:
+                fehler.append(f"{key_id}: {e}")
+                if prev:
+                    new[key_id] = prev
+                continue
+            new[key_id] = {"datei": f"audio/{key_id}.mp3", "hash": h, **info}
+            print(f"   {info['dauer']:.1f} s · {info['lufs']} LUFS · TP {info['tp']} dBTP")
 
     # verwaiste MP3s entfernen (nur selbst erzeugte, keine eigenen Aufnahmen)
     behalten = {(ROOT / v["datei"]).resolve() for v in new.values()}
     for f in AUDIO.glob("*.mp3"):
-        if f.resolve() not in behalten and f.stem not in ids:
+        if f.resolve() not in behalten:
             print(f"✗ entferne {f.name} (nicht mehr in sounds.json)")
             f.unlink()
 

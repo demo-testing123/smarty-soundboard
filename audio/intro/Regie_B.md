@@ -1,6 +1,6 @@
-# Eröffnung „Die Zukunft braucht euch“ – tatsächliche Zeitmarken
+# Eröffnung „Die Zukunft braucht euch“ – Erzählerstimme B · warm & älter
 
-Gesamtdauer 1:33.5 · erzeugt von `tools/intro.py` aus den Erzählerteilen in `sounds.json`.
+Gesamtdauer 1:33.5 · Datei `Eroeffnung_mit_Musik__B.mp3` · erzeugt von `tools/intro.py`.
 
 Spuren zum Weiterbearbeiten (z. B. Audacity): `Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3` – gleiche Länge, zusammen ergeben sie die Mischung.
 
