@@ -1,0 +1,128 @@
+{
+ "SMARTy_01_Landung": {
+  "datei": "audio/SMARTy_01_Landung.mp3",
+  "hash": "658a66eeda",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 6.96
+ },
+ "SMARTy_02_Entdeckung": {
+  "datei": "audio/SMARTy_02_Entdeckung.mp3",
+  "hash": "65b5e70311",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 5.57
+ },
+ "SMARTy_03_Frage": {
+  "datei": "audio/SMARTy_03_Frage.mp3",
+  "hash": "07c10530fc",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 6.39
+ },
+ "SMARTy_04_Aha": {
+  "datei": "audio/SMARTy_04_Aha.mp3",
+  "hash": "b9e3978954",
+  "lufs": -17.2,
+  "tp": -1.9,
+  "dauer": 6.14
+ },
+ "SMARTy_05_Zukunftsalarm": {
+  "datei": "audio/SMARTy_05_Zukunftsalarm.mp3",
+  "hash": "752c93364c",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 6.39
+ },
+ "SMARTy_06_Finale": {
+  "datei": "audio/SMARTy_06_Finale.mp3",
+  "hash": "c9f42aa5bc",
+  "lufs": -16.2,
+  "tp": -1.9,
+  "dauer": 6.3
+ },
+ "SMARTy_07_Stimmtest": {
+  "datei": "audio/SMARTy_07_Stimmtest.mp3",
+  "hash": "8d7e50b27a",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 7.1
+ },
+ "Erzaehler_01_Beginn": {
+  "datei": "audio/Erzaehler_01_Beginn.mp3",
+  "hash": "2dcb622790",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 9.62
+ },
+ "Erzaehler_02_Technik": {
+  "datei": "audio/Erzaehler_02_Technik.mp3",
+  "hash": "35b6fd1bbf",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 14.57
+ },
+ "Erzaehler_03_Schiefgelaufen": {
+  "datei": "audio/Erzaehler_03_Schiefgelaufen.mp3",
+  "hash": "aab15f3293",
+  "lufs": -16.3,
+  "tp": -1.9,
+  "dauer": 15.2
+ },
+ "Erzaehler_04_Hoffnung": {
+  "datei": "audio/Erzaehler_04_Hoffnung.mp3",
+  "hash": "a3c8b8c95d",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 13.86
+ },
+ "Erzaehler_05_Euch": {
+  "datei": "audio/Erzaehler_05_Euch.mp3",
+  "hash": "d4f059a67b",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 9.15
+ },
+ "Erzaehler_06_Countdown": {
+  "datei": "audio/Erzaehler_06_Countdown.mp3",
+  "hash": "9d378bbe3a",
+  "lufs": -17.5,
+  "tp": -1.8,
+  "dauer": 11.02
+ },
+ "Probe_SMARTy_Christoph_10": {
+  "datei": "audio/Probe_SMARTy_Christoph_10.mp3",
+  "hash": "d776e9ce89",
+  "lufs": -17.0,
+  "tp": -1.9,
+  "dauer": 7.09
+ },
+ "Probe_SMARTy_Christoph_30": {
+  "datei": "audio/Probe_SMARTy_Christoph_30.mp3",
+  "hash": "1b881f7870",
+  "lufs": -17.0,
+  "tp": -1.9,
+  "dauer": 7.11
+ },
+ "Probe_SMARTy_Brian": {
+  "datei": "audio/Probe_SMARTy_Brian.mp3",
+  "hash": "4d690a93b0",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 7.75
+ },
+ "Probe_SMARTy_Jonas": {
+  "datei": "audio/Probe_SMARTy_Jonas.mp3",
+  "hash": "4748ac3865",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 6.85
+ },
+ "Probe_Erzaehler_Andrew": {
+  "datei": "audio/Probe_Erzaehler_Andrew.mp3",
+  "hash": "5e2b7f71a6",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 8.94
+ }
+}

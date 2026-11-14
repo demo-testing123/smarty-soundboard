@@ -1,0 +1,163 @@
+{
+  "titel": "SMARTy Soundboard",
+  "untertitel": "START IT SMART · Mission Zukunft: Rettet unsere Stadt!",
+
+  "stimmen": [
+    {
+      "id": "smarty",
+      "name": "SMARTy",
+      "rolle": "Roboterhund · freundlich, neugierig, ein bisschen frech",
+      "farbe": "#2ee6d6",
+      "tts": { "voice": "de-DE-ChristophNeural", "pitch": "+20Hz", "rate": "+3%" },
+      "robo": 0.2
+    },
+    {
+      "id": "erzaehler",
+      "name": "Erzähler",
+      "rolle": "Eröffnung · tief, warm, geheimnisvoll – ohne Roboterfilter",
+      "farbe": "#ffb648",
+      "tts": { "voice": "de-DE-ChristophNeural", "pitch": "-8Hz", "rate": "-8%" },
+      "robo": 0
+    }
+  ],
+
+  "saetze": [
+    {
+      "id": "SMARTy_01_Landung", "stimme": "smarty", "taste": "1",
+      "titel": "01 · Die Landung",
+      "text": "Systemcheck abgeschlossen. Zeitreise überstanden. Moment mal … wo sind wir denn hier gelandet?",
+      "sprechen": "Systemcheck abgeschlossen. Zeitreise überstanden. [Pause 0.5] Moment mal … wo sind wir denn hier gelandet?",
+      "einsatz": "Nach dem Zeitreise-Crash."
+    },
+    {
+      "id": "SMARTy_02_Entdeckung", "stimme": "smarty", "taste": "2",
+      "titel": "02 · Die Entdeckung",
+      "text": "Alarm! Ich entdecke ganz viele kleine Menschen! Können die uns etwa hören?",
+      "sprechen": "Alarm! Ich entdecke ganz viele kleine Menschen! [Pause 0.5] Können die uns etwa hören?",
+      "einsatz": "SMARTy schaut zum Publikum."
+    },
+    {
+      "id": "SMARTy_03_Frage", "stimme": "smarty", "taste": "3",
+      "titel": "03 · Die Frage",
+      "text": "Ich habe 327 Computerspiele gespeichert. Wozu braucht ihr denn noch echte Spielplätze?",
+      "sprechen": "Ich habe 327 Computerspiele gespeichert. [Pause 0.6] Wozu braucht ihr denn noch echte Spielplätze?",
+      "einsatz": "Beim Thema lebenswerte Stadt."
+    },
+    {
+      "id": "SMARTy_04_Aha", "stimme": "smarty", "taste": "4",
+      "titel": "04 · Der Aha-Moment",
+      "text": "Aha! Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
+      "sprechen": "Aha! [Pause 0.35] Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
+      "einsatz": "Nach den Antworten der Kinder."
+    },
+    {
+      "id": "SMARTy_05_Zukunftsalarm", "stimme": "smarty", "taste": "5",
+      "titel": "05 · Der Zukunftsalarm",
+      "text": "Achtung, Achtung! Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
+      "sprechen": "Achtung, Achtung! [Pause 0.3] Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
+      "einsatz": "Beginn der Rettungsmission."
+    },
+    {
+      "id": "SMARTy_06_Finale", "stimme": "smarty", "taste": "6",
+      "titel": "06 · Das Finale",
+      "text": "Mission erfolgreich! Danke, Zukunftscrew! Ich werde eure Ideen niemals vergessen!",
+      "sprechen": "Mission erfolgreich! [Pause 0.3] Danke, Zukunftskru! Ich werde eure Ideen niemals vergessen!",
+      "einsatz": "Am Ende der Show."
+    },
+    {
+      "id": "SMARTy_07_Stimmtest", "stimme": "smarty", "taste": "7",
+      "titel": "07 · Soundcheck",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "einsatz": "Optional: Stimmtest über die Hallenanlage vor der Show."
+    },
+
+    {
+      "id": "Erzaehler_01_Beginn", "stimme": "erzaehler", "taste": "q",
+      "titel": "E1 · Geheimnisvoller Beginn",
+      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050.",
+      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
+      "tts": { "rate": "-12%" },
+      "einsatz": "0–12 s · Musik: leises, tiefes Pulsieren, schwebende Fläche."
+    },
+    {
+      "id": "Erzaehler_02_Technik", "stimme": "erzaehler", "taste": "w",
+      "titel": "E2 · Staunen über die Technik",
+      "text": "Eine Welt voller unglaublicher Erfindungen. Fahrzeuge, die ganz von allein fahren. Roboter, die uns im Alltag helfen. Und Häuser, die mitdenken können. Die Menschen haben Maschinen gebaut, die fast alles erledigen.",
+      "sprechen": "Eine Welt voller unglaublicher Erfindungen. [Pause 0.5] Fahrzeuge, die ganz von allein fahren. [Pause 0.4] Roboter, die uns im Alltag helfen. [Pause 0.4] Und Häuser, die mitdenken können. [Pause 0.6] Die Menschen haben Maschinen gebaut, die fast alles erledigen.",
+      "einsatz": "12–30 s · Musik öffnet sich, leise Signaltöne zwischen den Sätzen."
+    },
+    {
+      "id": "Erzaehler_03_Schiefgelaufen", "stimme": "erzaehler", "taste": "e",
+      "titel": "E3 · Etwas ist schiefgelaufen",
+      "text": "Doch … irgendetwas ist schiefgelaufen. Die Stadt ist voller Technik. Aber die Menschen haben kaum noch Zeit füreinander. Kinder finden nur wenige Orte zum Spielen. Und zwischen all den Maschinen ist das Leben still geworden.",
+      "sprechen": "Doch … irgendetwas ist schiefgelaufen. [Pause 1.0] Die Stadt ist voller Technik. [Pause 0.4] Aber die Menschen haben kaum noch Zeit füreinander. [Pause 0.4] Kinder finden nur wenige Orte zum Spielen. [Pause 0.5] Und zwischen all den Maschinen ist das Leben still geworden.",
+      "tts": { "rate": "-12%" },
+      "einsatz": "30–50 s · Bei „Doch“ stoppt der Rhythmus, danach leises Summen."
+    },
+    {
+      "id": "Erzaehler_04_Hoffnung", "stimme": "erzaehler", "taste": "r",
+      "titel": "E4 · Ein Hoffnungsschimmer",
+      "text": "Doch die Zukunft ist noch nicht entschieden. Denn irgendwo in dieser Stadt haben zwei mutige Zeitreisende einen Plan. Sie wollen zurückreisen. Zurück in unsere Zeit. Um Menschen zu finden, die etwas verändern können.",
+      "sprechen": "Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Denn irgendwo in dieser Stadt haben zwei mutige Zeitreisende einen Plan. [Pause 0.4] Sie wollen zurückreisen. [Pause 0.3] Zurück in unsere Zeit. [Pause 0.4] Um Menschen zu finden, die etwas verändern können.",
+      "einsatz": "50–65 s · Kurze Stille, dann warmer, aufsteigender Akkord."
+    },
+    {
+      "id": "Erzaehler_05_Euch", "stimme": "erzaehler", "taste": "t",
+      "titel": "E5 · Die Kinder sind die Lösung",
+      "text": "Menschen mit Fantasie. Mit Mut. Und mit richtig guten Ideen. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
+      "sprechen": "Menschen mit Fantasie. [Pause 0.5] Mit Mut. [Pause 0.5] Und mit richtig guten Ideen. [Pause 0.8] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
+      "tts": { "rate": "-4%" },
+      "einsatz": "65–78 s · Trommeln setzen ein, bei „EUCH!“ kräftiger Akzent."
+    },
+    {
+      "id": "Erzaehler_06_Countdown", "stimme": "erzaehler", "taste": "z",
+      "titel": "E6 · Zeitmaschine und Countdown",
+      "text": "Zeitreise aktiviert! Ziel: Gegenwart! Bereit zum Zeitsprung? FÜNF! VIER! DREI! ZWEI! EINS! ZEITSPRUNG!",
+      "sprechen": "Zeitreise aktiviert! [Pause 0.4] Ziel: Gegenwart! [Pause 0.4] Bereit zum Zeitsprung? [Pause 0.7] Fünf! [Pause 0.55] Vier! [Pause 0.55] Drei! [Pause 0.55] Zwei! [Pause 0.55] Eins! [Pause 0.45] Zeitsprung!",
+      "tts": { "rate": "+0%" },
+      "einsatz": "78–90 s · Startsignal, Countdown-Impulse, nach „ZEITSPRUNG!“ Whoosh."
+    },
+
+    {
+      "id": "Probe_SMARTy_Christoph_10", "stimme": "smarty", "gruppe": "proben",
+      "titel": "Probe A · Christoph, Tonhöhe +10Hz",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "tts": { "voice": "de-DE-ChristophNeural", "pitch": "+10Hz", "rate": "+3%" },
+      "einsatz": "Etwas tiefer als Standard (+20Hz)."
+    },
+    {
+      "id": "Probe_SMARTy_Christoph_30", "stimme": "smarty", "gruppe": "proben",
+      "titel": "Probe B · Christoph, Tonhöhe +30Hz",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "tts": { "voice": "de-DE-ChristophNeural", "pitch": "+30Hz", "rate": "+3%" },
+      "einsatz": "Jünger und heller als Standard (+20Hz)."
+    },
+    {
+      "id": "Probe_SMARTy_Brian", "stimme": "smarty", "gruppe": "proben",
+      "titel": "Probe C · Brian (mehrsprachig), +10Hz",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "tts": { "voice": "en-US-BrianMultilingualNeural", "pitch": "+10Hz", "rate": "+0%" },
+      "einsatz": "Andere Klangfarbe als der Erzähler, aber mit hörbarem Akzent."
+    },
+    {
+      "id": "Probe_SMARTy_Jonas", "stimme": "smarty", "gruppe": "proben",
+      "titel": "Probe D · Jonas (Österreich), +15Hz",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "tts": { "voice": "de-AT-JonasNeural", "pitch": "+15Hz", "rate": "+0%" },
+      "einsatz": "Andere Klangfarbe, leicht österreichisch."
+    },
+    {
+      "id": "Probe_Erzaehler_Andrew", "stimme": "erzaehler", "gruppe": "proben",
+      "titel": "Probe E · Erzähler Andrew (mehrsprachig), −6Hz",
+      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050.",
+      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
+      "tts": { "voice": "en-US-AndrewMultilingualNeural", "pitch": "-6Hz", "rate": "-10%" },
+      "einsatz": "Alternative Erzählstimme. Auf Akzent achten."
+    }
+  ]
+}
