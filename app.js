@@ -108,12 +108,104 @@
     document.body.classList.add('live');
   }
 
+  // ---------- Film (Beamer): Vollbild, Ton über das Soundboard, danach bleibt es schwarz ----------
+  const film = { layer: null, video: null, g: null, node: null, blobUrl: null, srcSet: '', on: store.get('film.on', true), padId: null, state: 'idle' };
+
+  function filmSetup() {
+    if (film.layer) return;
+    film.video = h('video', { playsinline: true, preload: 'auto' });
+    film.layer = h('div', { id: 'filmLayer', hidden: true }, film.video);
+    document.body.append(film.layer);
+    film.video.addEventListener('ended', filmEnded);
+    film.layer.addEventListener('click', () => { if (film.state !== 'playing') filmClose(); });   // während des Films kein versehentliches Beenden
+    const onFs = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && film.state !== 'idle') filmClose(); };
+    document.addEventListener('fullscreenchange', onFs);
+    document.addEventListener('webkitfullscreenchange', onFs);
+  }
+
+  function filmPlay(p) {
+    filmSetup();
+    ensureCtx(); resume();
+    if (!film.node) {
+      film.node = ctx.createMediaElementSource(film.video);
+      film.g = ctx.createGain();
+      film.node.connect(film.g);
+      film.g.connect(master);
+    }
+    if (!overlap) stopAll(0.04);
+    const v = film.video;
+    const src = film.blobUrl || p.film;
+    if (film.srcSet !== src) { v.src = src; film.srcSet = src; }
+    v.style.transition = '';
+    v.style.opacity = '1';
+    film.layer.hidden = false;
+    film.g.gain.cancelScheduledValues(ctx.currentTime);
+    film.g.gain.setValueAtTime(1, ctx.currentTime);
+    try { v.currentTime = 0; } catch { /* noch keine Metadaten */ }
+    film.state = 'playing';
+    film.padId = p.id;
+    playing.set(p.id, { film: true, dur: v.duration || p.buffer.duration });
+    v.play().catch(() => { status('<span class="warn">⚠</span> Film konnte nicht starten – Seite neu laden und erneut versuchen.'); filmClose(); });
+    const el = film.layer;
+    const fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen && el.webkitRequestFullscreen();
+    if (fs && fs.catch) fs.catch(() => { /* Vollbild nicht erlaubt – die Ebene deckt trotzdem das Fenster ab */ });
+    paint(p);
+    tick();
+  }
+
+  function filmEnded() {
+    if (film.state !== 'playing') return;
+    film.state = 'black';
+    film.video.style.opacity = '0';
+    const p = pads.get(film.padId);
+    playing.delete(film.padId);
+    paint(p);
+  }
+
+  function filmStop(fade = 0.08) {
+    if (film.state !== 'playing') return;
+    const now = ctx.currentTime;
+    film.g.gain.cancelScheduledValues(now);
+    film.g.gain.setValueAtTime(film.g.gain.value, now);
+    film.g.gain.linearRampToValueAtTime(0, now + fade);
+    film.video.style.transition = `opacity ${fade}s linear`;
+    film.video.style.opacity = '0';                    // Bild wird schwarz und bleibt schwarz
+    film.state = 'black';
+    const v = film.video;
+    setTimeout(() => { if (film.state !== 'playing') v.pause(); }, fade * 1000 + 60);
+    playing.delete(film.padId);
+    paint(pads.get(film.padId));
+  }
+
+  function filmClose() {
+    if (!film.layer) return;
+    if (film.state === 'playing') filmStop(0.05);
+    film.state = 'idle';
+    film.layer.hidden = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+
+  async function filmPreload() {
+    const p = [...pads.values()].find((x) => x.film);
+    if (!p) return;
+    try {
+      const res = await fetch(p.film);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      film.blobUrl = URL.createObjectURL(await res.blob());   // aus dem Speicher: startet sofort, auch offline
+      if (p.filmTag) p.filmTag.textContent = film.on ? '🎬 Film bereit' : 'nur Ton';
+    } catch {
+      if (p.filmTag) p.filmTag.textContent = '🎬 Film nicht geladen';
+    }
+  }
+
   function play(id) {
     const p = pads.get(id);
     if (!p || !p.buffer) return;
     ensureCtx(); resume();
     if (playing.has(id)) { stop(id); return; }
-    if (!overlap) stopAll(0.04);
+    if (p.film && film.on) { filmPlay(p); return; }
+    if (!overlap) stopAll(0.04, true);              // ein laufender Film wird dabei nicht abgebrochen
 
     const src = ctx.createBufferSource();
     src.buffer = p.buffer;
@@ -134,6 +226,7 @@
   function stop(id, fade = 0.08) {
     const e = playing.get(id);
     if (!e) return;
+    if (e.film) { filmStop(fade); return; }
     const now = ctx.currentTime;
     e.g.gain.cancelScheduledValues(now);
     e.g.gain.setValueAtTime(e.g.gain.value, now);
@@ -143,7 +236,9 @@
     paint(pads.get(id));
   }
 
-  function stopAll(fade = 0.08) { for (const id of [...playing.keys()]) stop(id, fade); }
+  function stopAll(fade = 0.08, keepFilm = false) {
+    for (const [id, e] of [...playing]) if (!(keepFilm && e.film)) stop(id, fade);
+  }
 
   function paint(p) {
     if (!p || !p.el) return;
@@ -165,9 +260,11 @@
       const now = ctx.currentTime;
       for (const [id, e] of playing) {
         const p = pads.get(id);
-        const f = Math.min(1, Math.max(0, (now - e.t0) / e.dur));
+        const dur = e.film ? (film.video.duration || e.dur) : e.dur;
+        const pos = e.film ? film.video.currentTime : now - e.t0;
+        const f = Math.min(1, Math.max(0, pos / dur));
         p.barEl.style.transform = `scaleX(${f})`;
-        p.durEl.textContent = '−' + fmt(Math.max(0, e.dur - (now - e.t0)));
+        p.durEl.textContent = '−' + fmt(Math.max(0, dur - pos));
       }
       analyser.getFloatTimeDomainData(meterBuf);
       let sum = 0;
@@ -297,6 +394,7 @@
         (p.durEl = h('span', { class: 'dur' }, 'lädt …')),
         p.local ? h('span', { class: 'tag' }, 'lokal') : null,
         p.direct ? h('span', { class: 'tag' }, 'Stimme + Musik + Effekte') : null,
+        p.film ? (p.filmTag = h('span', { class: 'tag film' }, film.on ? '🎬 Film lädt …' : 'nur Ton')) : null,
         p.vary ? (p.varTag = h('span', { class: 'tag' }, 'Stimme ' + v.variante)) : null),
       h('span', { class: 'bar' }, (p.barEl = h('i'))),
     );
@@ -308,6 +406,10 @@
         'aria-label': `${p.title} speichern`,
         onclick: () => exportWav(p.id),
       }, '⤓'),
+      p.film ? h('button', {
+        type: 'button', class: 'icon', title: 'Film als MP4 speichern', 'aria-label': `${p.title}: Film speichern`,
+        onclick: () => { const a = h('a', { href: p.film, download: `${p.id}_Film.mp4` }); document.body.append(a); a.click(); a.remove(); },
+      }, '🎞') : null,
       p.local ? h('button', {
         type: 'button', class: 'icon del', title: 'Eigenen Sound löschen', 'aria-label': `${p.title} löschen`,
         onclick: () => removeLocal(p.id),
@@ -316,6 +418,17 @@
     p.el = btn;
     p.cell = h('div', { class: p.direct ? 'cell wide' : 'cell', style: `--c:${v.farbe}` }, btn, tools);
     return p.cell;
+  }
+
+  function filmToggle() {
+    const cb = h('input', { type: 'checkbox' });
+    cb.checked = film.on;
+    cb.addEventListener('change', () => {
+      film.on = cb.checked;
+      store.set('film.on', film.on);
+      for (const p of pads.values()) if (p.filmTag) p.filmTag.textContent = film.on ? (film.blobUrl ? '🎬 Film bereit' : '🎬 Film lädt …') : 'nur Ton';
+    });
+    return h('label', { class: 'toggle film-toggle', title: 'Eröffnung als Film im Vollbild (Beamer) mit Ton – aus: nur Ton' }, cb, ' 🎬 Film zeigen');
   }
 
   function voiceSection(v) {
@@ -347,6 +460,7 @@
           'Robo', range, out),
         h('button', { type: 'button', class: 'btn small', onclick: () => openAdd(v.id) }, '＋ Eigener Sound'),
         v.varEl,
+        v.hasFilm ? filmToggle() : null,
       ),
       v.padsEl,
     );
@@ -496,6 +610,7 @@
     for (const l of lines) if (l.gruppe !== 'proben' && !l._key) l._key = nextKey();
 
     board.innerHTML = '';
+    for (const v of voices.values()) v.hasFilm = lines.some((l) => l.stimme === v.id && l.film);
     for (const v of voices.values()) board.append(voiceSection(v));
 
     const probenEl = $('#proben');
@@ -504,7 +619,7 @@
       const vary = v.varianten.length > 0 && l.gruppe !== 'proben' && !l.aufnahme;
       const p = {
         id: l.id, voice: l.stimme, title: l.titel || l.id, text: l.text || '', cue: l.einsatz || '',
-        key: l._key || null, datei: l.datei || null, vary,
+        key: l._key || null, datei: l.datei || null, vary, film: l.film ? audioUrl(`${l.id}__film`, l.film, null) : null,
         url: audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!(l.teile || l.aufnahme),
       };
       pads.set(p.id, p);
@@ -518,7 +633,7 @@
     await loadAll([...pads.values()]);
     await loadLocal();
     await offlineCheck();
-    warmCache().then(offlineCheck);
+    filmPreload().then(warmCache).then(offlineCheck);
   }
 
   async function loadLocal() {
@@ -653,6 +768,7 @@
 
   document.addEventListener('keydown', (e) => {
     if (dlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Escape' && film.state !== 'idle') { e.preventDefault(); stopAll(); filmClose(); return; }
     if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); stopAll(); return; }
     if (e.repeat) return;
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {

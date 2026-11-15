@@ -1,6 +1,6 @@
 /* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
  * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v4';
+const CACHE = 'smarty-v6';
 const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'audio/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -32,8 +32,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
 
-  // Sounds: erst Speicher (Dateiname enthält Version ?v=…), sonst Netz + speichern
-  if (url.pathname.includes('/audio/') && !url.pathname.endsWith('.json')) {
+  // Sounds und Film: erst Speicher (Adresse enthält Version ?v=…), sonst Netz + speichern
+  if ((url.pathname.includes('/audio/') || url.pathname.includes('/film/')) && !url.pathname.endsWith('.json')) {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
       const hit = await c.match(req);
@@ -49,7 +49,8 @@ self.addEventListener('fetch', (e) => {
   e.respondWith((async () => {
     const c = await caches.open(CACHE);
     try {
-      const res = await withTimeout(fetch(req), 4000);
+      // no-cache: beim Server nachfragen statt eine alte Fassung aus dem Browser-Cache zu nehmen
+      const res = await withTimeout(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }), 4000);
       if (res.ok) await c.put(req, res.clone());
       return res;
     } catch {

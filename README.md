@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung `Q`) |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung als Film `Q`) |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -27,6 +27,18 @@ Der Erzähler hat genau einen Sound: die komplette Eröffnung als eine Sequenz m
 - Unter der Sprache wird die Musik automatisch etwa 10 dB leiser, in den Pausen kommt sie wieder hoch.
 - **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
 - **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
+
+### Eröffnungsfilm (Beamer)
+
+Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnung_Film.mp4`, 1920×1080). Bildwechsel, Countdown-Zahlen und der weiße Blitz sind auf die Tonspur gerendert und bleiben dadurch bildgenau synchron.
+
+- Laptop und Beamer **gespiegelt** betreiben. Die Seite schaltet beim Start selbst in den Vollbildmodus.
+- Nach dem Blitz bleibt das Bild **schwarz stehen**. Die SMARTy-Tasten `1`–`7` funktionieren weiter, man sieht sie dabei nur nicht. Während der Film läuft, brechen andere Sounds ihn nicht ab.
+- `Leertaste` stoppt den Film sofort, `F` blendet Bild und Ton weich nach Schwarz aus. In beiden Fällen bleibt das Bild schwarz.
+- `Esc` (oder ein Klick nach dem Filmende) beendet das Vollbild und führt zurück zum Soundboard. Während der Film läuft, ignoriert die Seite Klicks.
+- Ohne Haken bei **🎬 Film zeigen** (im Erzähler-Bereich) spielt `Q` nur den Ton, z. B. für Proben ohne Beamer.
+- Der Film wird wie die Sounds im Browser gespeichert und läuft dadurch auch offline. 🎞 auf dem Feld speichert ihn als MP4.
+- Erzeugt wird er im Projekt `StartItSmart_Eroeffnung_Film` (`tools/film.py`). Ändert sich die Tonspur, dort neu rendern und die Datei nach `film/` kopieren.
 
 **Einstellungen** am Eintrag `Erzaehler_00_Eroeffnung` in `sounds.json` (GitHub baut danach automatisch neu):
 

@@ -270,6 +270,12 @@ def main() -> None:
             for vid, _ in variants(voice):
                 if vkey(lid, vid) in old:
                     new[vkey(lid, vid)] = old[vkey(lid, vid)]
+            if line.get("film"):                   # fertiger Film (Beamer) mit Versionsstempel
+                f = ROOT / line["film"]
+                if f.exists():
+                    new[f"{lid}__film"] = {"datei": line["film"], "hash": file_hash(f)[:10], "film": True}
+                else:
+                    fehler.append(f"{lid}: Film {line['film']} nicht gefunden")
             continue
 
         if line.get("datei"):                      # eigene Aufnahme

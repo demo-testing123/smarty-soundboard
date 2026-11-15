@@ -57,6 +57,11 @@
   "tp": -1.6,
   "sequenz": true
  },
+ "Erzaehler_00_Eroeffnung__film": {
+  "datei": "film/Eroeffnung_Film.mp4",
+  "hash": "e36c1d7410",
+  "film": true
+ },
  "Probe_SMARTy_Christoph_10": {
   "datei": "audio/Probe_SMARTy_Christoph_10.mp3",
   "hash": "d776e9ce89",

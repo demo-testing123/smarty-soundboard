@@ -103,7 +103,7 @@
       "stimme": "erzaehler",
       "taste": "q",
       "titel": "Eröffnung komplett · mit Musik",
-      "text": "„Die Zukunft braucht euch“ – Sprecheraufnahme mit Pausen, Musik und Effekten am Stück. Endet mit dem Zeitsprung-Whoosh.",
+      "text": "„Die Zukunft braucht euch“ – Film mit Ton im Vollbild (Beamer). Danach bleibt das Bild schwarz; Esc oder Klick führt zurück.",
       "aufnahme": "audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3",
       "aufnahme_name": "Sprecheraufnahme (ElevenLabs)",
       "abschnitte": [
@@ -158,7 +158,8 @@
         "6.9": 0.55
       },
       "countdown_takt": 0.95,
-      "einsatz": "Showbeginn. Direkt danach: Leinwand-Blitz, die zwei Zeitreisenden erscheinen."
+      "einsatz": "Showbeginn. Direkt danach: Leinwand-Blitz, die zwei Zeitreisenden erscheinen.",
+      "film": "film/Eroeffnung_Film.mp4"
     },
     {
       "id": "Probe_SMARTy_Christoph_10",
