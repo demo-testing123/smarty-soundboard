@@ -284,9 +284,9 @@ def rms(x):
 
 
 # ---------------------------------------------------------------- Laden
-def load_mono(path: Path) -> np.ndarray:
-    raw = subprocess.run([G.FF, "-v", "quiet", "-i", str(path), "-f", "f32le", "-ac", "1",
-                          "-ar", str(SR), "-"], capture_output=True, check=True).stdout
+def load_mono(path: Path, af: str | None = None) -> np.ndarray:
+    raw = subprocess.run([G.FF, "-v", "quiet", "-i", str(path), *(["-af", af] if af else []),
+                          "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.float32).astype(np.float64)
 
 
@@ -322,20 +322,28 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = json.loads(G.SOUNDS.read_text(encoding="utf-8"))
-    seqs = [l for l in cfg["saetze"] if l.get("teile")]
+    seqs = [l for l in cfg["saetze"] if l.get("teile") or l.get("aufnahme")]
     if not seqs:
         print("Keine Sequenz in sounds.json – nichts zu tun.")
         return
     seq = seqs[0]
-    voice = {v["id"]: v for v in cfg["stimmen"]}[seq["stimme"]]
-    std = G.standard_variant(voice)
     fehler = []
-    vlist = G.variants(voice)
-    for vid, var in vlist:                     # je Stimmvariante eine eigene Mischung
+    if seq.get("aufnahme"):                    # eigene Sprecheraufnahme (z. B. ElevenLabs)
+        vlist = [(None, {})]
         try:
-            build_sequence(cfg, seq, vid, var.get("name", ""), vid == std, args.neu)
+            build_sequence(cfg, seq, None, seq.get("aufnahme_name", "Sprecheraufnahme"), True, args.neu,
+                           rec=prepare_recording(seq))
         except SystemExit as e:
             fehler.append(str(e))
+    else:                                      # Computerstimme, je Stimmvariante eine Mischung
+        voice = {v["id"]: v for v in cfg["stimmen"]}[seq["stimme"]]
+        std = G.standard_variant(voice)
+        vlist = G.variants(voice)
+        for vid, var in vlist:
+            try:
+                build_sequence(cfg, seq, vid, var.get("name", ""), vid == std, args.neu)
+            except SystemExit as e:
+                fehler.append(str(e))
     # Dateien entfernter Varianten (oder der Version ohne Varianten) aufräumen
     keep = {f"Eroeffnung_mit_Musik__{v}.mp3" if v else MIX_NAME for v, _ in vlist}
     keep |= {f"Regie_{v}.md" if v else "Regie.md" for v, _ in vlist}
@@ -348,24 +356,111 @@ def main() -> None:
         sys.exit("\n".join(fehler))
 
 
-def build_sequence(cfg: dict, seq: dict, vid: str | None, vname: str, standard: bool, force: bool) -> None:
+def detect_chunks(x: np.ndarray, thr_db: float = -40.0, min_gap: float = 0.2) -> list[tuple[float, float]]:
+    """Sprachstücke zwischen Pausen (Pegel unter thr_db relativ zur Spitze, mindestens min_gap s)."""
+    hop = secs(0.01)
+    n = len(x) // hop
+    fr = np.sqrt(np.mean(x[: n * hop].reshape(n, hop) ** 2, axis=1))
+    fr = np.convolve(fr, np.ones(3) / 3, mode="same")
+    loud = fr > np.max(np.abs(x)) * 10 ** (thr_db / 20)
+    chunks, start, quiet = [], None, 0
+    for i, on in enumerate(loud):
+        if on:
+            if start is None:
+                start = i
+            quiet = 0
+        elif start is not None:
+            quiet += 1
+            if quiet * 0.01 >= min_gap:
+                chunks.append((start * 0.01, (i - quiet + 1) * 0.01))
+                start, quiet = None, 0
+    if start is not None:
+        chunks.append((start * 0.01, (n - quiet) * 0.01))
+    return [(a, b) for a, b in chunks if b - a >= 0.08]
+
+
+def prepare_recording(seq: dict):
+    """Zerlegt eine Sprecheraufnahme in die 6 Abschnitte und ihre Satzteile.
+    Die Sprache bleibt unverändert; nur die Pausen zwischen den Satzteilen werden gesetzt:
+    mindestens "pause_min", einzelne Stellen per "pausen_innen" {"Abschnitt.Stück": Sekunden},
+    Countdown-Zahlen im Takt "countdown_takt" (Beginn zu Beginn)."""
+    path = ROOT / seq["aufnahme"]
+    if not path.exists():
+        sys.exit(f"{seq['id']}: Aufnahme {seq['aufnahme']} nicht gefunden")
+    # sanfte Kompression: gleichmäßigere Sprache, weniger Spitzen für die Mischung
+    x = load_mono(path, "highpass=f=60,acompressor=threshold=-24dB:ratio=2.5:attack=4:release=120:makeup=2")
+    chunks = detect_chunks(x)
+    ab = seq.get("abschnitte") or []
+    if len(ab) != 6:
+        sys.exit(f"{seq['id']}: Für die Aufnahme werden 6 \"abschnitte\" mit Startzeit gebraucht.")
+    idx = [min(range(len(chunks)), key=lambda j: abs(chunks[j][0] - float(a["start"]))) for a in ab]
+    if any(b <= a for a, b in zip(idx, idx[1:])):
+        sys.exit(f"{seq['id']}: Abschnitt-Startzeiten passen nicht zur Aufnahme (Stücke {idx}).")
+    pmin = float(seq.get("pause_min", 0.45))
+    over = {k: float(v) for k, v in (seq.get("pausen_innen") or {}).items()}
+    takt = seq.get("countdown_takt")
+    audio, rel, texts = [], [], []
+    for k in range(6):
+        g = chunks[idx[k]: idx[k + 1] if k < 5 else len(chunks)]
+        cnt = set(range(max(0, len(g) - 6), len(g) - 2)) if (k == 5 and takt) else set()
+        out = np.zeros(secs(0.04))
+        pos = 0.04
+        times = []
+        for j, (a, b) in enumerate(g):
+            lo = g[j - 1][1] if j else a - 0.05
+            hi = g[j + 1][0] if j + 1 < len(g) else b + 0.15
+            a2, b2 = max(a - 0.05, lo, 0.0), min(b + 0.12, hi, len(x) / SR)
+            seg = x[secs(a2):secs(b2)].copy()
+            f = min(len(seg) // 2, secs(0.008))
+            if f:
+                seg[:f] *= np.linspace(0, 1, f)
+                seg[-f:] *= np.linspace(1, 0, f)
+            s0 = pos + (a - a2)                          # Sprachbeginn in der neuen Zeitachse
+            if j:                                        # Pause zum vorigen Stück setzen
+                pa, pb = g[j - 1]
+                if (j - 1) in cnt:
+                    gap = max(0.15, float(takt) - (pb - pa))
+                else:
+                    gap = over.get(f"{k + 1}.{j}", max(a - pb, pmin))
+                s0 = times[-1][1] + gap
+                pos = s0 - (a - a2)
+            need = secs(pos) + len(seg)
+            if need > len(out):
+                out = np.concatenate([out, np.zeros(need - len(out))])
+            out[secs(pos):secs(pos) + len(seg)] += seg
+            times.append([round(s0, 3), round(s0 + (b - a), 3)])
+        out = np.concatenate([out, np.zeros(secs(0.25))])
+        audio.append(out)
+        rel.append(times)
+        first = re.split(r"(?<=[.!?])\s", ab[k].get("text", "").strip())[0]
+        texts.append([first] + [""] * (len(times) - 1))
+    src = [G.file_hash(path), ab, pmin, over, takt, "aufnahme-2"]
+    return audio, rel, texts, src
+
+
+def build_sequence(cfg: dict, seq: dict, vid: str | None, vname: str, standard: bool, force: bool,
+                   rec=None) -> None:
     global rng
     rng = np.random.default_rng(2050)            # gleiche Musik, egal welche Variante zuerst gebaut wird
     manifest = json.loads(G.MANIFEST.read_text(encoding="utf-8"))
     lines = {l["id"]: l for l in cfg["saetze"]}
     sid = G.vkey(seq["id"], vid)
-    teile_ids = seq["teile"]
-    teile = [G.vkey(t, vid) for t in teile_ids]
-    if len(teile) != 6:
-        sys.exit(f"{sid}: Die Musik ist für genau 6 Abschnitte geschrieben (gefunden: {len(teile)}).")
-    fehlt = [t for t in teile if t not in manifest or "teile" not in manifest[t]]
-    if fehlt:
-        sys.exit(f"{sid}: Zuerst generate.py laufen lassen – fehlt/ohne Zeitmarken: {', '.join(fehlt)}")
+    if rec is None:
+        teile_ids = seq["teile"]
+        teile = [G.vkey(t, vid) for t in teile_ids]
+        if len(teile) != 6:
+            sys.exit(f"{sid}: Die Musik ist für genau 6 Abschnitte geschrieben (gefunden: {len(teile)}).")
+        fehlt = [t for t in teile if t not in manifest or "teile" not in manifest[t]]
+        if fehlt:
+            sys.exit(f"{sid}: Zuerst generate.py laufen lassen – fehlt/ohne Zeitmarken: {', '.join(fehlt)}")
+        src = [manifest[t]["hash"] for t in teile]
+    else:
+        audio, rel, texts, src = rec
 
     vorlauf = float(seq.get("vorlauf", 3.2))
     pausen = [float(p) for p in seq.get("pausen", [2.4, 2.0, 2.4, 2.0, 2.6])]
-    quelle = hashlib.sha1(json.dumps([MUSIK_VERSION, [manifest[t]["hash"] for t in teile],
-                                      vorlauf, pausen, standard]).encode()).hexdigest()[:10]
+    quelle = hashlib.sha1(json.dumps([MUSIK_VERSION, src, vorlauf, pausen, standard],
+                                     ensure_ascii=False).encode()).hexdigest()[:10]
     mix_path = OUTDIR / (f"Eroeffnung_mit_Musik__{vid}.mp3" if vid else MIX_NAME)
     regie_path = OUTDIR / (f"Regie_{vid}.md" if vid else "Regie.md")
     prev = manifest.get(sid, {})
@@ -377,9 +472,10 @@ def build_sequence(cfg: dict, seq: dict, vid: str | None, vname: str, standard: 
     OUTDIR.mkdir(parents=True, exist_ok=True)
 
     # --- Stimme auf die Zeitachse legen
-    audio = [load_mono(ROOT / manifest[t]["datei"]) for t in teile]
-    rel = [manifest[t]["teile"] for t in teile]
-    texts = [[p[0] for p in G.split_text(lines[t].get("sprechen") or lines[t]["text"])] for t in teile_ids]
+    if rec is None:
+        audio = [load_mono(ROOT / manifest[t]["datei"]) for t in teile]
+        rel = [manifest[t]["teile"] for t in teile]
+        texts = [[p[0] for p in G.split_text(lines[t].get("sprechen") or lines[t]["text"])] for t in teile_ids]
     starts, pos = [], None
     for i in range(6):
         if i == 0:
@@ -637,7 +733,7 @@ def build_sequence(cfg: dict, seq: dict, vid: str | None, vname: str, standard: 
     for i in range(6):
         regie.append((onset[i], "Sprecher", f"Abschnitt {i + 1}: „{texts[i][0]}“"))
     regie.sort(key=lambda r: r[0])
-    stimme = f"Erzählerstimme {vid} · {vname}" if vid else "Erzählerstimme"
+    stimme = f"Erzählerstimme {vid} · {vname}" if vid else (vname or "Erzählerstimme")
     spuren = ("Spuren zum Weiterbearbeiten (z. B. Audacity): `Spur_Sprecher.mp3`, `Spur_Musik.mp3`, "
               "`Spur_Effekte.mp3` – gleiche Länge, zusammen ergeben sie die Mischung."
               if standard or vid is None else

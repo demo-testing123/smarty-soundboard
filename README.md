@@ -1,13 +1,13 @@
 # SMARTy Soundboard
 
 Soundboard für die Grundschul-Bühnenshow **START IT SMART · Mission Zukunft: Rettet unsere Stadt!**
-Hier liegen die Sätze des Roboterhunds SMARTy und der Erzählertext der Eröffnung. Jeder Satz wird per Klick oder Taste abgespielt.
+Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler und Musik. Jeder Satz wird per Klick oder Taste abgespielt.
 
 ## Bedienung
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung komplett `Q`, Erzähler-Einzelteile `W E R T Z U`) |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung `Q`) |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -20,28 +20,27 @@ Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 
 ## Eröffnung „Die Zukunft braucht euch“ (Taste `Q`)
 
-Die sechs Erzählerabschnitte laufen hier als eine Sequenz mit Pausen, Musik und Effekten. Grundlage ist die Musik- und Soundregie aus dem Intro-PDF. Je nach Stimme dauert sie etwa 1:30 bis 1:37.
+Der Erzähler hat genau einen Sound: die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
 
+- **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“, der Countdown kommt etwa im Sekundentakt.
 - **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
 - Unter der Sprache wird die Musik automatisch etwa 10 dB leiser, in den Pausen kommt sie wieder hoch.
-- **`audio/intro/Regie_<Stimme>.md`** (z. B. [`Regie_B.md`](audio/intro/Regie_B.md)) listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
+- **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
 - **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
-- Die Einzelteile `W`–`U` gibt es weiterhin, ohne Musik, z. B. für Proben.
-- Ändert sich ein Erzählertext, baut GitHub die Sequenz samt Musik automatisch neu. Die Pausen zwischen den Abschnitten lassen sich am Eintrag `Erzaehler_00_Eroeffnung` mit `"pausen": [2.4, 2.0, 2.4, 2.0, 2.6]` einstellen, die Musik vor dem ersten Wort mit `"vorlauf": 3.2`.
 
-**Erzählerstimme umschalten:** Im Erzähler-Bereich wählst du oben mit **Stimme: A–E**, wer spricht. Das gilt für die Eröffnung mit Musik (Q) und für alle Einzelteile (W–U). Die Wahl bleibt im Browser gespeichert. Es gibt fünf Varianten:
+**Einstellungen** am Eintrag `Erzaehler_00_Eroeffnung` in `sounds.json` (GitHub baut danach automatisch neu):
 
-| | Variante | Charakter |
-|---|---|---|
-| A | warm | freundlich, mittleres Alter |
-| B ★ | warm & älter | ruhig, etwas langsamer, leichtes Alterszittern (Standard) |
-| C | Großvater | Märchenerzähler: langsam, tief, deutliches Zittern |
-| D | natürlich | fast unbearbeitet, nur etwas wärmer |
-| E | Andrew | sehr warme, andere Klangfarbe, mit leichtem Akzent |
+| Wert | Bedeutung |
+|---|---|
+| `aufnahme` | Pfad der Sprecheraufnahme |
+| `abschnitte` | die 6 Abschnitte mit Startzeit in der Aufnahme (Sekunden, ungefähr reicht) und Text |
+| `pausen` | Pausen zwischen den 6 Abschnitten, z. B. `[2.4, 2.0, 2.4, 2.0, 2.6]` |
+| `vorlauf` | Musik vor dem ersten Wort (Sekunden) |
+| `pause_min` | Mindestpause zwischen zwei Sätzen |
+| `pausen_innen` | einzelne Pausen, z. B. `"3.1": 0.9` = Abschnitt 3, nach dem 1. Satzteil 0,9 s |
+| `countdown_takt` | Abstand der Countdown-Zahlen (Beginn zu Beginn) |
 
-Jede Variante hat ihre eigene fertige Mischung, die Musik ist auf ihr Sprechtempo abgestimmt. Die Zeitmarken stehen in `audio/intro/Regie_A.md` bis `Regie_E.md`. Getrennte Spuren gibt es für die Standardvariante (★). Welche das ist, legt `"standard": true` in `sounds.json` fest.
-
-Die Varianten stehen in `sounds.json` beim Erzähler unter `"varianten"`, jeweils mit `tts` und `klang`. Zum Ergänzen oder Löschen einfach dort bearbeiten, GitHub erzeugt den Rest. Echte Stimmen bestimmter Synchronsprecher werden nicht nachgebaut. Ein erster Versuch im Kino-Trailer-Stil, tief und rau, wirkte bedrohlich und wurde verworfen.
+**Neue Aufnahme einsetzen:** Die Datei unter demselben Namen hochladen, also `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3` ersetzen. Wenn sich das Tempo ändert, die sechs Startzeiten bei `abschnitte` anpassen. Das Skript findet die Satzteile über die Pausen selbst. Es bricht mit einer Meldung ab, wenn die Startzeiten nicht passen.
 
 ## In der Turnhalle
 
@@ -117,4 +116,5 @@ python -m http.server 8000        # Seite unter http://localhost:8000
 - Statische Seite (HTML/CSS/JS) ohne Abhängigkeiten. Web Audio spielt die Sätze verzögerungsfrei ab.
 - **Robo-Effekt** (live): Ringmodulator mit 55 Hz und metallischer Kammfilter mit 7 ms werden dem Originalklang beigemischt. Dazu kommen ein Präsenz-EQ bei 3 kHz für die Verständlichkeit in der Halle und ein leichter Kompressor.
 - **Sprachdateien:** [edge-tts](https://github.com/rany2/edge-tts) mit Microsoft-Neuralstimmen. Die Dateien werden auf −16 LUFS und −1,5 dBTP angeglichen. edge-tts nutzt den Vorlesedienst von Microsoft Edge über eine inoffizielle Schnittstelle. Für die Schulshow ist das üblich. Wer ganz sicher gehen will, spricht selbst ein (siehe oben).
+- **Erzähler:** Sprecheraufnahme von ElevenLabs (`audio/eigene/`). Ob und wie du sie öffentlich aufführen und veröffentlichen darfst, hängt von deinem ElevenLabs-Tarif ab.
 - **Offline:** Ein Service Worker speichert Seite und Sounds im Browser.

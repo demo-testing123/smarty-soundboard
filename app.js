@@ -501,11 +501,11 @@
     const probenEl = $('#proben');
     for (const l of lines) {
       const v = voices.get(l.stimme);
-      const vary = v.varianten.length > 0 && l.gruppe !== 'proben';
+      const vary = v.varianten.length > 0 && l.gruppe !== 'proben' && !l.aufnahme;
       const p = {
         id: l.id, voice: l.stimme, title: l.titel || l.id, text: l.text || '', cue: l.einsatz || '',
         key: l._key || null, datei: l.datei || null, vary,
-        url: audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!l.teile,
+        url: audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!(l.teile || l.aufnahme),
       };
       pads.set(p.id, p);
       if (p.key) keyMap.set(p.key, p.id);

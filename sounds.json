@@ -17,7 +17,7 @@
     {
       "id": "erzaehler",
       "name": "Erzähler",
-      "rolle": "Eröffnung · Stimme oben umschaltbar – ohne Roboterfilter",
+      "rolle": "Eröffnung · Sprecheraufnahme mit Musik und Effekten",
       "farbe": "#ffb648",
       "tts": {
         "voice": "de-DE-ChristophNeural",
@@ -31,95 +31,7 @@
         "alter": 0.5,
         "praesenz": 1.5
       },
-      "robo": 0,
-      "varianten": [
-        {
-          "id": "A",
-          "name": "warm",
-          "tts": {
-            "voice": "de-DE-ChristophNeural",
-            "pitch": "-10Hz",
-            "rate": "-8%"
-          },
-          "klang": {
-            "formant": -0.5,
-            "tiefe": 1.5,
-            "waerme": 3,
-            "alter": 0,
-            "rau": 0,
-            "praesenz": 1.5
-          }
-        },
-        {
-          "id": "B",
-          "name": "warm & älter",
-          "standard": true,
-          "tts": {
-            "voice": "de-DE-ChristophNeural",
-            "pitch": "-16Hz",
-            "rate": "-12%"
-          },
-          "klang": {
-            "formant": -0.8,
-            "tiefe": 2,
-            "waerme": 3,
-            "alter": 0.5,
-            "rau": 0,
-            "praesenz": 1.5
-          }
-        },
-        {
-          "id": "C",
-          "name": "Großvater",
-          "tts": {
-            "voice": "de-DE-ChristophNeural",
-            "pitch": "-20Hz",
-            "rate": "-16%"
-          },
-          "klang": {
-            "formant": -1.0,
-            "tiefe": 2.5,
-            "waerme": 4,
-            "alter": 0.8,
-            "rau": 0,
-            "praesenz": 1.5
-          }
-        },
-        {
-          "id": "D",
-          "name": "natürlich",
-          "tts": {
-            "voice": "de-DE-ChristophNeural",
-            "pitch": "-6Hz",
-            "rate": "-10%"
-          },
-          "klang": {
-            "formant": 0,
-            "tiefe": 0,
-            "waerme": 2,
-            "alter": 0,
-            "rau": 0,
-            "praesenz": 2
-          }
-        },
-        {
-          "id": "E",
-          "name": "Andrew (Akzent)",
-          "tts": {
-            "voice": "en-US-AndrewMultilingualNeural",
-            "pitch": "-14Hz",
-            "rate": "-10%"
-          },
-          "klang": {
-            "formant": -0.5,
-            "tiefe": 1.5,
-            "waerme": 3,
-            "alter": 0,
-            "rau": 0,
-            "praesenz": 1.5
-          }
-        }
-      ]
+      "robo": 0
     }
   ],
   "saetze": [
@@ -191,74 +103,62 @@
       "stimme": "erzaehler",
       "taste": "q",
       "titel": "Eröffnung komplett · mit Musik",
-      "text": "„Die Zukunft braucht euch“ – alle sechs Abschnitte am Stück, mit Pausen, Musik und Effekten. Endet mit dem Zeitsprung-Whoosh.",
-      "teile": [
-        "Erzaehler_01_Beginn",
-        "Erzaehler_02_Technik",
-        "Erzaehler_03_Schiefgelaufen",
-        "Erzaehler_04_Hoffnung",
-        "Erzaehler_05_Euch",
-        "Erzaehler_06_Countdown"
+      "text": "„Die Zukunft braucht euch“ – Sprecheraufnahme mit Pausen, Musik und Effekten am Stück. Endet mit dem Zeitsprung-Whoosh.",
+      "aufnahme": "audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3",
+      "aufnahme_name": "Sprecheraufnahme (ElevenLabs)",
+      "abschnitte": [
+        {
+          "start": 0.0,
+          "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050."
+        },
+        {
+          "start": 8.7,
+          "text": "Eine Welt voller unglaublicher Erfindungen. Fahrzeuge, die ganz von allein fahren. Roboter, die uns im Alltag helfen. Und Häuser, die mitdenken können. Die Menschen haben Maschinen gebaut, die fast alles erledigen."
+        },
+        {
+          "start": 22.4,
+          "text": "Doch … irgendetwas ist schiefgelaufen. Die Stadt ist voller Technik. Aber die Menschen haben kaum noch Zeit füreinander. Kinder finden nur wenige Orte zum Spielen. Und zwischen all den Maschinen ist das Leben still geworden."
+        },
+        {
+          "start": 36.5,
+          "text": "Doch die Zukunft ist noch nicht entschieden. Denn irgendwo in dieser Stadt haben zwei mutige Zeitreisende einen Plan. Sie wollen zurückreisen. Zurück in unsere Zeit. Um Menschen zu finden, die etwas verändern können."
+        },
+        {
+          "start": 50.5,
+          "text": "Menschen mit Fantasie. Mit Mut. Und mit richtig guten Ideen. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!"
+        },
+        {
+          "start": 59.5,
+          "text": "Zeitreise aktiviert! Ziel: Gegenwart! Bereit zum Zeitsprung? FÜNF! VIER! DREI! ZWEI! EINS! ZEITSPRUNG!"
+        }
       ],
+      "pause_min": 0.45,
+      "pausen_innen": {
+        "1.1": 0.55,
+        "1.2": 0.6,
+        "1.3": 0.7,
+        "1.4": 0.6,
+        "2.1": 0.6,
+        "2.4": 0.7,
+        "3.1": 0.9,
+        "3.2": 1.0,
+        "3.5": 0.6,
+        "4.1": 0.7,
+        "4.2": 0.5,
+        "4.4": 0.5,
+        "5.1": 0.6,
+        "5.2": 0.6,
+        "5.3": 0.9,
+        "5.4": 0.5,
+        "5.5": 0.55,
+        "6.1": 0.5,
+        "6.2": 0.3,
+        "6.3": 0.5,
+        "6.4": 0.75,
+        "6.9": 0.55
+      },
+      "countdown_takt": 0.95,
       "einsatz": "Showbeginn. Direkt danach: Leinwand-Blitz, die zwei Zeitreisenden erscheinen."
-    },
-    {
-      "id": "Erzaehler_01_Beginn",
-      "stimme": "erzaehler",
-      "taste": "w",
-      "titel": "E1 · Geheimnisvoller Beginn",
-      "text": "Stellt euch vor … wir könnten durch die Zeit reisen. Weit hinaus in die Zukunft. In das Jahr … 2050.",
-      "sprechen": "Stellt euch vor … wir könnten durch die Zeit reisen. [Pause 0.6] Weit hinaus in die Zukunft. [Pause 0.7] In das Jahr … 2050.",
-      "einsatz": "0–12 s · Musik: leises, tiefes Pulsieren, schwebende Fläche.",
-      "tempo": -4
-    },
-    {
-      "id": "Erzaehler_02_Technik",
-      "stimme": "erzaehler",
-      "taste": "e",
-      "titel": "E2 · Staunen über die Technik",
-      "text": "Eine Welt voller unglaublicher Erfindungen. Fahrzeuge, die ganz von allein fahren. Roboter, die uns im Alltag helfen. Und Häuser, die mitdenken können. Die Menschen haben Maschinen gebaut, die fast alles erledigen.",
-      "sprechen": "Eine Welt voller unglaublicher Erfindungen. [Pause 0.5] Fahrzeuge, die ganz von allein fahren. [Pause 0.4] Roboter, die uns im Alltag helfen. [Pause 0.4] Und Häuser, die mitdenken können. [Pause 0.6] Die Menschen haben Maschinen gebaut, die fast alles erledigen.",
-      "einsatz": "12–30 s · Musik öffnet sich, leise Signaltöne zwischen den Sätzen."
-    },
-    {
-      "id": "Erzaehler_03_Schiefgelaufen",
-      "stimme": "erzaehler",
-      "taste": "r",
-      "titel": "E3 · Etwas ist schiefgelaufen",
-      "text": "Doch … irgendetwas ist schiefgelaufen. Die Stadt ist voller Technik. Aber die Menschen haben kaum noch Zeit füreinander. Kinder finden nur wenige Orte zum Spielen. Und zwischen all den Maschinen ist das Leben still geworden.",
-      "sprechen": "Doch … irgendetwas ist schiefgelaufen. [Pause 1.0] Die Stadt ist voller Technik. [Pause 0.4] Aber die Menschen haben kaum noch Zeit füreinander. [Pause 0.4] Kinder finden nur wenige Orte zum Spielen. [Pause 0.5] Und zwischen all den Maschinen ist das Leben still geworden.",
-      "einsatz": "30–50 s · Bei „Doch“ stoppt der Rhythmus, danach leises Summen.",
-      "tempo": -4
-    },
-    {
-      "id": "Erzaehler_04_Hoffnung",
-      "stimme": "erzaehler",
-      "taste": "t",
-      "titel": "E4 · Ein Hoffnungsschimmer",
-      "text": "Doch die Zukunft ist noch nicht entschieden. Denn irgendwo in dieser Stadt haben zwei mutige Zeitreisende einen Plan. Sie wollen zurückreisen. Zurück in unsere Zeit. Um Menschen zu finden, die etwas verändern können.",
-      "sprechen": "Doch die Zukunft ist noch nicht entschieden. [Pause 0.6] Denn irgendwo in dieser Stadt haben zwei mutige Zeitreisende einen Plan. [Pause 0.4] Sie wollen zurückreisen. [Pause 0.3] Zurück in unsere Zeit. [Pause 0.4] Um Menschen zu finden, die etwas verändern können.",
-      "einsatz": "50–65 s · Kurze Stille, dann warmer, aufsteigender Akkord."
-    },
-    {
-      "id": "Erzaehler_05_Euch",
-      "stimme": "erzaehler",
-      "taste": "z",
-      "titel": "E5 · Die Kinder sind die Lösung",
-      "text": "Menschen mit Fantasie. Mit Mut. Und mit richtig guten Ideen. Sie suchen nicht irgendwelche Menschen. Sie suchen … EUCH!",
-      "sprechen": "Menschen mit Fantasie. [Pause 0.5] Mit Mut. [Pause 0.5] Und mit richtig guten Ideen. [Pause 0.8] Sie suchen nicht irgendwelche Menschen. [Pause 0.4] Sie suchen … [Pause 0.35] euch!",
-      "einsatz": "65–78 s · Trommeln setzen ein, bei „EUCH!“ kräftiger Akzent.",
-      "tempo": 4
-    },
-    {
-      "id": "Erzaehler_06_Countdown",
-      "stimme": "erzaehler",
-      "taste": "u",
-      "titel": "E6 · Zeitmaschine und Countdown",
-      "text": "Zeitreise aktiviert! Ziel: Gegenwart! Bereit zum Zeitsprung? FÜNF! VIER! DREI! ZWEI! EINS! ZEITSPRUNG!",
-      "sprechen": "Zeitreise aktiviert! [Pause 0.4] Ziel: Gegenwart! [Pause 0.4] Bereit zum Zeitsprung? [Pause 0.7] Fünf! [Pause 0.55] Vier! [Pause 0.55] Drei! [Pause 0.55] Zwei! [Pause 0.55] Eins! [Pause 0.45] Zeitsprung!",
-      "einsatz": "78–90 s · Startsignal, Countdown-Impulse, nach „ZEITSPRUNG!“ Whoosh.",
-      "tempo": 8
     },
     {
       "id": "Probe_SMARTy_Christoph_10",

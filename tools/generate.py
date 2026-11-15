@@ -266,7 +266,7 @@ def main() -> None:
             fehler.append(f"{lid}: Stimme '{line['stimme']}' fehlt unter 'stimmen'")
             continue
 
-        if line.get("teile"):                      # Sequenz mit Musik -> tools/intro.py
+        if line.get("teile") or line.get("aufnahme"):   # Sequenz mit Musik -> tools/intro.py
             for vid, _ in variants(voice):
                 if vkey(lid, vid) in old:
                     new[vkey(lid, vid)] = old[vkey(lid, vid)]
