@@ -38,7 +38,6 @@ MANIFEST = AUDIO / "manifest.json"
 
 VERSION = "3"            # erhöhen, wenn sich die Verarbeitung ändert -> alles neu
 LUFS, TRUE_PEAK = -16.0, -1.5
-PAUSE_RE = re.compile(r"\[\s*pause\s*([0-9]+(?:[.,][0-9]+)?)\s*s?\s*\]", re.I)
 
 
 def ffmpeg_exe() -> str:
@@ -63,20 +62,78 @@ def ff(*args: str) -> subprocess.CompletedProcess:
     return p
 
 
+MARK_RE = re.compile(r"\[\s*(pause|ton)\b\s*([a-zäöüß]*)\s*([0-9]+(?:[.,][0-9]+)?)?\s*s?\s*\]", re.I)
+TON = "§ton:"                           # Kennung für eingefügte Töne in der Teile-Liste
+TOENE = ("bestaetigung", "warnung", "scan")
+
+
 def split_text(text: str) -> list[tuple[str, float]]:
-    """'A [Pause 0.5] B' -> [('A', 0.5), ('B', 0)]"""
-    parts, pos = [], 0
-    for m in PAUSE_RE.finditer(text):
-        parts.append([text[pos:m.start()].strip(), float(m.group(1).replace(",", "."))])
-        pos = m.end()
-    parts.append([text[pos:].strip(), 0.0])
-    out: list[tuple[str, float]] = []
-    for t, p in parts:
+    """'A [Pause 0.5] B [Ton warnung] C' -> [('A', 0.5), ('B', 0), ('§ton:warnung:0', 0), ('C', 0)]
+    Eine Pause gehört zum Teil davor. Töne: [Ton bestaetigung], [Ton warnung], [Ton scan 1.4]."""
+    out: list[list] = []
+    pos = 0
+
+    def add(t: str) -> None:
+        t = t.strip()
         if t:
-            out.append((t, p))
-        elif out:                       # Pause ohne Text davor -> an vorigen Teil hängen
-            out[-1] = (out[-1][0], out[-1][1] + p)
-    return out
+            out.append([t, 0.0])
+    for m in MARK_RE.finditer(text):
+        add(text[pos:m.start()])
+        kind, name, num = m.group(1).lower(), m.group(2).lower(), m.group(3)
+        val = float(num.replace(",", ".")) if num else 0.0
+        if kind == "pause":
+            if out:
+                out[-1][1] += val
+        else:
+            out.append([f"{TON}{name}:{val}", 0.0])
+        pos = m.end()
+    add(text[pos:])
+    return [(t, p) for t, p in out]
+
+
+def make_tone(name: str, dur: float, path: Path) -> float:
+    """Dezente, selbst berechnete Systemtöne (frei verwendbar), etwa 8–10 dB unter der Sprache.
+    Schreibt WAV, gibt Dauer zurück."""
+    import numpy as np
+    sr = 44100
+
+    def env(n, a=0.005, r=0.06):
+        e = np.ones(n)
+        na, nr = int(a * sr), min(n, int(r * sr))
+        e[:na] = np.linspace(0, 1, na)
+        e[n - nr:] *= np.linspace(1, 0, nr) ** 2
+        return e
+
+    def tone(f, d, harm=(1.0, 0.25)):
+        t = np.arange(int(d * sr)) / sr
+        y = sum(a * np.sin(2 * np.pi * f * (k + 1) * t) for k, a in enumerate(harm))
+        return y * env(len(t))
+
+    def gap(d):
+        return np.zeros(int(d * sr))
+    if name == "bestaetigung":                     # zwei helle, aufsteigende Töne
+        y = np.concatenate([tone(988, 0.09), gap(0.03), tone(1480, 0.18)]) * 0.025
+    elif name == "warnung":                        # zwei kurze Warntöne
+        w = tone(740, 0.16, harm=(1.0, 0.0, 0.33, 0.0, 0.2))
+        y = np.concatenate([w, gap(0.10), w]) * 0.027
+    elif name == "scan":                           # Scan: aufsteigender Ton mit schnellem Flirren
+        d = dur or 1.3
+        t = np.arange(int(d * sr)) / sr
+        f = 520 + 900 * (t / d)
+        ph = 2 * np.pi * np.cumsum(f) / sr
+        flirr = 0.55 + 0.45 * np.sin(2 * np.pi * 13 * t)
+        rng = np.random.default_rng(5)
+        rausch = np.convolve(rng.standard_normal(len(t)), np.ones(12) / 12, "same")
+        y = (np.sin(ph) * flirr * 0.8 + rausch * 0.35) * np.sin(np.pi * t / d) ** 0.7 * 0.055
+    else:
+        raise ValueError(f"Unbekannter Ton '{name}' – erlaubt: {', '.join(TOENE)}")
+    y = np.concatenate([gap(0.02), y, gap(0.04)])
+    with wave.open(str(path), "wb") as w_:
+        w_.setnchannels(1)
+        w_.setsampwidth(2)
+        w_.setframerate(sr)
+        w_.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+    return len(y) / sr
 
 
 def variants(voice: dict) -> list[tuple[str | None, dict]]:
@@ -151,8 +208,9 @@ def klang_filter(k: dict, src: str, dst: str) -> str:
     waerme   dB untere Mitten (um 220 Hz) + weichere Höhen = warm, freundlich
     alter    0…1 leichtes Zittern in Tonhöhe und Lautstärke = ältere Stimme
     praesenz dB bei 3 kHz für Verständlichkeit (Standard 2)
-    rau      0…1 Anteil gesättigter Mitten = rauchig, kratzig"""
-    keys = ("formant", "tiefe", "rau", "waerme", "alter")
+    rau      0…1 Anteil gesättigter Mitten = rauchig, kratzig
+    digital  0…1 leicht elektronisch: feste, sehr kurze Reflexionen (kein Schweben), schlanker, klarer"""
+    keys = ("formant", "tiefe", "rau", "waerme", "alter", "digital")
     if not any(float(k.get(x, 0)) for x in keys) and "praesenz" not in k:
         return f"{src}anull{dst}"
     st = float(k.get("formant", 0))
@@ -174,6 +232,10 @@ def klang_filter(k: dict, src: str, dst: str) -> str:
         f.append(f"equalizer=f=3000:t=q:w=1:g={praesenz:.1f}")
     if alter:
         f.append(f"vibrato=f=5.6:d={0.10 * alter:.3f},tremolo=f=6.3:d={0.05 * alter:.3f}")
+    digital = float(k.get("digital", 0))
+    if digital:                                  # Bordcomputer: kurze feste Reflexionen, schlank, klar
+        f.append(f"aecho=1.0:0.9:9|16:{0.20 * digital:.3f}|{0.12 * digital:.3f},"
+                 f"highpass=f=150,highshelf=f=8000:g={1.5 * digital:.1f}")
     head = f"{src}{','.join(f)}"
     if waerme:                                   # warm: sanft komprimieren
         comp = "acompressor=threshold=-20dB:ratio=1.8:attack=15:release=250:makeup=1.3"
@@ -201,11 +263,15 @@ def build(line: dict, s: dict, k: dict, out: Path) -> dict:
         pos = 0.04                                   # adelay 40 ms
         for i, (txt, pause) in enumerate(pieces):
             mp3, wav = td / f"p{i}.mp3", td / f"p{i}.wav"
-            asyncio.run(speak(txt, s, mp3))
-            ff("-i", str(mp3), "-af", f"aresample=44100,aformat=channel_layouts=mono,{TRIM}",
-               "-c:a", "pcm_s16le", str(wav))
-            d = wav_seconds(wav)
-            teile.append([round(pos, 3), round(pos + d, 3)])
+            if txt.startswith(TON):                  # eingefügter Systemton (zählt nicht als Sprachteil)
+                _, name, dur = txt.split(":")
+                d = make_tone(name, float(dur), wav)
+            else:
+                asyncio.run(speak(txt, s, mp3))
+                ff("-i", str(mp3), "-af", f"aresample=44100,aformat=channel_layouts=mono,{TRIM}",
+                   "-c:a", "pcm_s16le", str(wav))
+                d = wav_seconds(wav)
+                teile.append([round(pos, 3), round(pos + d, 3)])
             pos += d + pause
             inputs += ["-i", str(wav)]
             labels.append(f"[{i}:a]")
@@ -225,6 +291,16 @@ def build(line: dict, s: dict, k: dict, out: Path) -> dict:
            f":measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}"
            f":offset={m['target_offset']},aresample=44100",
            "-ac", "1", "-c:a", "libmp3lame", "-b:a", "128k", str(out))
+        m2 = loudnorm_measure(out)
+        fehlt = LUFS - float(m2["input_i"])
+        if fehlt > 1.0:                              # kurze Sätze: Spitzen bremsen die Angleichung -> anheben + Limiter
+            ff("-i", str(raw), "-af",
+               f"loudnorm=I={LUFS}:TP={TRUE_PEAK}:LRA=11:linear=true"
+               f":measured_I={m['input_i']}:measured_TP={m['input_tp']}"
+               f":measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}"
+               f":offset={m['target_offset']},volume={fehlt:.2f}dB,"
+               f"alimiter=limit={10 ** ((TRUE_PEAK - 0.3) / 20):.4f}:level=0:attack=3:release=60,aresample=44100",
+               "-ac", "1", "-c:a", "libmp3lame", "-b:a", "128k", str(out))
     m2 = loudnorm_measure(out)
     return {"lufs": round(float(m2["input_i"]), 1), "tp": round(float(m2["input_tp"]), 1),
             "dauer": duration(out), "teile": teile}

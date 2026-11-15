@@ -48,6 +48,57 @@
   "tp": -1.9,
   "dauer": 7.1
  },
+ "SMARTy_08_Heimlicher_Passagier": {
+  "datei": "audio/SMARTy_08_Heimlicher_Passagier.mp3",
+  "hash": "b901148242",
+  "lufs": -16.6,
+  "tp": -1.8,
+  "dauer": 4.35,
+  "teile": [
+   [
+    0.04,
+    1.425
+   ],
+   [
+    1.925,
+    4.096
+   ]
+  ]
+ },
+ "SMARTy_09_Mitgeschmuggelt": {
+  "datei": "audio/SMARTy_09_Mitgeschmuggelt.mp3",
+  "hash": "d803e3578a",
+  "lufs": -16.9,
+  "tp": -1.9,
+  "dauer": 4.16,
+  "teile": [
+   [
+    0.04,
+    1.418
+   ],
+   [
+    1.918,
+    3.905
+   ]
+  ]
+ },
+ "SMARTy_10_Sehr_guter_Grund": {
+  "datei": "audio/SMARTy_10_Sehr_guter_Grund.mp3",
+  "hash": "738832c13b",
+  "lufs": -17.0,
+  "tp": -2.2,
+  "dauer": 1.93,
+  "teile": [
+   [
+    0.04,
+    0.292
+   ],
+   [
+    0.742,
+    1.681
+   ]
+  ]
+ },
  "Erzaehler_00_Eroeffnung": {
   "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",
   "hash": "e93061565f",
@@ -61,6 +112,81 @@
   "datei": "film/Eroeffnung_Film.mp4",
   "hash": "13439b2d8b",
   "film": true
+ },
+ "KI_01_Zeitreise_abgeschlossen": {
+  "datei": "audio/KI_01_Zeitreise_abgeschlossen.mp3",
+  "hash": "83ff1f982e",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 7.23,
+  "teile": [
+   [
+    0.75,
+    2.524
+   ],
+   [
+    3.124,
+    4.3
+   ],
+   [
+    4.9,
+    6.969
+   ]
+  ]
+ },
+ "KI_02_Systemfehler_Alterstransformation": {
+  "datei": "audio/KI_02_Systemfehler_Alterstransformation.mp3",
+  "hash": "028d5c3d35",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 10.91,
+  "teile": [
+   [
+    0.87,
+    1.497
+   ],
+   [
+    1.797,
+    2.88
+   ],
+   [
+    3.48,
+    6.719
+   ],
+   [
+    7.319,
+    10.639
+   ]
+  ]
+ },
+ "KI_03_Unbekannter_Passagier": {
+  "datei": "audio/KI_03_Unbekannter_Passagier.mp3",
+  "hash": "0fd3eef167",
+  "lufs": -16.2,
+  "tp": -1.9,
+  "dauer": 13.15,
+  "teile": [
+   [
+    0.04,
+    0.608
+   ],
+   [
+    0.908,
+    3.027
+   ],
+   [
+    3.627,
+    5.43
+   ],
+   [
+    7.34,
+    10.076
+   ],
+   [
+    10.776,
+    12.885
+   ]
+  ]
  },
  "Probe_SMARTy_Christoph_10": {
   "datei": "audio/Probe_SMARTy_Christoph_10.mp3",

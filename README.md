@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`7`, Eröffnung als Film `Q`) |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, Eröffnung als Film `Q`, Zeitmaschine `A S D`) |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -54,6 +54,18 @@ Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnu
 
 **Neue Aufnahme einsetzen:** Die Datei unter demselben Namen hochladen, also `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3` ersetzen. Wenn sich das Tempo ändert, die sechs Startzeiten bei `abschnitte` anpassen. Das Skript findet die Satzteile über die Pausen selbst. Es bricht mit einer Meldung ab, wenn die Startzeiten nicht passen.
 
+## Zeitmaschine (KI) – Tasten `A S D`
+
+Der Bordcomputer der Zeitmaschine meldet sich in der Ankunftsszene nach dem Intro. Die Stimme ist weiblich (Grundstimme Tanja), klar, sachlich und etwas langsamer. Sie klingt leicht elektronisch, aber ohne Roboterverzerrung, und unterscheidet sich damit deutlich vom Erzähler und von SMARTy.
+
+| Taste | Ansage | Ton | Leinwand |
+|---|---|---|---|
+| `A` | Zeitreise abgeschlossen. Ziel erreicht. Willkommen in der Vergangenheit. | Bestätigungston vorweg | ZEITREISE ABGESCHLOSSEN |
+| `S` | Warnung! Systemfehler! Unerwartete Alterstransformation festgestellt. … | zwei Warntöne vorweg | SYSTEMFEHLER: ALTERSTRANSFORMATION |
+| `D` | Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet. | Scan-Geräusch in der Pause | UNBEKANNTER PASSAGIER ERKANNT |
+
+Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einzeln abspielen. Mit ⤓ speichert man sie als WAV.
+
 ## In der Turnhalle
 
 - Die Seite **vorher einmal mit Internet öffnen**. Unten erscheint dann „offline bereit“. Ab dann läuft sie im selben Browser auch ohne Netz.
@@ -80,6 +92,7 @@ Alles steht in **`sounds.json`**. Die Datei lässt sich direkt auf GitHub bearbe
 - `text`: steht auf dem Pad. `sprechen` (optional) wird gesprochen, mit Pausen wie `[Pause 0.5]` (Sekunden)
 - `taste` (optional): sonst wird eine freie Taste vergeben
 - `tts` (optional): Einstellungen nur für diesen Satz, z. B. `{ "rate": "-10%" }`
+- Töne im Text (selbst berechnet, dezent): `[Ton bestaetigung]`, `[Ton warnung]`, `[Ton scan 1.4]` (Dauer in Sekunden)
 
 **Neue Stimme** – einen Block unter `"stimmen"` ergänzen und in den Sätzen mit `"stimme": "<id>"` verwenden:
 
@@ -102,6 +115,7 @@ Optional formt `"klang"` die Stimme, z. B. `{ "formant": -0.8, "tiefe": 2, "waer
 | `alter` | 0 bis 1, leichtes Zittern: ältere Stimme |
 | `praesenz` | dB bei 3 kHz für die Verständlichkeit (Standard 2) |
 | `rau` | 0 bis 1, rauchig und kratzig |
+| `digital` | 0 bis 1, leicht elektronisch: kurze, feste Reflexionen ohne Schweben, schlanker Klang |
 
 Deutsche Grundstimmen: `de-DE-ChristophNeural`, `de-DE-TanjaNeural`, `de-AT-JonasNeural`, `de-AT-IngridNeural`, `de-CH-JanNeural`, `de-CH-LeniNeural`. Die mehrsprachigen Stimmen wie `en-US-AndrewMultilingualNeural` sprechen auch Deutsch, aber mit Akzent. `pitch` hebt oder senkt die Tonhöhe (`+20Hz`), `rate` ändert das Tempo (`-10%`).
 

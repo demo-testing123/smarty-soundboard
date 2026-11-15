@@ -32,6 +32,22 @@
         "praesenz": 1.5
       },
       "robo": 0
+    },
+    {
+      "id": "ki",
+      "name": "Zeitmaschine (KI)",
+      "rolle": "Bordcomputer · klar, sachlich, leicht elektronisch",
+      "farbe": "#b48cff",
+      "tts": {
+        "voice": "de-DE-TanjaNeural",
+        "pitch": "+0Hz",
+        "rate": "-6%"
+      },
+      "klang": {
+        "digital": 1,
+        "praesenz": 2.5
+      },
+      "robo": 0
     }
   ],
   "saetze": [
@@ -99,6 +115,33 @@
       "einsatz": "Optional: Stimmtest über die Hallenanlage vor der Show."
     },
     {
+      "id": "SMARTy_08_Heimlicher_Passagier",
+      "stimme": "smarty",
+      "taste": "8",
+      "titel": "08 · Heimlicher Passagier",
+      "text": "Zeitreise erfolgreich. Heimlicher Passagier ebenfalls angekommen.",
+      "sprechen": "Zeitreise erfolgreich. [Pause 0.5] Heimlicher Passagier ebenfalls angekommen.",
+      "einsatz": "Ankunftsszene."
+    },
+    {
+      "id": "SMARTy_09_Mitgeschmuggelt",
+      "stimme": "smarty",
+      "taste": "9",
+      "titel": "09 · Mitgeschmuggelt",
+      "text": "Ich habe mich mitgeschmuggelt. Ihr habt vergessen, mich einzuladen.",
+      "sprechen": "Ich habe mich mitgeschmuggelt. [Pause 0.5] Ihr habt vergessen, mich einzuladen.",
+      "einsatz": "Ankunftsszene."
+    },
+    {
+      "id": "SMARTy_10_Sehr_guter_Grund",
+      "stimme": "smarty",
+      "taste": "0",
+      "titel": "10 · Sehr guter Grund",
+      "text": "Doch. Sehr guter Grund.",
+      "sprechen": "Doch. [Pause 0.45] Sehr guter Grund.",
+      "einsatz": "Ankunftsszene: trockene Antwort."
+    },
+    {
       "id": "Erzaehler_00_Eroeffnung",
       "stimme": "erzaehler",
       "taste": "q",
@@ -160,6 +203,33 @@
       "countdown_takt": 0.95,
       "einsatz": "Showbeginn. Direkt danach: Leinwand-Blitz, die zwei Zeitreisenden erscheinen.",
       "film": "film/Eroeffnung_Film.mp4"
+    },
+    {
+      "id": "KI_01_Zeitreise_abgeschlossen",
+      "stimme": "ki",
+      "taste": "a",
+      "titel": "01 · Zeitreise abgeschlossen",
+      "text": "Zeitreise abgeschlossen. Ziel erreicht. Willkommen in der Vergangenheit.",
+      "sprechen": "[Ton bestaetigung] [Pause 0.35] Zeitreise abgeschlossen. [Pause 0.6] Ziel erreicht. [Pause 0.6] Willkommen in der Vergangenheit.",
+      "einsatz": "Nach dem Intro · Leinwand: „ZEITREISE ABGESCHLOSSEN“"
+    },
+    {
+      "id": "KI_02_Systemfehler_Alterstransformation",
+      "stimme": "ki",
+      "taste": "s",
+      "titel": "02 · Systemfehler: Alterstransformation",
+      "text": "Warnung! Systemfehler! Unerwartete Alterstransformation festgestellt. Biologisches Alter der Zeitreisenden verändert.",
+      "sprechen": "[Ton warnung] [Pause 0.35] Warnung! [Pause 0.3] Systemfehler! [Pause 0.6] Unerwartete Alterstransformation festgestellt. [Pause 0.6] Biologisches Alter der Zeitreisenden verändert.",
+      "einsatz": "Wenn die Zeitreisenden merken, dass sie erwachsen sind · Leinwand: „SYSTEMFEHLER: ALTERSTRANSFORMATION“"
+    },
+    {
+      "id": "KI_03_Unbekannter_Passagier",
+      "stimme": "ki",
+      "taste": "d",
+      "titel": "03 · Unbekannter Passagier",
+      "text": "Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet.",
+      "sprechen": "Achtung! [Pause 0.3] Zusätzlicher Passagier erkannt. [Pause 0.6] Identifikation läuft … [Pause 0.15] [Ton scan 1.4] [Pause 0.3] Roboterhund Smarty identifiziert. [Pause 0.7] Passagier war nicht angemeldet.",
+      "einsatz": "Kurz bevor der echte SMARTy (Unitree Go2) auftritt · Leinwand: „UNBEKANNTER PASSAGIER ERKANNT“"
     },
     {
       "id": "Probe_SMARTy_Christoph_10",
