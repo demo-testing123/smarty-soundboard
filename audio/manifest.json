@@ -50,11 +50,11 @@
  },
  "Erzaehler_00_Eroeffnung": {
   "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",
-  "hash": "9688c55fb5",
+  "hash": "10d65937f3",
   "quelle": "cdbe24353e",
   "dauer": 92.77,
   "lufs": -16.3,
-  "tp": -1.5,
+  "tp": -1.4,
   "sequenz": true
  },
  "Probe_SMARTy_Christoph_10": {
