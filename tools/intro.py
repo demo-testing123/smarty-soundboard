@@ -33,7 +33,7 @@ from scipy import signal
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate as G  # noqa: E402
 
-MUSIK_VERSION = "1"
+MUSIK_VERSION = "2"   # 2: Rausch-Sweeps ohne Kammfilter (unabhängige Kanäle)
 SR = 44100
 ROOT = G.ROOT
 OUTDIR = G.AUDIO / "intro"
@@ -259,8 +259,10 @@ def sweep_noise(dur, f0, f1, shape="rise"):
     """Rauschen, dessen Band von f0 nach f1 wandert (Whoosh/Riser), per STFT-Maske."""
     n = secs(dur)
     W, H = 2048, 512
-    x = noise(n + W)
-    out = np.zeros(n + W)
+    # zwei unabhängige Rauschquellen für L/R – eine verzögerte Kopie würde in Mono einen
+    # wandernden Kammfilter erzeugen (klingt „wellig“ wie ein Flanger)
+    x = np.stack([noise(n + W), noise(n + W)])
+    out = np.zeros((2, n + W))
     win = np.hanning(W)
     freqs = np.fft.rfftfreq(W, 1 / SR)
     lf = np.log2(np.maximum(freqs, 20))
@@ -273,10 +275,9 @@ def sweep_noise(dur, f0, f1, shape="rise"):
         else:                                           # whoosh: kurz an, lang aus
             a = min(1.0, p / 0.12) * (1 - p) ** 1.6
         mask = np.exp(-0.5 * ((lf - np.log2(fc)) / 0.55) ** 2) * a
-        seg = np.fft.irfft(np.fft.rfft(x[k:k + W] * win) * mask) * win
-        out[k:k + W] += seg
-    out = out[:n]
-    return np.stack([out, np.roll(out, 37)])
+        seg = np.fft.irfft(np.fft.rfft(x[:, k:k + W] * win, axis=1) * mask, axis=1) * win
+        out[:, k:k + W] += seg[:, :W]
+    return out[:, :n]
 
 
 def rms(x):
