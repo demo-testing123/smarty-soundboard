@@ -1,6 +1,6 @@
 /* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
  * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v9';
+const CACHE = 'smarty-v10';
 const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'layout.json', 'audio/manifest.json'];
 // Simulationen für die Bühne (eigene Seiten im selben Projekt) – ebenfalls offline verfügbar
 const SPIELE = [
@@ -9,6 +9,7 @@ const SPIELE = [
   'verkehr/sim.js', 'verkehr/scene3d.js', 'verkehr/render2d.js',
   'wohnen/', 'wohnen/index.html', 'wohnen/style.css', 'wohnen/main.js', 'wohnen/config.js',
   'wohnen/model.js', 'wohnen/scene3d.js',
+  'minecraft/', 'minecraft/index.html', 'minecraft/style.css', 'minecraft/main.js', 'minecraft/welt.js', 'minecraft/mcworld.js',
 ];
 
 self.addEventListener('install', (e) => {

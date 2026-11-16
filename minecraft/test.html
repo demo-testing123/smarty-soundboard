@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spielplatz-Test · Selbsttests</title>
+<style>
+  :root { --bg: #f6f7f4; --ink: #17201a; --ok: #1f7a34; --nein: #b3261e; --linie: #dde3da; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151916; --ink: #e5ebe4; --ok: #6cc070; --nein: #ff8a80; --linie: #333b34; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 18px 16px 40px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  #summe { font-weight: 800; font-size: 19px; margin: 10px 0 14px; }
+  li { margin: 4px 0; list-style: none; padding: 6px 10px; border: 1px solid var(--linie); border-radius: 8px; }
+  ul { padding: 0; }
+  .ok b { color: var(--ok); } .nein b { color: var(--nein); }
+  small { display: block; opacity: .75; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Spielplatz-Test · Selbsttests</h1>
+  <p>Prüft die erzeugte Welt ohne Minecraft: Die .mcworld wird zurückgelesen und Block für Block verglichen, der Tausch wird im Modell simuliert. Ob Minecraft Education die Datei öffnet, zeigt nur der Testplan auf der Hauptseite.</p>
+  <div id="summe">läuft …</div>
+  <ul id="liste"></ul>
+</main>
+<script type="module">
+import * as W from './welt.js';
+import { mcworld, mcstructure, crcMaskiert, crc32 } from './mcworld.js';
+
+const liste = document.getElementById('liste'), erg = [];
+function pruefe(name, ok, info = '') {
+  erg.push(ok);
+  const li = document.createElement('li'); li.className = ok ? 'ok' : 'nein';
+  li.innerHTML = `<b>${ok ? '✓' : '✗'}</b> ${name}` + (info ? `<small>${info}</small>` : '');
+  liste.append(li);
+}
+const dv = (a) => new DataView(a.buffer, a.byteOffset, a.byteLength);
+const dec = new TextDecoder();
+
+/* ---------- Leser ---------- */
+async function unzip(z) {
+  const d = dv(z); let e = z.length - 22; while (d.getUint32(e, true) !== 0x06054b50) e--;
+  const n = d.getUint16(e + 10, true); let o = d.getUint32(e + 16, true); const out = {}, crcFehler = [];
+  for (let k = 0; k < n; k++) {
+    const meth = d.getUint16(o + 10, true), crc = d.getUint32(o + 16, true), cs = d.getUint32(o + 20, true), nl = d.getUint16(o + 28, true), xl = d.getUint16(o + 30, true), cl = d.getUint16(o + 32, true), lo = d.getUint32(o + 42, true);
+    const name = dec.decode(z.subarray(o + 46, o + 46 + nl));
+    const lnl = d.getUint16(lo + 26, true), lxl = d.getUint16(lo + 28, true), roh = z.subarray(lo + 30 + lnl + lxl, lo + 30 + lnl + lxl + cs);
+    const daten = meth === 0 ? roh : new Uint8Array(await new Response(new Blob([roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    if (crc32(daten) !== crc) crcFehler.push(name);
+    out[name] = daten; o += 46 + nl + xl + cl;
+  }
+  return { dateien: out, crcFehler };
+}
+function leseLog(a) {
+  const records = [], fehler = []; let o = 0, teil = [];
+  while (o + 7 <= a.length) {
+    const rest = 32768 - (o % 32768); if (rest < 7) { o += rest; continue; }
+    const d = dv(a), crc = d.getUint32(o, true), len = d.getUint16(o + 4, true), typ = a[o + 6], daten = a.subarray(o + 7, o + 7 + len);
+    if (len === 0 && typ === 0) break;
+    if (crcMaskiert(typ, daten) !== crc) fehler.push(`CRC bei ${o}`);
+    if (7 + len > rest) fehler.push(`Datensatz über Blockgrenze bei ${o}`);
+    if (typ === 1) records.push(daten); else if (typ === 2) teil = [daten]; else if (typ === 3) teil.push(daten);
+    else if (typ === 4) { teil.push(daten); const n = teil.reduce((s, t) => s + t.length, 0), g = new Uint8Array(n); let p = 0; for (const t of teil) { g.set(t, p); p += t.length; } records.push(g); }
+    o += 7 + len;
+  }
+  return { records, fehler };
+}
+const varint = (a, o) => { let v = 0, s = 0, b; do { b = a[o++]; v |= (b & 127) << s; s += 7; } while (b & 128); return [v >>> 0, o]; };
+function leseBatch(a) {
+  const d = dv(a), anzahl = d.getUint32(8, true), m = new Map(); let o = 12;
+  for (let k = 0; k < anzahl; k++) {
+    const typ = a[o++]; let kl, vl; [kl, o] = varint(a, o); const key = a.slice(o, o + kl); o += kl;
+    [vl, o] = varint(a, o); const val = a.subarray(o, o + vl); o += vl;
+    if (typ === 1) m.set(Array.from(key).join(','), { key, val });
+  }
+  return { m, anzahl, rest: a.length - o };
+}
+function leseNbt(a, o = 0) {
+  const d = dv(a);
+  const str = () => { const n = d.getUint16(o, true); o += 2; const s = dec.decode(a.subarray(o, o + n)); o += n; return s; };
+  const wert = (t) => {
+    switch (t) {
+      case 1: return d.getInt8(o++);
+      case 2: { const v = d.getInt16(o, true); o += 2; return v; }
+      case 3: { const v = d.getInt32(o, true); o += 4; return v; }
+      case 4: { const v = d.getBigInt64(o, true); o += 8; return v; }
+      case 5: { const v = d.getFloat32(o, true); o += 4; return v; }
+      case 6: { const v = d.getFloat64(o, true); o += 8; return v; }
+      case 8: return str();
+      case 9: { const et = a[o++], n = d.getInt32(o, true); o += 4; const l = []; for (let k = 0; k < n; k++) l.push(wert(et)); return l; }
+      case 10: { const c = {}; for (;;) { const tt = a[o++]; if (tt === 0) return c; const k = str(); c[k] = wert(tt); } }
+      default: throw new Error('NBT-Typ ' + t + ' bei ' + o);
+    }
+  };
+  const t = a[o++]; str(); const v = wert(t); return { v, ende: o, typ: t };
+}
+const schluessel = (name, states) => name + JSON.stringify(Object.keys(states).sort().map((k) => [k, typeof states[k] === 'bigint' ? Number(states[k]) : states[k]]));
+const NACH_SCHLUESSEL = new Map(W.NAMEN.map((n, id) => { const [bn, z] = W.BLOECKE[n]; return [schluessel('minecraft:' + bn, Object.fromEntries(Object.entries(z).map(([k, [, v]]) => [k, v]))), id]; }));
+
+/* ---------- Tests ---------- */
+try {
+  const t0 = performance.now();
+  const { welt, vorlagen, kopie } = W.erzeugeWelt();
+  const BF = W.befehle();
+  pruefe('Welt im Modell erzeugt', true, `${(performance.now() - t0).toFixed(0)} ms`);
+
+  // Maße und Grenzen
+  const vol = ([a, e]) => (e[0] - a[0] + 1) * (e[1] - a[1] + 1) * (e[2] - a[2] + 1);
+  const pb = W.platzBox(), gb = W.vorlageBox('grau'), nb = W.vorlageBox('gruen');
+  pruefe('Platz und Vorlagen gleich groß', vol(pb) === vol(gb) && vol(pb) === vol(nb) && vol(pb) === 16384, `${vol(pb)} Blöcke je Quader`);
+  pruefe('Unter den Grenzen von /clone (655 360) und /structure (64 × 384 × 64)', vol(pb) <= 655360 && W.PLATZ.dx <= 64 && W.PLATZ.dz <= 64 && W.PLATZ.dy <= 384);
+  const ueberlapp = (a, b) => a[0].every((_, k) => a[0][k] <= b[1][k] && b[0][k] <= a[1][k]);
+  const kammern = [pb, gb, nb, W.kontrollKopieBox()];
+  pruefe('Platz, Kammern und Kontrollkopie überlappen nicht', kammern.every((a, i) => kammern.every((b, j) => i === j || !ueberlapp(a, b))));
+  const chunks = ([a, e]) => [Math.floor(a[0] / 16), Math.floor(a[2] / 16), Math.floor(e[0] / 16), Math.floor(e[2] / 16)];
+  const [t1, t2] = [W.TICKING.von, W.TICKING.bis];
+  const imTicking = ([a, e]) => a[0] >= t1[0] && a[2] >= t1[1] && e[0] <= t2[0] && e[2] <= t2[1];
+  pruefe('Kammern liegen unter dem Platz (gleiche Chunks)', JSON.stringify(chunks(gb)) === JSON.stringify(chunks(pb)) && JSON.stringify(chunks(nb)) === JSON.stringify(chunks(pb)));
+  pruefe('Ticking-Bereich deckt Platz, Kammern, Rand und Kontrollkopie', [pb, gb, nb, W.kontrollBox(), W.kontrollKopieBox()].every(imTicking), BF.ticking);
+
+  // Befehle
+  pruefe('Befehl GRÜN', BF.gruen === '/clone 0 19 0 31 34 31 0 59 0', BF.gruen);
+  pruefe('Befehl GRAU', BF.grau === '/clone 0 39 0 31 54 31 0 59 0', BF.grau);
+  pruefe('Prüfbefehl Ausgangszustand', BF.pruefeGrau === '/testforblocks -4 59 -4 35 74 35 -4 -1 -4 all', BF.pruefeGrau);
+  const cmd = [...welt.entities.entries()].filter(([, e]) => e.art === 'befehl');
+  pruefe('Befehlsblöcke enthalten die Befehle', cmd.length === 5 && cmd.some(([, e]) => '/' + e.befehl === BF.gruen) && cmd.some(([, e]) => '/' + e.befehl === BF.grau) && cmd.every(([, e]) => !e.befehl.includes('@s')), cmd.map(([k, e]) => `${k}: ${e.befehl}`).join(' | '));
+  pruefe('Jeder Befehlsblock hat Knopf oben und Schild', cmd.every(([k]) => { const [x, y, z] = k.split(',').map(Number); return welt.hole(x, y + 1, z) === W.ID.knopf && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => W.istSchild(welt.hole(x + dx, y, z + dz))); }));
+
+  // Regeln für die Vorlagen
+  for (const [n, v] of Object.entries(vorlagen)) {
+    const fehler = [];
+    const fest = (id) => id !== W.ID.luft && id !== W.ID.wasser && !W.istPflanze(id) && !W.istSchild(id) && id !== W.ID.knopf;
+    for (let y = 0; y < v.dy; y++) for (let z = 0; z < v.dz; z++) for (let x = 0; x < v.dx; x++) {
+      const id = v.hole(x, y, z);
+      if (id === W.ID.wasser) {
+        if (x === 0 || z === 0 || x === v.dx - 1 || z === v.dz - 1 || y === 0) fehler.push(`Wasser am Rand ${x},${y},${z}`);
+        for (const [a, b2, c] of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0], [0, 1, 0]]) { const w = v.hole(x + a, y + b2, z + c); if (w !== W.ID.wasser && !fest(w)) fehler.push(`Wasser offen bei ${x},${y},${z}`); }
+      }
+      if (id === W.ID.kies && y > 0 && !fest(v.hole(x, y - 1, z))) fehler.push(`Kies ohne Halt ${x},${y},${z}`);
+      if (W.istPflanze(id) && ![W.ID.gras, W.ID.erde, W.ID.moos, W.ID.grobeErde].includes(v.hole(x, y - 1, z))) fehler.push(`Pflanze ohne Erde ${x},${y},${z}`);
+      if (W.istSchild(id)) { const r = W.NAMEN[id].replace('schild', ''); const [a, c] = { Nord: [0, 1], Sued: [0, -1], West: [1, 0], Ost: [-1, 0] }[r]; if (!fest(v.hole(x + a, y, z + c))) fehler.push(`Schild ohne Halt ${x},${y},${z}`); }
+    }
+    pruefe(`Vorlage ${n}: Wasser dicht, Kies gestützt, Pflanzen auf Erde, Schilder befestigt`, fehler.length === 0, fehler.slice(0, 5).join(' · ') || `${v.zaehle('wasser')} Wasserblöcke, ${v.schilder.size} Schilder`);
+  }
+  const g = vorlagen.gruen;
+  pruefe('Grün enthält Bäume, Regenmulde, tiefen Spielbereich und markierte Zisterne', g.zaehle('eicheLaub') + g.zaehle('birkeLaub') > 100 && g.hole(5, W.PLATZ.boden, 17) !== W.ID.gras && g.hole(15, W.PLATZ.boden - 2, 16) === W.ID.gras && g.zaehle('wasser') > 0 && g.zaehle('markierung') > 0 && g.zaehle('fenster') > 0, `${g.zaehle('eicheStamm') + g.zaehle('birkeStamm')} Stammblöcke, ${g.zaehle('wasser')} Wasser, ${g.zaehle('kies')} Kies`);
+  pruefe('Grau ist versiegelt (keine Pflanzen, kein Wasser, kein Gras)', vorlagen.grau.zaehle('gras') + vorlagen.grau.zaehle('wasser') + W.NAMEN.filter((n) => W.istPflanze(W.ID[n])).reduce((s, n) => s + vorlagen.grau.zaehle(n), 0) === 0);
+  const leer = (v) => { for (let z = 0; z < v.dz; z++) for (let x = 0; x < v.dx; x++) if (v.hole(x, v.dy - 1, z)) return false; return true; };
+  pruefe('Oberste Schicht beider Vorlagen ist Luft (nichts wird abgeschnitten)', leer(vorlagen.grau) && leer(vorlagen.gruen));
+
+  // Kontrollkopie entspricht dem Ausgangszustand
+  const gleich = (a, b) => a.dx === b.dx && a.dy === b.dy && a.dz === b.dz && a.daten.every((v, k) => v === b.daten[k]);
+  pruefe('Kontrollkopie = Platz + Rand im Ausgangszustand', gleich(welt.ausschnitt(W.kontrollBox()), kopie) && gleich(welt.ausschnitt(W.kontrollKopieBox()), kopie));
+  pruefe('Kammern enthalten die Vorlagen', gleich(welt.ausschnitt(gb), vorlagen.grau) && gleich(welt.ausschnitt(nb), vorlagen.gruen) && gleich(welt.ausschnitt(pb), vorlagen.grau));
+
+  // Tausch simulieren (Modell von /clone replace)
+  const original = welt.daten.slice(), entsOriginal = JSON.stringify([...welt.entities].sort());
+  const sim = new W.Welt(); sim.daten.set(original); for (const [k, e] of welt.entities) sim.entities.set(k, { ...e });
+  let ok = true, info = '';
+  const innen = (x, y, z) => x >= pb[0][0] && x <= pb[1][0] && y >= pb[0][1] && y <= pb[1][1] && z >= pb[0][2] && z <= pb[1][2];
+  for (let runde = 0; runde < 10 && ok; runde++) {
+    sim.klonen(nb, pb[0]);
+    if (!gleich(sim.ausschnitt(pb), vorlagen.gruen)) { ok = false; info = `Runde ${runde + 1}: Platz ≠ Grün`; break; }
+    // außerhalb des Platzes darf sich nichts ändern
+    const { x0, z0, y0, nx, nz, ny } = W.BEREICH;
+    for (let k = 0; k < sim.daten.length; k++) if (sim.daten[k] !== original[k]) {
+      const x = x0 + (k % nx), z = z0 + (Math.floor(k / nx) % nz), y = y0 + Math.floor(k / (nx * nz));
+      if (!innen(x, y, z)) { ok = false; info = `Runde ${runde + 1}: außerhalb geändert bei ${x} ${y} ${z}`; break; }
+    }
+    sim.klonen(gb, pb[0]);
+    if (!sim.daten.every((v, k) => v === original[k])) { ok = false; info = `Runde ${runde + 1}: nach GRAU nicht wie am Anfang`; }
+    if (JSON.stringify([...sim.entities].sort()) !== entsOriginal) { ok = false; info = `Runde ${runde + 1}: Schilder/Befehlsblöcke weichen ab`; }
+  }
+  pruefe('10 × GRÜN/GRAU simuliert: Platz exakt, außerhalb unverändert, danach wieder Ausgangszustand', ok, info || 'auch Schilder und Befehlsblöcke stimmen');
+
+  // Datei erzeugen und zurücklesen
+  const t3 = performance.now();
+  const zipDaten = await mcworld(welt, 'Test', W.REGIE.stand);
+  const { dateien, crcFehler } = await unzip(zipDaten);
+  pruefe('.mcworld erzeugt, ZIP lesbar, Prüfsummen stimmen', crcFehler.length === 0 && ['level.dat', 'levelname.txt', 'db/CURRENT', 'db/MANIFEST-000001', 'db/000002.log'].every((n) => dateien[n]),
+    `${(zipDaten.length / 1024).toFixed(0)} KB in ${((performance.now() - t3) / 1000).toFixed(1)} s; Dateien: ${Object.keys(dateien).join(', ')}`);
+  pruefe('db/CURRENT zeigt auf das Manifest', dec.decode(dateien['db/CURRENT']) === 'MANIFEST-000001\n');
+  const man = leseLog(dateien['db/MANIFEST-000001']);
+  const mr = man.records[0] || new Uint8Array();
+  pruefe('MANIFEST: Prüfsumme und Inhalt (Vergleicher, Log 2, nächste Datei 3)', man.fehler.length === 0 && man.records.length === 1 && dec.decode(mr.subarray(2, 2 + mr[1])) === 'leveldb.BytewiseComparator' && mr[mr.length - 6] === 2 && mr[mr.length - 5] === 2, man.fehler.join(' '));
+  const log = leseLog(dateien['db/000002.log']);
+  pruefe('Protokoll: alle Datensätze mit gültiger Prüfsumme, keiner über eine 32-KB-Grenze', log.fehler.length === 0 && log.records.length === 1, `${log.records.length} Schreibvorgang, ${log.fehler.length} Fehler`);
+  const batch = leseBatch(log.records[0]);
+  pruefe('Schreibvorgang vollständig gelesen', batch.rest === 0 && batch.m.size === batch.anzahl, `${batch.anzahl} Einträge`);
+
+  // level.dat
+  const ld = dateien['level.dat'], ldd = dv(ld), lev = leseNbt(ld, 8);
+  pruefe('level.dat: Kopf und Spielregeln', ldd.getInt32(0, true) === 10 && ldd.getInt32(4, true) === ld.length - 8 && lev.ende === ld.length && lev.v.commandsEnabled === 1 && lev.v.GameType === 1 && lev.v.randomtickspeed === 0 && lev.v.commandblocksenabled === 1 && lev.v.SpawnY === W.REGIE.stand[1] && lev.v.educationFeaturesEnabled === 1,
+    `Name „${lev.v.LevelName}“, Start ${lev.v.SpawnX} ${lev.v.SpawnY} ${lev.v.SpawnZ}, Generator ${lev.v.Generator}`);
+
+  // Subchunks Block für Block
+  const le = (x, z) => { const a = new Uint8Array(8); const d = dv(a); d.setInt32(0, x, true); d.setInt32(4, z, true); return Array.from(a).join(','); };
+  let gepr = 0, abw = [], fehlend = 0, subs = 0;
+  const { x0, z0, nx, nz, y0, ny } = W.BEREICH;
+  for (let cx = x0 / 16; cx < (x0 + nx) / 16; cx++) for (let cz = z0 / 16; cz < (z0 + nz) / 16; cz++) {
+    const kopf = le(cx, cz);
+    if (!batch.m.has(kopf + ',44') || !batch.m.has(kopf + ',54') || !batch.m.has(kopf + ',43')) fehlend++;
+    for (let sy = 0; sy < ny / 16; sy++) {
+      const yi = (y0 / 16 + sy) & 255, e = batch.m.get(kopf + ',47,' + yi);
+      let leerImModell = true;
+      for (let k = 0; k < 4096 && leerImModell; k++) if (welt.hole(cx * 16 + (k >> 8), y0 + sy * 16 + (k & 15), cz * 16 + ((k >> 4) & 15))) leerImModell = false;
+      if (!e) { if (!leerImModell) fehlend++; continue; }
+      subs++;
+      const a = e.val, d = dv(a);
+      if (a[0] !== 9 || a[1] !== 1 || ((a[2] << 24) >> 24) !== y0 / 16 + sy || (a[3] & 1)) { abw.push(`Kopf ${cx},${cz},${sy}`); continue; }
+      const bits = a[3] >> 1, pw = Math.floor(32 / bits), nw = Math.ceil(4096 / pw);
+      let o = 4 + nw * 4; const np = d.getInt32(o, true); o += 4; const pal = [];
+      for (let k = 0; k < np; k++) { const r = leseNbt(a, o); o = r.ende; pal.push(NACH_SCHLUESSEL.get(schluessel(r.v.name, r.v.states)) ?? -1); }
+      if (o !== a.length) abw.push(`Länge ${cx},${cz},${sy}`);
+      for (let k = 0; k < 4096; k++) {
+        const w = d.getUint32(4 + Math.floor(k / pw) * 4, true), p = (w >>> (bits * (k % pw))) & ((1 << bits) - 1);
+        const x = cx * 16 + (k >> 8), z = cz * 16 + ((k >> 4) & 15), y = y0 + sy * 16 + (k & 15);
+        gepr++;
+        if (pal[p] !== welt.hole(x, y, z) && abw.length < 5) abw.push(`${x} ${y} ${z}: ${W.NAMEN[pal[p]]} statt ${W.NAMEN[welt.hole(x, y, z)]}`);
+      }
+    }
+  }
+  pruefe('Alle Blöcke der Datei stimmen mit dem Modell überein', abw.length === 0 && fehlend === 0, `${gepr.toLocaleString('de-DE')} Blöcke in ${subs} Subchunks verglichen` + (abw.length ? ' · ' + abw.join(' · ') : '') + (fehlend ? ` · ${fehlend} fehlen` : ''));
+
+  // Block-Entitäten
+  let ents = 0; const gefunden = [];
+  for (const { key, val } of batch.m.values()) if (key.length === 9 && key[8] === 49) {
+    let o = 0; while (o < val.length) { const r = leseNbt(val, o); o = r.ende; ents++; gefunden.push(r.v); }
+  }
+  const erwartet = welt.entities.size;
+  const passt = gefunden.every((e) => { const m = welt.entities.get(`${e.x},${e.y},${e.z}`); return m && (m.art === 'schild' ? e.id === 'Sign' && e.FrontText.Text === m.zeilen.join('\n') : e.id === 'CommandBlock' && e.Command === m.befehl && e.auto === 0); });
+  pruefe('Schilder und Befehlsblöcke in der Datei', ents === erwartet && passt, `${ents} von ${erwartet}; ${gefunden.filter((e) => e.id === 'CommandBlock').length} Befehlsblöcke`);
+
+  // .mcstructure zurücklesen
+  for (const n of ['grau', 'gruen']) {
+    const v = vorlagen[n], st = leseNbt(mcstructure(v, W.VORLAGEN[n].ursprung)).v, s = st.structure, pal = s.palette.default.block_palette.map((b) => NACH_SCHLUESSEL.get(schluessel(b.name, b.states)));
+    let fehler = 0, k = 0;
+    for (let x = 0; x < v.dx; x++) for (let y = 0; y < v.dy; y++) for (let z = 0; z < v.dz; z++) if (pal[s.block_indices[0][k++]] !== v.hole(x, y, z)) fehler++;
+    pruefe(`spielplatz_${n}.mcstructure zurückgelesen`, st.format_version === 1 && st.size.join() === '32,16,32' && fehler === 0 && s.block_indices[1].every((i) => i === -1) && Object.keys(s.palette.default.block_position_data).length === v.schilder.size,
+      `${pal.length} Blockarten, ${Object.keys(s.palette.default.block_position_data).length} Schilder`);
+  }
+} catch (err) {
+  pruefe('Ausnahme', false, err.stack || err.message);
+}
+const n = erg.filter(Boolean).length;
+document.getElementById('summe').textContent = `${n} von ${erg.length} Prüfungen bestanden`;
+document.title = `${n}/${erg.length} · Spielplatz-Test · Selbsttests`;
+window.__ergebnis = { bestanden: n, gesamt: erg.length };
+</script>
+</body>
+</html>

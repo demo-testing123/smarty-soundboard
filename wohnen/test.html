@@ -79,16 +79,17 @@ frame.addEventListener('load', async () => {
   if (!w.__wohnenOk) { check('Wechseltest: App geladen', false, 'App nicht geladen'); return zeigen(); }
   const api = w.__wohnen, welt = api.welt();
   const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-  const runde = async () => {
+  const runde = async (ms = 20) => {
     for (const m of ['experiment', 'A', 'B', 'C', 'aufstocken']) {
       api.modus(m);
       api.weiter(1); api.weiter(1);
-      await pause(20);
+      await pause(ms);
     }
-    api.modus('vergleich'); await pause(20);
-    api.modus('start'); await pause(20);
+    api.modus('vergleich'); await pause(ms);
+    api.modus('start'); await pause(ms);
   };
-  await runde();                                   // Aufwärmen: jede Szene einmal auf die Grafikkarte laden
+  // Aufwärmen: jede Szene so lange zeigen, dass sie sicher einmal gezeichnet und auf die Grafikkarte geladen wird
+  await runde(400);
   api.modus('experiment'); await pause(3500);
   const vorher = welt.info();
   for (let i = 0; i < 10; i++) await runde();

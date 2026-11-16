@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spielplatz-Test · Minecraft Education</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="kopf">
+  <div class="wrap">
+    <p class="kicker">START IT SMART · Mission Natur · Prototyp</p>
+    <h1>Spielplatz-Test für Minecraft Education</h1>
+    <p class="lead">Der graue Platz wird in <b>derselben geöffneten Welt</b> durch den fertig gebauten
+      Natur-Abenteuerspielplatz ersetzt und wieder zurückgesetzt. Die Welt muss dafür nicht neu importiert werden, und es läuft kein Block-für-Block-Aufbau.</p>
+    <p class="status" id="status">Stand: Die Welt ist erzeugt und selbst geprüft. <b>In Minecraft Education ist sie noch nicht getestet</b>, dafür ist der Testplan unten da.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>So funktioniert es</h2>
+    <div class="zwei">
+      <div>
+        <p>Unter dem Platz liegen im selben Chunk zwei geschlossene <b>Vorlagen-Kammern</b>, genau so groß wie der Platz.
+          Ein Knopf (oder ein Chatbefehl) führt <code>/clone … replace</code> aus. Dieser Befehl kopiert die Kammer <b>in einem Schritt</b> auf den Platz
+          und überschreibt dabei jeden Block, auch mit Luft. Alte Bäume oder Wasser bleiben deshalb nicht stehen. Außerhalb des Platz-Quaders ändert sich nichts.</p>
+        <ul class="eckdaten" id="eckdaten"></ul>
+      </div>
+      <figure class="schnitt"><canvas id="schnitt" width="640" height="420" aria-label="Schnitt durch Platz und Vorlagen-Kammern"></canvas>
+        <figcaption>Schnitt von Süden: oben der sichtbare Platz, darunter die Kammern (nicht maßstäblich in der Tiefe).</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>1 · Herunterladen</h2>
+    <div class="karten">
+      <div class="karte haupt">
+        <h3>Testwelt</h3>
+        <p>Grauer Platz zwischen Hochhäusern, Vorlagen-Kammern, Regieplatz mit Knöpfen. Flache Welt, Kreativmodus, Befehle an. Kein Wetter, keine Tageszeit; es wächst und verwelkt nichts.</p>
+        <button type="button" class="gross" id="ladeWelt">⬇ Spielplatz-Test.mcworld</button>
+        <p class="klein" id="weltInfo"></p>
+      </div>
+      <div class="karte">
+        <h3>Nur die Bauabschnitte (optional)</h3>
+        <p>Für eine andere Welt, zum Beispiel die echte Stadt: die beiden Zustände als <code>.mcstructure</code>-Dateien.
+          Laden geht nur über ein Behavior-Pack oder den Import im Strukturblock (Windows). In Education ist das <b>ungeprüft</b>.</p>
+        <div class="knoepfe"><button type="button" data-struktur="grau">⬇ spielplatz_grau</button><button type="button" data-struktur="gruen">⬇ spielplatz_gruen</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Einmalig vorbereiten (vor der Vorlesung)</h2>
+    <ol class="schritte" id="vorbereiten"></ol>
+  </section>
+
+  <section>
+    <h2>3 · In der Vorlesung</h2>
+    <p>Die Kamera steht auf dem Regieplatz. Links liegen vier Knöpfe auf Befehlsblöcken mit Schildern.
+      Ein Knopf löst sofort aus, Ergebnis ohne Wartezeit. Für die Leinwand blendet <kbd>F1</kbd> die Anzeigen aus.</p>
+    <table class="ablauf" id="ablauf"></table>
+    <details class="option" id="animation"></details>
+  </section>
+
+  <section>
+    <h2>4 · Testplan</h2>
+    <p>Reihenfolge einhalten. Jede Prüfung mit <code>/testforblocks</code> vergleicht Block für Block und meldet „… Blöcke verglichen“ (bestanden)
+      oder „Quell- und Zielbereich sind nicht gleich“ (nicht bestanden). Die Häkchen merkt sich nur dieser Browser.</p>
+    <ol class="test" id="testplan"></ol>
+    <p><button type="button" class="leise" id="testReset">Häkchen zurücksetzen</button></p>
+  </section>
+
+  <section>
+    <h2>5 · Die beiden Zustände von oben</h2>
+    <div class="ansichten">
+      <figure><canvas id="sichtGrau" width="384" height="384"></canvas><figcaption><b>Grau:</b> Betonplatten, Abflüsse, Betonwürfel, ein Lichtmast. Kein Schatten, kein offener Boden.</figcaption></figure>
+      <figure><canvas id="sichtGruen" width="384" height="384"></canvas><figcaption><b>Grün:</b> Bäume, Wiese, wilde Ecke mit Insektenhotel, Kieswege, Kletterturm mit Rutsche, Schaukel, Balancieren,
+        <span class="w">Regenmulde</span>, <span class="w">tiefer Spielbereich</span> mit Sitzstufen, <span class="w">Zisterne</span> mit Glasdeckel, hellblauer Markierung und Gießleitung zum Baum.</figcaption></figure>
+    </div>
+    <p class="klein">Die Gestaltung von „Grün“ ist ein Entwurf nach Drehbuch (Mission Natur: „Beides gemeinsam!“) und Konzept „Stadt von morgen“.
+      Ihr könnt sie direkt in Minecraft in der Vorlagen-Kammer umbauen. Der Knopf „GRÜN“ kopiert danach automatisch die neue Fassung.</p>
+    <details class="option" id="aendern"></details>
+  </section>
+
+  <section>
+    <h2>Grenzen</h2>
+    <ul id="grenzen"></ul>
+    <p>Bestandsanalyse des Stadt-Konfigurators, Technikentscheidung und Einzelheiten:
+      <a href="https://github.com/demo-testing123/smarty-soundboard/blob/main/minecraft/LIESMICH.md" target="_blank" rel="noopener">LIESMICH.md</a> ·
+      <a href="test.html">Selbsttests der Welt</a></p>
+  </section>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

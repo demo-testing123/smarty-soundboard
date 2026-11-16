@@ -218,12 +218,12 @@ function anzeigen() {
   $('#fussnote').textContent = g === 'experiment' ? C.experiment.hinweis : g === 'varianten' ? C.varianten.rasterInfo : g === 'aufstocken' ? C.aufstocken.vorbild : '';
   $('#fussnote').hidden = !$('#fussnote').textContent;
 
-  // Lernziel und Moderation
+  // Moderation (das Lernziel steht nur hier, nicht auf der Leinwand)
   const mod = C.moderation[g === 'varianten' ? 'varianten' : g] || C.moderation.start;
-  $('#lernziel').textContent = mod.lernziel;
   const info = $('#info');
   info.hidden = !S.info;
   $('#infoListe').innerHTML = '';
+  $('#infoListe').append(h('li', {}, h('b', {}, 'Lernziel: '), mod.lernziel));
   for (const n of mod.notizen) $('#infoListe').append(h('li', {}, n));
 
   beschriftungen();

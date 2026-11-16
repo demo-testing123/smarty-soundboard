@@ -127,7 +127,7 @@ export const CONFIG = {
     check: { frage: 'Was kann beim Weiterbauen helfen?', antwort: 'Wir können vorhandene Bauteile weiterverwenden.', zeigen: 'Antwort zeigen' },
   },
 
-  // Lernzielkarte (max. zwei Sätze) und Notizen für die Moderation je Modus
+  // Lernziel (max. zwei Sätze) und Notizen je Modus – beides nur in „Info für Moderation“ (Taste I), nicht auf der Leinwand
   moderation: {
     start: { lernziel: 'Sechs Familien brauchen sechs Wohnungen. Wir probieren aus, wie man sie auf ein Grundstück baut.', notizen: ['Hauptknöpfe 1–5 oder unten anklicken. Nichts läuft von allein weiter.', 'Abstimmungen im Saal per Handzeichen.'] },
     experiment: { lernziel: 'Gestapelt brauchen dieselben sechs Wohnungen weniger Bodenfläche. Die Zahl der Wohnungen bleibt gleich.', notizen: ['Frage: „Wir brauchen sechs Wohnungen. Brauchen sie immer gleich viel Platz am Boden?“', 'Erst Kinder vermuten lassen („Vermutung zeigen“), dann „Stapeln“.', 'Vereinfachtes Modell: Echte Hochhäuser sparen nicht immer genau so viel Boden (Wege, Abstände, Treppenhäuser).', 'Das Experiment ist größer dargestellt als die Varianten A/B/C (eigener Maßstab).'] },

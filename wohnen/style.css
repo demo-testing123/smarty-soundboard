@@ -80,19 +80,13 @@ kbd {
 .textkarte.gruen { background: #dcfce7; }
 .textkarte.antwort { background: #16a34a; color: #fff; font-size: 4cqh; font-weight: 800; }
 
-/* ---------- Fußnote, Lernziel ---------- */
+/* ---------- Fußnote ---------- */
 .fussnote {
   position: absolute; left: 2cqh; bottom: 19cqh; max-width: 44%; margin: 0;
   font-size: 2.5cqh; line-height: 1.3; color: #1e293b; background: rgba(255,255,255,.88);
   padding: .8cqh 1.4cqh; border-radius: 1cqh; border-left: .6cqh solid #64748b;
 }
-.lernziel {
-  position: absolute; right: 2cqh; bottom: 19cqh; width: 33%; margin: 0;
-  font-size: 2.4cqh; line-height: 1.3; color: #0f172a; background: rgba(255,247,214,.94);
-  padding: 1cqh 1.4cqh; border-radius: 1.2cqh; border: 1px solid #f5c84c;
-}
-.lernziel::before { content: 'Lernziel: '; font-weight: 800; }
-[data-modus="start"] .lernziel, [data-modus="start"] .fussnote { display: none; }
+[data-modus="start"] .fussnote { display: none; }
 
 /* ---------- Beschriftungen an 3D-Punkten ---------- */
 .label {
@@ -105,7 +99,6 @@ kbd {
 .label.unten { white-space: pre-line; text-align: center; font-size: 2.5cqh; line-height: 1.3; border-radius: 1.4cqh; padding: 1cqh 1.6cqh; margin-top: 0; background: var(--ink); }
 [data-modus="vergleich"] .fussnote { top: 9cqh; bottom: auto; }
 .label.unten::first-line { font-size: 3cqh; }
-[data-modus="vergleich"] .lernziel { display: none; }
 
 /* ---------- Vermutung ---------- */
 .vermutung {
