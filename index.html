@@ -39,8 +39,19 @@
     <label class="toggle" title="Texte auf den Pads anzeigen">
       <input type="checkbox" id="showText" checked> <span>Texte</span>
     </label>
+    <button type="button" id="arrange" class="btn" aria-pressed="false" title="Pads und Bereiche verschieben, Platz verteilen">⇄ Anordnen</button>
     <button type="button" id="fade" class="btn" title="Alles in 1,5 s ausblenden (Taste F)">Ausblenden <kbd>F</kbd></button>
     <button type="button" id="stop" class="btn stop" title="Alles sofort stoppen">■ Stopp <kbd>Leer</kbd></button>
+  </div>
+  <div id="arrangeBar" class="arrange-bar" hidden>
+    <p>
+      <b>Anordnen:</b> Pad oder Kopf eines Bereichs ziehen = verschieben ·
+      Griff <span class="grip-demo" aria-hidden="true"></span> zwischen zwei Blöcken nach links/rechts ziehen = Platz verteilen ·
+      Tastatur: <kbd>←</kbd><kbd>→</kbd> verschieben, <kbd>Umschalt</kbd>+<kbd>←</kbd><kbd>→</kbd> Breite.
+      Wird in diesem Browser gespeichert.
+    </p>
+    <button type="button" id="arrangeReset" class="btn small">Zurücksetzen</button>
+    <button type="button" id="arrangeDone" class="btn small primary">Fertig</button>
   </div>
 </header>
 

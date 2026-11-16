@@ -39,6 +39,7 @@
   let ctx = null, master = null, analyser = null, meterBuf = null;
   let overlap = store.get('overlap', false);
   let cfg = null, manifest = {};
+  let arranging = false;      // Modus „Anordnen“: Pads/Bereiche verschieben statt abspielen
 
   // ---------- Audio ----------
   function ensureCtx() {
@@ -398,7 +399,7 @@
         p.vary ? (p.varTag = h('span', { class: 'tag' }, 'Stimme ' + v.variante)) : null),
       h('span', { class: 'bar' }, (p.barEl = h('i'))),
     );
-    btn.addEventListener('click', () => play(p.id));
+    btn.addEventListener('click', () => { if (!arranging) play(p.id); });
     const tools = h('div', { class: 'tools' },
       h('button', {
         type: 'button', class: 'icon',
@@ -416,7 +417,8 @@
       }, '✕') : null,
     );
     p.el = btn;
-    p.cell = h('div', { class: p.direct ? 'cell wide' : 'cell', style: `--c:${v.farbe}` }, btn, tools);
+    p.cell = h('div', { class: p.direct ? 'cell wide' : 'cell', style: `--c:${v.farbe}`, 'data-key': p.id }, btn, tools,
+      p.direct ? null : resizeHandle());
     return p.cell;
   }
 
@@ -443,7 +445,7 @@
       store.set('robo.' + v.id, v.robo);
     });
     range.addEventListener('dblclick', () => { range.value = String(v.roboDefault); range.dispatchEvent(new Event('input')); });
-    v.padsEl = h('div', { class: 'pads' });
+    v.padsEl = h('div', { class: 'pads', 'data-list': 'v:' + v.id });
     v.varEl = v.varianten.length ? h('div', { class: 'variants', role: 'group', 'aria-label': `Stimme ${v.name}` },
       h('span', { class: 'variants-label' }, 'Stimme:'),
       v.varianten.map((x) => h('button', {
@@ -451,7 +453,8 @@
         title: `${x.name}${x.standard ? ' (Standard)' : ''} – gilt für die Eröffnung und alle Einzelteile`,
         onclick: () => setVariant(v.id, x.id),
       }, h('b', {}, x.id), ' ', x.name, x.standard ? ' ★' : ''))) : null;
-    return h('section', { class: 'voice', style: `--c:${v.farbe}`, 'aria-label': v.name },
+    return h('section', { class: 'voice', style: `--c:${v.farbe}`, 'aria-label': v.name, 'data-key': 'v:' + v.id },
+      resizeHandle(),
       h('header', { class: 'voice-head' },
         h('div', { class: 'who' },
           h('h2', {}, h('span', { class: 'dot' }), v.name),
@@ -628,15 +631,20 @@
       if (l.gruppe === 'proben') probenEl.append(cell);
       else {
         // Szenen-Überschrift, sobald innerhalb einer Stimme eine neue Szene beginnt
-        if (l.szene && l.szene !== v.szene) v.padsEl.append(h('h3', { class: 'szene' }, l.szene));
+        if (l.szene && l.szene !== v.szene) v.padsEl.append(h('h3', { class: 'szene', 'data-key': 'szene:' + l.szene }, l.szene));
         v.szene = l.szene || v.szene;
         v.padsEl.append(cell);
       }
     }
     $('#probenWrap').hidden = !probenEl.children.length;
+    board.dataset.list = 'board';
+    probenEl.dataset.list = 'proben';
+    for (const list of arrangeLists()) list._default = [...list.children].map((el) => el.dataset.key);
+    applyLayout();
 
     await loadAll([...pads.values()]);
     await loadLocal();
+    applyLayout();   // eigene Sounds an ihren gespeicherten Platz
     await offlineCheck();
     filmPreload().then(warmCache).then(offlineCheck);
   }
@@ -747,6 +755,274 @@
     setAddBlob(null);
   });
 
+  // ---------- Anordnen: Blöcke verschieben und Platz verteilen ----------
+  /* Listen: das Board (Bereiche je Stimme) und jede Pad-Fläche. Jeder Block hat
+     data-key; seine Breite ist ein Gewicht --w (1 = Standard). Zwei Blöcke in einer
+     Zeile teilen sich beim Ziehen am Griff ihren gemeinsamen Platz.
+     Gespeichert wird nur in diesem Browser (localStorage). */
+  const W_MIN = 0.5, W_MAX = 6;
+  const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let layout = store.get('layout', null);
+  if (!layout || typeof layout !== 'object') layout = {};
+  layout.order = layout.order || {};
+  layout.w = layout.w || {};
+  let drag = null;
+
+  const arrangeLists = () => [$('#board'), ...document.querySelectorAll('.pads')].filter((l) => l && l.dataset.list);
+  const isFull = (el) => el.classList.contains('szene') || el.classList.contains('wide');
+  const weight = (el) => parseFloat(el.style.getPropertyValue('--w')) || 1;
+
+  function resizeHandle() {
+    return h('span', { class: 'resize', 'aria-hidden': 'true', title: 'Ziehen: Platz zwischen den Blöcken verteilen' });
+  }
+
+  function setW(el, w) {
+    w = Math.round(Math.min(W_MAX, Math.max(W_MIN, w)) * 100) / 100;
+    if (Math.abs(w - 1) < 0.005) el.style.removeProperty('--w');
+    else el.style.setProperty('--w', String(w));
+  }
+
+  /* Reihenfolge herstellen; Blöcke, die in der gespeicherten Liste fehlen
+     (z. B. neue Sätze aus sounds.json), bleiben hinter ihrem bisherigen Vorgänger. */
+  function applyOrder(list, keys) {
+    if (!keys || !keys.length) return;
+    const items = [...list.children];
+    const byKey = new Map(items.filter((el) => el.dataset.key).map((el) => [el.dataset.key, el]));
+    const out = [...new Set(keys)].map((k) => byKey.get(k)).filter(Boolean);
+    const placed = new Set(out);
+    items.forEach((el, i) => {
+      if (placed.has(el)) return;
+      let j = i - 1;
+      while (j >= 0 && !placed.has(items[j])) j--;
+      out.splice(j < 0 ? 0 : out.indexOf(items[j]) + 1, 0, el);
+      placed.add(el);
+    });
+    list.append(...out);
+  }
+
+  function applyLayout() {
+    for (const list of arrangeLists()) {
+      applyOrder(list, layout.order[list.dataset.list]);
+      for (const el of list.children) {
+        const w = layout.w[el.dataset.key];
+        if (typeof w === 'number' && !isFull(el)) setW(el, w);
+      }
+    }
+  }
+
+  function saveLayout() {
+    layout = { order: {}, w: {} };
+    for (const list of arrangeLists()) {
+      layout.order[list.dataset.list] = [...list.children].map((el) => el.dataset.key).filter(Boolean);
+      for (const el of list.children) if (el.dataset.key && el.style.getPropertyValue('--w')) layout.w[el.dataset.key] = weight(el);
+    }
+    store.set('layout', layout);
+  }
+
+  /* Umstellen mit kurzer Gleitbewegung (FLIP), damit man sieht, wohin die Blöcke wandern. */
+  function flip(list, mutate) {
+    const els = [...list.children];
+    const before = reduceMotion ? null : new Map(els.map((el) => [el, el.getBoundingClientRect()]));
+    mutate();
+    if (!before) return;
+    for (const el of els) {
+      const a = before.get(el), b = el.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+      el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+        { duration: 170, easing: 'cubic-bezier(.2,.7,.3,1)' });
+    }
+  }
+
+  function setArranging(on) {
+    arranging = on;
+    if (!on && drag) dragEnd();
+    document.body.classList.toggle('arranging', on);
+    $('#arrange').setAttribute('aria-pressed', String(on));
+    $('#arrangeBar').hidden = !on;
+  }
+
+  function resetLayout() {
+    if (!confirm('Anordnung und Breiten auf den Standard zurücksetzen?')) return;
+    layout = { order: {}, w: {} };
+    store.set('layout', layout);
+    for (const list of arrangeLists()) {
+      flip(list, () => {
+        applyOrder(list, list._default);
+        for (const el of list.children) el.style.removeProperty('--w');
+      });
+    }
+  }
+
+  // Ziehen beginnt: Griff = Breite, Pad oder Kopf eines Bereichs = verschieben
+  document.addEventListener('pointerdown', (e) => {
+    if (!arranging || drag || e.button > 0) return;
+    const handle = e.target.closest('.resize');
+    if (handle) { sizeStart(e, handle.parentElement); return; }
+    if (e.target.closest('input, select, textarea, a, label, .tools, .icon, .btn, .var-btn')) return;
+    const cell = e.target.closest('.pads > .cell');
+    const head = !cell && e.target.closest('.voice-head');
+    const item = cell || (head && head.parentElement);
+    if (!item || !item.parentElement || !item.parentElement.dataset.list) return;
+    e.preventDefault();
+    drag = { kind: 'move', item, list: item.parentElement, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, lock: 0, raf: 0 };
+  });
+
+  function rowNeighbor(item) {
+    const n = item.nextElementSibling;
+    if (!n || isFull(n)) return null;
+    return Math.abs(n.getBoundingClientRect().top - item.getBoundingClientRect().top) < 4 ? n : null;
+  }
+
+  function sizeStart(e, item) {
+    e.preventDefault();
+    const r = item.getBoundingClientRect();
+    const next = rowNeighbor(item);
+    const w = weight(item);
+    drag = { kind: 'size', item, list: item.parentElement, pid: e.pointerId, x: e.clientX, y: e.clientY, on: true,
+      left: r.left, unit: r.width / w, next, sum: w + (next ? weight(next) : 0) };
+    item.classList.add('resizing');
+    document.body.classList.add('sizing');
+  }
+
+  function sizeMove() {
+    const { item, next, left, unit, sum } = drag;
+    let a = (drag.x - left) / unit;
+    if (next) {   // Grenze zwischen zwei Nachbarn: Summe bleibt, die Zeile bleibt gleich
+      a = Math.min(sum - W_MIN, Math.max(W_MIN, a));
+      setW(item, a);
+      setW(next, sum - a);
+    } else {
+      setW(item, a);
+    }
+  }
+
+  function dragBegin() {
+    const { item } = drag;
+    const section = item.classList.contains('voice');
+    const src = section ? item.querySelector('.voice-head') : item;
+    const r = (section ? item : src).getBoundingClientRect();
+    const rs = src.getBoundingClientRect();
+    drag.ox = drag.x0 - r.left;
+    drag.oy = drag.y0 - r.top;
+    const clone = src.cloneNode(true);
+    clone.style.height = section ? '' : '100%';
+    drag.ghost = h('div', {
+      class: section ? 'ghost ghost-voice' : 'ghost',
+      style: `width:${r.width}px;height:${section ? rs.height + 28 : r.height}px;--c:${getComputedStyle(item).getPropertyValue('--c')}`,
+    }, clone);
+    document.body.append(drag.ghost);
+    item.classList.add('placeholder');
+    document.body.classList.add('dragging');
+    drag.on = true;
+  }
+
+  function moveGhost() {
+    drag.ghost.style.transform = `translate(${drag.x - drag.ox}px, ${drag.y - drag.oy}px) rotate(.6deg)`;
+  }
+
+  function reorderAt() {
+    const now = performance.now();
+    if (now < drag.lock) {
+      // während der Gleitbewegung nicht messen, aber danach die letzte Position auswerten
+      if (!drag.recheck) {
+        const d = drag;
+        d.recheck = setTimeout(() => { d.recheck = 0; if (drag === d) reorderAt(); }, d.lock - now + 10);
+      }
+      return;
+    }
+    const { item, list, x, y } = drag;
+    const rc = item.getBoundingClientRect();
+    if (x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom) return;
+    let best = null, bd = Infinity;
+    for (const el of list.children) {
+      if (el === item) continue;
+      const r = el.getBoundingClientRect();
+      const dx = x < r.left ? r.left - x : x > r.right ? x - r.right : 0;
+      const dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      const d = dx * dx + 4 * dy * dy;
+      if (d < bd) { bd = d; best = { el, r }; }
+    }
+    if (!best) return;
+    const { el, r } = best;
+    const inRow = y >= r.top && y <= r.bottom;
+    const before = isFull(el) || !inRow ? y < r.top + r.height / 2 : x < r.left + r.width / 2;
+    const ref = before ? el : el.nextElementSibling;
+    if (ref === item || item.nextElementSibling === ref) return;
+    flip(list, () => list.insertBefore(item, ref));
+    drag.lock = now + 180;
+  }
+
+  // am oberen/unteren Rand automatisch weiterscrollen
+  function autoScroll() {
+    if (drag.raf) return;
+    const step = () => {
+      if (!drag || !drag.on) return;
+      drag.raf = 0;
+      const top = Math.max(0, $('.top').getBoundingClientRect().bottom) + 40;
+      const bottom = innerHeight - 50;
+      const v = drag.y < top ? -Math.min(22, (top - drag.y) / 3 + 4) : drag.y > bottom ? Math.min(22, (drag.y - bottom) / 3 + 4) : 0;
+      if (!v) return;
+      window.scrollBy(0, v);
+      reorderAt();
+      drag.raf = requestAnimationFrame(step);
+    };
+    drag.raf = requestAnimationFrame(step);
+  }
+
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.kind === 'size') { e.preventDefault(); sizeMove(); return; }
+    if (!drag.on) {
+      if (Math.hypot(drag.x - drag.x0, drag.y - drag.y0) < 6) return;
+      dragBegin();
+    }
+    e.preventDefault();
+    moveGhost();
+    reorderAt();
+    autoScroll();
+  });
+
+  function dragEnd(e) {
+    if (!drag || (e && e.pointerId !== drag.pid)) return;
+    const d = drag;
+    if (e && d.kind === 'move' && d.on) {
+      // Endposition auswerten: laufende Gleitbewegungen beenden, dann messen
+      for (const el of d.list.children) for (const a of el.getAnimations()) a.finish();
+      d.lock = 0;
+      reorderAt();
+    }
+    drag = null;
+    clearTimeout(d.recheck);
+    if (d.raf) cancelAnimationFrame(d.raf);
+    if (d.ghost) d.ghost.remove();
+    d.item.classList.remove('placeholder', 'resizing');
+    document.body.classList.remove('dragging', 'sizing');
+    if (d.on) saveLayout();
+  }
+  document.addEventListener('pointerup', dragEnd);
+  document.addEventListener('pointercancel', dragEnd);
+
+  // Tastatur im Anordnen-Modus: ←/→ verschiebt das fokussierte Pad, mit Umschalt ändert sich die Breite
+  function nudge(item, dir, wider) {
+    const list = item.parentElement;
+    if (wider) {
+      flip(list, () => setW(item, weight(item) + dir * 0.25));
+    } else {
+      const sib = dir < 0 ? item.previousElementSibling : item.nextElementSibling;
+      if (!sib) return;
+      flip(list, () => list.insertBefore(item, dir < 0 ? sib : sib.nextElementSibling));
+    }
+    const pad = item.querySelector('.pad');
+    if (pad) pad.focus();
+    saveLayout();
+  }
+
+  $('#arrange').addEventListener('click', () => setArranging(!arranging));
+  $('#arrangeDone').addEventListener('click', () => setArranging(false));
+  $('#arrangeReset').addEventListener('click', resetLayout);
+
   // ---------- Bedienelemente ----------
   function setMaster(v) {
     v = Math.min(1.5, Math.max(0, v));
@@ -774,7 +1050,13 @@
   document.addEventListener('keydown', (e) => {
     if (dlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'Escape' && film.state !== 'idle') { e.preventDefault(); stopAll(); filmClose(); return; }
+    if (e.key === 'Escape' && arranging) setArranging(false);
     if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); stopAll(); return; }
+    if (arranging && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      const item = document.activeElement && document.activeElement.closest('.pads > .cell');
+      if (item) { e.preventDefault(); nudge(item, e.key === 'ArrowLeft' ? -1 : 1, e.shiftKey); }
+      return;
+    }
     if (e.repeat) return;
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();

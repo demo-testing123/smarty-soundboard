@@ -15,6 +15,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 | Robo-Anteil je Stimme | Regler „Robo“ (Standard SMARTy 20 %, Erzähler 0 %; Doppelklick setzt zurück) |
 | Mehrere Sätze gleichzeitig | Haken bei „Überlappen“ |
 | Satz als WAV speichern (mit Effekt) | Symbol ⤓ unten rechts auf dem Pad |
+| Pads und Bereiche umstellen, Platz verteilen | „⇄ Anordnen“: Pad oder Kopf eines Bereichs ziehen = verschieben; Griff zwischen zwei Blöcken nach links/rechts ziehen = Breite zwischen beiden verteilen; Tastatur `←` `→` bzw. `Umschalt`+`←` `→`. „Fertig“ oder `Esc` beendet den Modus. Die Anordnung wird nur in diesem Browser gespeichert, „Zurücksetzen“ stellt den Standard her |
 
 Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 
