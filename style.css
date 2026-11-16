@@ -85,6 +85,7 @@ input[type=range] { accent-color: var(--c); width: 120px; }
 .btn.primary { background: #2ee6d6; border-color: #2ee6d6; color: #04201d; }
 .btn.primary:disabled { opacity: .45; cursor: not-allowed; }
 .btn.small { font-size: .8rem; padding: .4em .75em; }
+a.btn { text-decoration: none; }
 
 /* ---------- Board ----------
    Bereiche und Pads liegen in Flex-Zeilen. --w ist das Breiten-Gewicht eines Blocks

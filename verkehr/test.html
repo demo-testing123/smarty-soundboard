@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verkehrssimulation – Prüfung</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 24px; background: #0b1220; color: #e8eefc; font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  p { color: #93a0bd; margin: 0 0 16px; }
+  table { border-collapse: collapse; width: 100%; max-width: 900px; }
+  td, th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #26324d; vertical-align: top; }
+  .ok { color: #4ade80; font-weight: 700; }
+  .fail { color: #ff6b6b; font-weight: 700; }
+  code { background: #ffffff14; padding: 0 .3em; border-radius: 4px; }
+  #summary { font-size: 1.2rem; margin: 16px 0; }
+</style>
+</head>
+<body>
+<h1>Verkehrssimulation · Prüfung der Logik</h1>
+<p>Rechnet beide Versuche ohne Grafik durch und prüft die Abnahmekriterien. Nach jeder Änderung an <code>config.js</code> hier neu laden.</p>
+<div id="summary">Prüfe …</div>
+<table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Details</th></tr></thead><tbody id="rows"></tbody></table>
+<script type="module">
+import { Simulation, GRUEN } from './sim.js';
+import { CONFIG } from './config.js';
+
+const rows = [];
+const check = (name, ok, detail = '') => rows.push({ name, ok, detail });
+const f1 = (x) => x.toFixed(2).replace('.', ',');
+
+const runs = {};
+for (const modus of ['normal', 'schlau']) {
+  const a = new Simulation(modus).bisEnde();
+  const b = new Simulation(modus).bisEnde();
+  runs[modus] = a;
+  check(`${modus}: Versuch endet`, a.fertig, `nach ${f1(a.t)} s`);
+  check(`${modus}: Bus fährt nur bei Grün über die Haltelinie`, a.bus.ueberfahrtSignal === GRUEN, `Signal beim Überfahren: ${a.bus.ueberfahrtSignal}`);
+  check(`${modus}: Bus hält bei Rot (hat gestanden)`, a.bus.gewartet > 0, `Standzeit ${f1(a.bus.gewartet)} s`);
+  check(`${modus}: nie zwei kreuzende Richtungen gleichzeitig frei`, a.konflikte === 0, `${a.konflikte} Schritte mit Konflikt`);
+  check(`${modus}: nie kreuzende Fahrzeuge gleichzeitig in der Kreuzung`, a.kreuzungsKonflikte === 0, `${a.kreuzungsKonflikte} Schritte`);
+  check(`${modus}: kein Fahrzeug fährt bei Rot`, a.rotFahrten === 0, `${a.rotFahrten} Rotfahrten`);
+  check(`${modus}: wiederholbar (zweiter Durchlauf identisch)`, a.bus.gewartet === b.bus.gewartet && a.t === b.t && JSON.stringify(a.ereignisse) === JSON.stringify(b.ereignisse),
+    `${f1(a.bus.gewartet)} s / ${f1(b.bus.gewartet)} s`);
+}
+
+// gleiche Ausgangslage
+const s1 = new Simulation('normal'), s2 = new Simulation('schlau');
+const lage = (s) => JSON.stringify({ phase: s.phase, inPhase: s.inPhase, f: s.fahrzeuge.map((f) => [f.typ, f.spur, f.s, f.v]) });
+check('Beide Versuche starten gleich (Bus, Ampel, Autos, Tempo)', lage(s1) === lage(s2));
+
+// Reset mitten im Versuch
+const s3 = new Simulation('schlau');
+for (let i = 0; i < 400; i++) s3.schritt();
+s3.reset('schlau');
+check('Zurücksetzen mitten im Versuch ergibt wieder die Ausgangslage', lage(s3) === lage(s2) && s3.t === 0);
+s3.bisEnde();
+check('… und danach dasselbe Ergebnis', s3.bus.gewartet === runs.schlau.bus.gewartet, `${f1(s3.bus.gewartet)} s`);
+
+// Funksignal und sichere Umschaltung im intelligenten Modus
+const e = runs.schlau.ereignisse.map((x) => x.typ);
+const order = ['funk', 'empfangen', 'umschalten', 'allesRot', 'rotGelb', 'busGruen'];
+const idx = order.map((x) => e.indexOf(x));
+check('Intelligent: Funk → Empfang → Gelb → alles Rot → Rot-Gelb → Grün', idx.every((v, i) => v >= 0 && (i === 0 || v > idx[i - 1])), order.map((x, i) => `${x}@${idx[i] >= 0 ? f1(runs.schlau.ereignisse[idx[i]].t) : '–'}`).join(' · '));
+const tUm = runs.schlau.ereignisse.find((x) => x.typ === 'umschalten');
+const tGr = runs.schlau.ereignisse.find((x) => x.typ === 'busGruen');
+const minUeb = CONFIG.ampel.gelb + CONFIG.ampel.allesRot + CONFIG.ampel.rotGelb;
+check('Intelligent: volle Übergangszeit eingehalten (nicht „magisch“ Grün)', tUm && tGr && tGr.t - tUm.t >= minUeb - 1e-6, tUm && tGr ? `${f1(tGr.t - tUm.t)} s ≥ ${minUeb} s` : '');
+check('Normal: kein Funksignal', !runs.normal.ereignisse.some((x) => x.typ === 'funk'));
+
+const wN = Simulation.runden(runs.normal.bus.gewartet), wS = Simulation.runden(runs.schlau.bus.gewartet);
+check('Intelligente Ampel spart Wartezeit', wS < wN, `Normal ${wN} s · Intelligent ${wS} s · spart ${wN - wS} s (Querstraße wartet: ${f1(runs.normal.querWarten)} s → ${f1(runs.schlau.querWarten)} s)`);
+
+const bad = rows.filter((r) => !r.ok).length;
+document.getElementById('summary').innerHTML = bad
+  ? `<span class="fail">✗ ${bad} von ${rows.length} Prüfungen fehlgeschlagen</span>`
+  : `<span class="ok">✓ Alle ${rows.length} Prüfungen bestanden</span> · Normal ${wN} s, Intelligent ${wS} s, der Bus spart ${wN - wS} s`;
+document.getElementById('rows').innerHTML = rows.map((r) => `<tr><td>${r.name}</td><td class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'}</td><td>${r.detail}</td></tr>`).join('');
+window.__testErgebnis = { bestanden: rows.length - bad, gesamt: rows.length, rows, wN, wS };
+</script>
+</body>
+</html>

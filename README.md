@@ -96,6 +96,10 @@ Die gemeinsame Anordnung steht in **`layout.json`**. Jedes Gerät lädt sie beim
 - **Ohne Token:** „Ohne Token …“ kopiert den Text und öffnet `layout.json` im GitHub-Editor. Dort alles markieren, einfügen und „Commit changes“ klicken.
 - Zum Abspielen braucht kein Gerät einen Token. Offline gilt die zuletzt geladene Anordnung.
 
+## Verkehrssimulation „Die schlaue Ampel“ (`verkehr/`)
+
+Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, im Soundboard oben über **🚦 Verkehr** (öffnet ein neues Fenster für den Beamer). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
+
 ## In der Turnhalle
 
 - Die Seite **vorher einmal mit Internet öffnen**. Unten erscheint dann „offline bereit“. Ab dann läuft sie im selben Browser auch ohne Netz.

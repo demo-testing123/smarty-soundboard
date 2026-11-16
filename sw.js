@@ -1,13 +1,20 @@
 /* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
  * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v7';
+const CACHE = 'smarty-v8';
 const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'layout.json', 'audio/manifest.json'];
+// Simulationen für die Bühne (eigene Seiten im selben Projekt) – ebenfalls offline verfügbar
+const SPIELE = [
+  'lib/three.module.min.js',
+  'verkehr/', 'verkehr/index.html', 'verkehr/style.css', 'verkehr/main.js', 'verkehr/config.js',
+  'verkehr/sim.js', 'verkehr/scene3d.js', 'verkehr/render2d.js',
+];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
     await c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' })));
+    await Promise.allSettled(SPIELE.map((u) => c.add(new Request(u, { cache: 'reload' }))));
     try {
       const m = await (await fetch('audio/manifest.json', { cache: 'no-store' })).json();
       // einzeln, damit eine fehlende Datei nicht alles verhindert

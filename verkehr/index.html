@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Die schlaue Ampel · Verkehrssimulation</title>
+<meta name="description" content="Verkehrssimulation für START IT SMART: normale Ampel und intelligente Ampel mit Busfunk im Vergleich – gemessene Wartezeit des Busses.">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='20' y='4' width='24' height='56' rx='8' fill='%231f2937'/%3E%3Ccircle cx='32' cy='17' r='7' fill='%23ff3b30'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23ffcc00'/%3E%3Ccircle cx='32' cy='47' r='7' fill='%2322e36b'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <main id="buehne" data-modus="normal">
+    <div id="welt" aria-label="Kreuzung mit Bus, Autos und Ampeln"></div>
+    <div id="lblBus" class="label" hidden></div>
+    <div id="lblAmpel" class="label funk" hidden></div>
+
+    <header class="hud-top">
+      <div class="modus-box">
+        <div id="modus" class="modus">A · Normale Ampel</div>
+        <div id="modusInfo" class="modus-info"></div>
+      </div>
+      <div id="titel" class="titel">Die schlaue Ampel</div>
+      <div id="uhr" class="uhr" role="timer" aria-live="off">
+        <span id="stLabel" class="uhr-label">Wartezeit Bus</span>
+        <span id="uhrZeit" class="uhr-zeit">0,0 s</span>
+      </div>
+    </header>
+
+    <aside class="signale" aria-label="Ampelanzeige">
+      <div id="sigBus" class="sig"><div class="sig-kopf"><i class="l-rot"></i><i class="l-gelb"></i><i class="l-gruen"></i></div><span class="sig-name">Ampel Bus</span></div>
+      <div id="sigQuer" class="sig"><div class="sig-kopf"><i class="l-rot"></i><i class="l-gelb"></i><i class="l-gruen"></i></div><span class="sig-name">Querstraße</span></div>
+    </aside>
+
+    <section id="kette" class="kette" hidden aria-live="polite">
+      <div class="glieder">
+        <span class="glied"><em>1</em><b>Information</b></span><span class="pfeil">→</span>
+        <span class="glied"><em>2</em><b>Entscheidung</b></span><span class="pfeil">→</span>
+        <span class="glied"><em>3</em><b>Wirkung</b></span>
+      </div>
+      <div id="ketteText" class="kette-text"></div>
+    </section>
+
+    <div id="banner" class="banner" hidden></div>
+    <div id="hinweis" class="hinweis" hidden></div>
+
+    <section id="ergebnis" class="ergebnis" hidden aria-live="polite">
+      <h2 id="erTitel">Ergebnis</h2>
+      <div class="er-zeilen">
+        <div class="er-zeile normal"><span id="erNName">Normale Ampel</span><b id="erN">–</b></div>
+        <div class="er-zeile schlau"><span id="erSName">Intelligente Ampel</span><b id="erS">–</b></div>
+      </div>
+      <p id="erSpart" class="er-spart"></p>
+      <p id="erHinweis" class="er-hinweis"></p>
+    </section>
+
+    <div id="laden" class="laden">Lade Simulation …</div>
+    <div id="fehler" class="fehler" hidden></div>
+
+    <nav id="regie" class="regie" aria-label="Regie">
+      <button type="button" data-aktion="normal" id="btnNormal" aria-pressed="true">Normale Ampel <kbd>1</kbd></button>
+      <button type="button" data-aktion="schlau" id="btnSchlau" aria-pressed="false">Intelligente Ampel <kbd>2</kbd></button>
+      <span class="trenner"></span>
+      <button type="button" data-aktion="start" id="btnStart" class="haupt">▶ Start <kbd>Leer</kbd></button>
+      <button type="button" data-aktion="pause" id="btnPause" aria-pressed="false">Pause <kbd>P</kbd></button>
+      <button type="button" data-aktion="zuruecksetzen">Zurücksetzen <kbd>R</kbd></button>
+      <button type="button" data-aktion="ergebnis" id="btnErgebnis" aria-pressed="false">Ergebnis <kbd>E</kbd></button>
+      <span class="trenner"></span>
+      <button type="button" data-aktion="vollbild" title="Vollbild (F)">⛶ <kbd>F</kbd></button>
+      <button type="button" data-aktion="ton" id="btnTon" aria-pressed="true" title="Ton an/aus (M)">🔊 Ton</button>
+      <button type="button" data-aktion="leiste" title="Bedienleiste ausblenden (H) – Tasten funktionieren weiter">▾ <kbd>H</kbd></button>
+    </nav>
+  </main>
+</div>
+
+<noscript><p class="fehler">Für die Simulation muss JavaScript eingeschaltet sein.</p></noscript>
+<script>
+  // Ladefehler verständlich anzeigen (z. B. per Doppelklick als Datei geöffnet oder Datei fehlt)
+  setTimeout(function () {
+    if (window.__verkehrOk) return;
+    var l = document.getElementById('laden'); if (l) l.hidden = true;
+    var f = document.getElementById('fehler');
+    if (f && f.hidden) { f.textContent = 'Die Simulation konnte nicht geladen werden. Bitte über GitHub Pages oder einen lokalen Webserver öffnen (nicht per Doppelklick auf die Datei).'; f.hidden = false; }
+  }, 8000);
+</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+/* Verkehrssimulation – Bühne im Format 16:9, alle Schriftgrößen relativ zur Bühnenhöhe (cqh),
+   damit es auf Laptop und Leinwand gleich aussieht. */
+:root {
+  --ink: #0f172a;
+  --hud: rgba(15, 23, 42, .82);
+  --hud-line: rgba(255, 255, 255, .14);
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --bus: #f5a524;
+  --funk: #22d3ee;
+  --rot: #ff3b30;
+  --gelb: #ffcc00;
+  --gruen: #22e36b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; background: #05080f; color: var(--text); overflow: hidden; }
+body { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+body.maus-weg, body.maus-weg * { cursor: none !important; }
+
+#app { position: fixed; inset: 0; display: grid; place-items: center; }
+#buehne {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: size;
+  background: #bfe3f2;
+}
+#welt { position: absolute; inset: 0; }
+#welt canvas { display: block; }
+
+kbd {
+  font: 600 .72em/1 ui-monospace, Consolas, monospace;
+  padding: .2em .4em; border-radius: .35em;
+  border: 1px solid rgba(255,255,255,.35); border-bottom-width: 2px;
+  background: rgba(255,255,255,.12); color: inherit;
+}
+
+/* ---------- Kopfzeile ---------- */
+.hud-top {
+  position: absolute; left: 1.6cqh; right: 1.6cqh; top: 1.6cqh;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 2cqh;
+  pointer-events: none;
+}
+.modus-box, .uhr {
+  background: var(--hud); border: 1px solid var(--hud-line); border-radius: 1.6cqh;
+  padding: 1.2cqh 2cqh; backdrop-filter: blur(6px);
+}
+.modus { font-size: 4.6cqh; font-weight: 800; letter-spacing: .01em; line-height: 1.1; }
+[data-modus="schlau"] .modus { color: var(--funk); }
+.modus-info { font-size: 2.7cqh; color: var(--muted); margin-top: .5cqh; }
+.titel {
+  font-size: 3cqh; font-weight: 700; color: var(--ink);
+  background: rgba(255,255,255,.75); padding: .8cqh 2cqh; border-radius: 99cqh; margin-top: .8cqh;
+}
+.uhr { justify-self: end; text-align: right; min-width: 30cqh; }
+.uhr-label { display: block; font-size: 2.6cqh; color: var(--muted); }
+.uhr-zeit { display: block; font-size: 9cqh; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.uhr.laeuft { border-color: var(--rot); box-shadow: 0 0 0 .4cqh rgba(255,59,48,.55); }
+.uhr.laeuft .uhr-zeit { color: #ff8a80; }
+.uhr.fertig .uhr-zeit { color: var(--gruen); }
+
+/* ---------- Ampelanzeige links ---------- */
+.signale {
+  position: absolute; left: 1.6cqh; bottom: 12.5cqh;
+  display: flex; flex-direction: row; gap: 1.4cqh; pointer-events: none;
+}
+.sig { display: flex; align-items: center; gap: 1.2cqh; background: var(--hud); border: 1px solid var(--hud-line); border-radius: 1.6cqh; padding: 1cqh 1.4cqh; }
+.sig-kopf { display: flex; flex-direction: column; gap: .6cqh; background: #111827; padding: .8cqh; border-radius: 1.2cqh; }
+.sig-kopf i { width: 4.4cqh; height: 4.4cqh; border-radius: 50%; background: #2b3443; display: block; transition: background .12s, box-shadow .12s; }
+.sig-kopf i.l-rot.an { background: var(--rot); box-shadow: 0 0 2.4cqh var(--rot); }
+.sig-kopf i.l-gelb.an { background: var(--gelb); box-shadow: 0 0 2.4cqh var(--gelb); }
+.sig-kopf i.l-gruen.an { background: var(--gruen); box-shadow: 0 0 2.4cqh var(--gruen); }
+.sig-name { font-size: 3cqh; font-weight: 700; writing-mode: horizontal-tb; max-width: 16cqh; line-height: 1.15; }
+#sigBus .sig-name { color: var(--bus); }
+
+/* ---------- Kette Information → Entscheidung → Wirkung ---------- */
+.kette {
+  position: absolute; left: 50%; top: 14.5cqh; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 1.2cqh; pointer-events: none;
+}
+.glieder { display: flex; align-items: center; gap: 1.2cqh; }
+.glied {
+  display: inline-flex; align-items: center; gap: 1cqh;
+  font-size: 3.2cqh; padding: .8cqh 1.8cqh; border-radius: 99cqh;
+  background: rgba(15,23,42,.7); border: .3cqh solid rgba(255,255,255,.18); color: #94a3b8;
+  transition: all .2s;
+}
+.glied em { font-style: normal; font-weight: 800; width: 3.6cqh; height: 3.6cqh; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.12); font-size: 2.4cqh; }
+.glied.aktiv { background: var(--funk); color: #04202a; border-color: #a5f3fc; transform: scale(1.08); box-shadow: 0 0 3cqh rgba(34,211,238,.6); }
+.glied.aktiv em { background: rgba(4,32,42,.18); }
+.glied.erledigt { color: #e2e8f0; border-color: rgba(34,211,238,.6); }
+.pfeil { font-size: 3.4cqh; color: #e2e8f0; text-shadow: 0 1px 4px #000; }
+.kette-text {
+  font-size: 4cqh; font-weight: 800; color: #fff; text-align: center;
+  background: rgba(15,23,42,.82); padding: .9cqh 2.4cqh; border-radius: 1.4cqh; border: 1px solid var(--hud-line);
+}
+
+/* ---------- Beschriftungen an Bus und Ampel ---------- */
+.label {
+  position: absolute; left: 0; top: 0; pointer-events: none; white-space: nowrap;
+  font-size: 3.2cqh; font-weight: 800; padding: .7cqh 1.6cqh; border-radius: 99cqh;
+  background: #fff; color: var(--ink); box-shadow: 0 .6cqh 2cqh rgba(0,0,0,.35);
+  margin-top: -1cqh;
+}
+.label[data-art="funk"], .label.funk { background: var(--funk); color: #04202a; }
+.label[data-art="warten"] { background: #fee2e2; color: #7f1d1d; }
+.label[data-art="gruen"] { background: var(--gruen); color: #052e16; }
+
+/* ---------- Banner, Hinweis ---------- */
+.banner {
+  position: absolute; left: 50%; bottom: 30cqh; transform: translateX(-50%);
+  font-size: 4.2cqh; font-weight: 800; padding: 1.2cqh 3cqh; border-radius: 99cqh;
+  background: rgba(15,23,42,.88); border: 1px solid var(--hud-line); white-space: nowrap;
+}
+.banner[data-art="fertig"] { background: #14532d; border-color: #4ade80; }
+.banner[data-art="pause"] { background: #78350f; border-color: #fbbf24; }
+.hinweis {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 70%;
+  font-size: 3cqh; padding: 2cqh 3cqh; border-radius: 1.6cqh; background: rgba(15,23,42,.92); text-align: center;
+}
+
+/* ---------- Ergebnis ---------- */
+.ergebnis {
+  position: absolute; inset: 9cqh 14cqh 12cqh; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3cqh;
+  background: rgba(15,23,42,.94); border: .3cqh solid rgba(255,255,255,.2); border-radius: 3cqh;
+  box-shadow: 0 3cqh 8cqh rgba(0,0,0,.5);
+  animation: einblenden .35s ease-out;
+}
+@keyframes einblenden { from { opacity: 0; transform: scale(.96); } }
+.ergebnis h2 { margin: 0; font-size: 6cqh; }
+.er-zeilen { display: grid; gap: 2cqh; width: 84%; }
+.er-zeile {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 3cqh;
+  font-size: 5.4cqh; font-weight: 700; padding: 1.6cqh 3cqh; border-radius: 2cqh; background: rgba(255,255,255,.07);
+}
+.er-zeile b { font-size: 7.4cqh; font-variant-numeric: tabular-nums; }
+.er-zeile.normal b { color: #fca5a5; }
+.er-zeile.schlau b { color: var(--funk); }
+.er-zeile b.fehlt { font-size: 4cqh; color: #94a3b8; font-weight: 600; }
+.er-spart {
+  margin: 0; font-size: 7cqh; font-weight: 900; color: #052e16; background: var(--gruen);
+  padding: 1.2cqh 4cqh; border-radius: 99cqh; box-shadow: 0 0 5cqh rgba(34,227,107,.45);
+}
+.er-hinweis { margin: 0; font-size: 3cqh; color: var(--muted); }
+
+/* ---------- Laden, Fehler ---------- */
+.laden, .fehler {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 8cqh;
+  font-size: 4cqh; background: #0b1220; z-index: 10;
+}
+.fehler { color: #fecaca; }
+.laden[hidden], .fehler[hidden] { display: none; }
+
+/* ---------- Regie-Leiste ---------- */
+.regie {
+  position: absolute; left: 50%; bottom: 1.6cqh; transform: translateX(-50%); z-index: 6;
+  display: flex; align-items: center; gap: .8cqh; flex-wrap: nowrap; max-width: 96%;
+  padding: .9cqh; border-radius: 2cqh; background: rgba(15,23,42,.9); border: 1px solid var(--hud-line);
+  box-shadow: 0 1cqh 3cqh rgba(0,0,0,.35);
+}
+.regie button {
+  appearance: none; font: inherit; font-size: 2.3cqh; font-weight: 700; color: var(--text);
+  background: #1e293b; border: .25cqh solid #334155; border-radius: 1.2cqh;
+  padding: .9cqh 1.25cqh; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: .6cqh;
+}
+.regie kbd { font-size: .78em; }
+.regie button:hover { background: #273449; border-color: #475569; }
+.regie button:focus-visible { outline: .4cqh solid #fff; outline-offset: .3cqh; }
+.regie button[aria-pressed="true"] { background: #e2e8f0; color: var(--ink); border-color: #fff; }
+#btnSchlau[aria-pressed="true"] { background: var(--funk); border-color: #a5f3fc; color: #04202a; }
+.regie button.haupt { background: #16a34a; border-color: #4ade80; }
+.regie button.haupt:hover { background: #15803d; }
+.regie .trenner { width: .3cqh; align-self: stretch; background: var(--hud-line); margin: 0 .4cqh; }
+.ohne-leiste .regie { display: none; }
+.ohne-leiste .signale { bottom: 2cqh; }
