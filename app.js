@@ -626,7 +626,12 @@
       if (p.key) keyMap.set(p.key, p.id);
       const cell = padCell(p);
       if (l.gruppe === 'proben') probenEl.append(cell);
-      else voices.get(l.stimme).padsEl.append(cell);
+      else {
+        // Szenen-Überschrift, sobald innerhalb einer Stimme eine neue Szene beginnt
+        if (l.szene && l.szene !== v.szene) v.padsEl.append(h('h3', { class: 'szene' }, l.szene));
+        v.szene = l.szene || v.szene;
+        v.padsEl.append(cell);
+      }
     }
     $('#probenWrap').hidden = !probenEl.children.length;
 

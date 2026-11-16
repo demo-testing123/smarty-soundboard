@@ -52,76 +52,14 @@
   ],
   "saetze": [
     {
-      "id": "SMARTy_01_Landung",
-      "stimme": "smarty",
-      "taste": "1",
-      "titel": "01 · Die Landung",
-      "text": "Systemcheck abgeschlossen. Zeitreise überstanden. Moment mal … wo sind wir denn hier gelandet?",
-      "sprechen": "Systemcheck abgeschlossen. Zeitreise überstanden. [Pause 0.5] Moment mal … wo sind wir denn hier gelandet?",
-      "einsatz": "Nach dem Zeitreise-Crash."
-    },
-    {
-      "id": "SMARTy_02_Entdeckung",
-      "stimme": "smarty",
-      "taste": "2",
-      "titel": "02 · Die Entdeckung",
-      "text": "Alarm! Ich entdecke ganz viele kleine Menschen! Können die uns etwa hören?",
-      "sprechen": "Alarm! Ich entdecke ganz viele kleine Menschen! [Pause 0.5] Können die uns etwa hören?",
-      "einsatz": "SMARTy schaut zum Publikum."
-    },
-    {
-      "id": "SMARTy_03_Frage",
-      "stimme": "smarty",
-      "taste": "3",
-      "titel": "03 · Die Frage",
-      "text": "Ich habe 327 Computerspiele gespeichert. Wozu braucht ihr denn noch echte Spielplätze?",
-      "sprechen": "Ich habe 327 Computerspiele gespeichert. [Pause 0.6] Wozu braucht ihr denn noch echte Spielplätze?",
-      "einsatz": "Beim Thema lebenswerte Stadt."
-    },
-    {
-      "id": "SMARTy_04_Aha",
-      "stimme": "smarty",
-      "taste": "4",
-      "titel": "04 · Der Aha-Moment",
-      "text": "Aha! Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
-      "sprechen": "Aha! [Pause 0.35] Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
-      "einsatz": "Nach den Antworten der Kinder."
-    },
-    {
-      "id": "SMARTy_05_Zukunftsalarm",
-      "stimme": "smarty",
-      "taste": "5",
-      "titel": "05 · Der Zukunftsalarm",
-      "text": "Achtung, Achtung! Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
-      "sprechen": "Achtung, Achtung! [Pause 0.3] Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
-      "einsatz": "Beginn der Rettungsmission."
-    },
-    {
-      "id": "SMARTy_06_Finale",
-      "stimme": "smarty",
-      "taste": "6",
-      "titel": "06 · Das Finale",
-      "text": "Mission erfolgreich! Danke, Zukunftscrew! Ich werde eure Ideen niemals vergessen!",
-      "sprechen": "Mission erfolgreich! [Pause 0.3] Danke, Zukunftskru! Ich werde eure Ideen niemals vergessen!",
-      "einsatz": "Am Ende der Show."
-    },
-    {
-      "id": "SMARTy_07_Stimmtest",
-      "stimme": "smarty",
-      "taste": "7",
-      "titel": "07 · Soundcheck",
-      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
-      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
-      "einsatz": "Optional: Stimmtest über die Hallenanlage vor der Show."
-    },
-    {
       "id": "SMARTy_08_Heimlicher_Passagier",
       "stimme": "smarty",
       "taste": "8",
       "titel": "08 · Heimlicher Passagier",
       "text": "Zeitreise erfolgreich. Heimlicher Passagier ebenfalls angekommen.",
       "sprechen": "Zeitreise erfolgreich. [Pause 0.5] Heimlicher Passagier ebenfalls angekommen.",
-      "einsatz": "Ankunftsszene."
+      "einsatz": "Ankunftsszene.",
+      "szene": "Ankunft"
     },
     {
       "id": "SMARTy_09_Mitgeschmuggelt",
@@ -130,7 +68,8 @@
       "titel": "09 · Mitgeschmuggelt",
       "text": "Ich habe mich mitgeschmuggelt. Ihr habt vergessen, mich einzuladen.",
       "sprechen": "Ich habe mich mitgeschmuggelt. [Pause 0.5] Ihr habt vergessen, mich einzuladen.",
-      "einsatz": "Ankunftsszene."
+      "einsatz": "Ankunftsszene.",
+      "szene": "Ankunft"
     },
     {
       "id": "SMARTy_10_Sehr_guter_Grund",
@@ -139,7 +78,158 @@
       "titel": "10 · Sehr guter Grund",
       "text": "Doch. Sehr guter Grund.",
       "sprechen": "Doch. [Pause 0.45] Sehr guter Grund.",
-      "einsatz": "Ankunftsszene: trockene Antwort."
+      "einsatz": "Ankunftsszene: trockene Antwort.",
+      "szene": "Ankunft"
+    },
+    {
+      "id": "SMARTy_03_Frage",
+      "stimme": "smarty",
+      "taste": "3",
+      "titel": "03 · Die Frage (N1)",
+      "text": "Ich habe 327 Computerspiele gespeichert. Wozu braucht ihr denn noch echte Spielplätze?",
+      "sprechen": "Ich habe 327 Computerspiele gespeichert. [Pause 0.6] Wozu braucht ihr denn noch echte Spielplätze?",
+      "einsatz": "Mission Natur · nach „Vielleicht fehlt hier einfach das richtige Computerspiel?“",
+      "szene": "Mission Natur – Aus Grau wird Grün"
+    },
+    {
+      "id": "SMARTy_04_Aha",
+      "stimme": "smarty",
+      "taste": "4",
+      "titel": "04 · Der Aha-Moment (N2)",
+      "text": "Aha! Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
+      "sprechen": "Aha! [Pause 0.35] Menschen brauchen also nicht nur Computer, sondern auch Natur, Freunde und Platz zum Spielen!",
+      "einsatz": "Mission Natur · Leinwand „DIE LÖSUNG: BEIDES GEMEINSAM!“, Grünversion in Minecraft",
+      "szene": "Mission Natur – Aus Grau wird Grün"
+    },
+    {
+      "id": "SMARTy_N3_Wetterwarnung",
+      "stimme": "smarty",
+      "taste": "w",
+      "titel": "N3 · Wetterwarnung",
+      "text": "Wetterwarnung! Starkregen im Anmarsch. Prognose: sehr, sehr nasse Pfoten.",
+      "sprechen": "Wetterwarnung! [Pause 0.3] Starkregen im Anmarsch. [Pause 0.6] Prognose: sehr, sehr nasse Pfoten.",
+      "einsatz": "Mission Natur · nach „Mission geschafft! Oder?“ · Textvorschlag: laut Drehbuch erst nach Freigabe einsetzen",
+      "szene": "Mission Natur – Aus Grau wird Grün"
+    },
+    {
+      "id": "SMARTy_N4_Regenwasser",
+      "stimme": "smarty",
+      "taste": "e",
+      "titel": "N4 · Regenwasser auffangen",
+      "text": "Neue Erkenntnis gespeichert: Ein guter Spielplatz kann auch Regenwasser auffangen. Multifunktional. Gefällt mir!",
+      "sprechen": "Neue Erkenntnis gespeichert: Ein guter Spielplatz kann auch Regenwasser auffangen. [Pause 0.5] Multifunktional. [Pause 0.45] Gefällt mir!",
+      "einsatz": "Mission Natur · nach „… zum Gießen der Bäume nutzen!“ · Textvorschlag: laut Drehbuch erst nach Freigabe einsetzen",
+      "szene": "Mission Natur – Aus Grau wird Grün"
+    },
+    {
+      "id": "SMARTy_T1_Sprachbefehl",
+      "stimme": "smarty",
+      "taste": "r",
+      "titel": "T1 · Sprachbefehl nicht erkannt",
+      "text": "Sprachbefehl nicht erkannt. Straßenlaternen besitzen keine Ohren. Vorschlag: Helligkeitssensor verwenden.",
+      "sprechen": "Sprachbefehl nicht erkannt. [Pause 0.5] Straßenlaternen besitzen keine Ohren. [Pause 0.6] Vorschlag: Helligkeitssensor verwenden.",
+      "einsatz": "Übergang von der Abstimmung · nach „Bitte nur leuchten, wenn es dunkel ist!“ und kurzer Pause, in der nichts passiert",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_T2_Programm_verstanden",
+      "stimme": "smarty",
+      "taste": "t",
+      "titel": "T2 · Programm verstanden",
+      "text": "Programm verstanden. Bereit für den Praxistest.",
+      "sprechen": "Programm verstanden. [Pause 0.4] Bereit für den Praxistest.",
+      "einsatz": "Nach der Programmierfolie · nach „… einer Regel, die wir festgelegt haben.“",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_T3_Programmoptimierung",
+      "stimme": "smarty",
+      "taste": "z",
+      "titel": "T3 · Programmoptimierung",
+      "text": "Programmoptimierung erkannt. Kurzzeitige Verdunkelung ignorieren. Sehr gute Idee, Zukunftsteam!",
+      "sprechen": "Programmoptimierung erkannt. [Pause 0.4] Kurzzeitige Verdunkelung ignorieren. [Pause 0.5] Sehr gute Idee, Zukunftsteam!",
+      "einsatz": "Nach der Verbesserungsfolie „Wir machen unser Programm schlauer!“",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_T4_Experiment_erfolgreich",
+      "stimme": "smarty",
+      "taste": "u",
+      "titel": "T4 · Experiment erfolgreich",
+      "text": "Experiment erfolgreich. Intelligente Straßenbeleuchtung kann in die Stadtplanung übernommen werden.",
+      "sprechen": "Experiment erfolgreich. [Pause 0.5] Intelligente Straßenbeleuchtung kann in die Stadtplanung übernommen werden.",
+      "einsatz": "Nach dem Experiment, vor Minecraft",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_T5_Mission_Technik",
+      "stimme": "smarty",
+      "taste": "i",
+      "titel": "T5 · Mission Technik abgeschlossen",
+      "text": "Mission Technik abgeschlossen. Zukunftsstadt aktualisiert.",
+      "sprechen": "Mission Technik abgeschlossen. [Pause 0.4] Zukunftsstadt aktualisiert.",
+      "einsatz": "Nach der Minecraft-Demonstration (Tag: Laternen aus, Nacht: Laternen an)",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_T6_Verkehrsproblem",
+      "stimme": "smarty",
+      "taste": "o",
+      "titel": "T6 · Verkehrsproblem (optional)",
+      "text": "Warnung. Verkehrsproblem erkannt.",
+      "sprechen": "Warnung. [Pause 0.35] Verkehrsproblem erkannt.",
+      "einsatz": "Optional · Übergang zur Mobilität, Leinwand: Kreuzung in Minecraft · nur falls die Szene so bleibt",
+      "szene": "Mission Technik – Straßenlaternen"
+    },
+    {
+      "id": "SMARTy_01_Landung",
+      "stimme": "smarty",
+      "taste": "1",
+      "titel": "01 · Die Landung",
+      "text": "Systemcheck abgeschlossen. Zeitreise überstanden. Moment mal … wo sind wir denn hier gelandet?",
+      "sprechen": "Systemcheck abgeschlossen. Zeitreise überstanden. [Pause 0.5] Moment mal … wo sind wir denn hier gelandet?",
+      "einsatz": "Nach dem Zeitreise-Crash.",
+      "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
+    },
+    {
+      "id": "SMARTy_02_Entdeckung",
+      "stimme": "smarty",
+      "taste": "2",
+      "titel": "02 · Die Entdeckung",
+      "text": "Alarm! Ich entdecke ganz viele kleine Menschen! Können die uns etwa hören?",
+      "sprechen": "Alarm! Ich entdecke ganz viele kleine Menschen! [Pause 0.5] Können die uns etwa hören?",
+      "einsatz": "SMARTy schaut zum Publikum.",
+      "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
+    },
+    {
+      "id": "SMARTy_05_Zukunftsalarm",
+      "stimme": "smarty",
+      "taste": "5",
+      "titel": "05 · Der Zukunftsalarm",
+      "text": "Achtung, Achtung! Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
+      "sprechen": "Achtung, Achtung! [Pause 0.3] Unsere Zukunftsstadt ist in Gefahr! Wir brauchen dringend eure Hilfe!",
+      "einsatz": "Beginn der Rettungsmission.",
+      "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
+    },
+    {
+      "id": "SMARTy_06_Finale",
+      "stimme": "smarty",
+      "taste": "6",
+      "titel": "06 · Das Finale",
+      "text": "Mission erfolgreich! Danke, Zukunftscrew! Ich werde eure Ideen niemals vergessen!",
+      "sprechen": "Mission erfolgreich! [Pause 0.3] Danke, Zukunftskru! Ich werde eure Ideen niemals vergessen!",
+      "einsatz": "Am Ende der Show.",
+      "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
+    },
+    {
+      "id": "SMARTy_07_Stimmtest",
+      "stimme": "smarty",
+      "taste": "7",
+      "titel": "07 · Soundcheck",
+      "text": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. Moment mal … was sind denn das für kleine Wesen?",
+      "sprechen": "Systemcheck abgeschlossen. Alle vier Beine vorhanden. [Pause 0.5] Moment mal … was sind denn das für kleine Wesen?",
+      "einsatz": "Optional: Stimmtest über die Hallenanlage vor der Show.",
+      "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
     },
     {
       "id": "Erzaehler_00_Eroeffnung",

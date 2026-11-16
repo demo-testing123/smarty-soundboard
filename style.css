@@ -129,6 +129,14 @@ main {
 
 .pads { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 
+.szene {
+  grid-column: 1 / -1; margin: 10px 0 0; padding-bottom: 4px;
+  font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--c) 75%, var(--text));
+  border-bottom: 1px solid color-mix(in srgb, var(--c) 30%, var(--line));
+}
+.szene:first-child { margin-top: 0; }
+
 .cell { position: relative; min-width: 0; }
 .cell.wide { grid-column: 1 / -1; }
 .cell.wide .pad { background: linear-gradient(160deg, color-mix(in srgb, var(--c) 14%, var(--pad-hi)), var(--pad)); border-color: color-mix(in srgb, var(--c) 40%, var(--line)); }

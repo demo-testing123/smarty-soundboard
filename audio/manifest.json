@@ -1,53 +1,4 @@
 {
- "SMARTy_01_Landung": {
-  "datei": "audio/SMARTy_01_Landung.mp3",
-  "hash": "658a66eeda",
-  "lufs": -16.6,
-  "tp": -1.9,
-  "dauer": 6.96
- },
- "SMARTy_02_Entdeckung": {
-  "datei": "audio/SMARTy_02_Entdeckung.mp3",
-  "hash": "65b5e70311",
-  "lufs": -16.7,
-  "tp": -1.9,
-  "dauer": 5.57
- },
- "SMARTy_03_Frage": {
-  "datei": "audio/SMARTy_03_Frage.mp3",
-  "hash": "07c10530fc",
-  "lufs": -16.7,
-  "tp": -1.9,
-  "dauer": 6.39
- },
- "SMARTy_04_Aha": {
-  "datei": "audio/SMARTy_04_Aha.mp3",
-  "hash": "b9e3978954",
-  "lufs": -17.2,
-  "tp": -1.9,
-  "dauer": 6.14
- },
- "SMARTy_05_Zukunftsalarm": {
-  "datei": "audio/SMARTy_05_Zukunftsalarm.mp3",
-  "hash": "752c93364c",
-  "lufs": -16.5,
-  "tp": -1.9,
-  "dauer": 6.39
- },
- "SMARTy_06_Finale": {
-  "datei": "audio/SMARTy_06_Finale.mp3",
-  "hash": "c9f42aa5bc",
-  "lufs": -16.2,
-  "tp": -1.9,
-  "dauer": 6.3
- },
- "SMARTy_07_Stimmtest": {
-  "datei": "audio/SMARTy_07_Stimmtest.mp3",
-  "hash": "8d7e50b27a",
-  "lufs": -17.1,
-  "tp": -1.9,
-  "dauer": 7.1
- },
  "SMARTy_08_Heimlicher_Passagier": {
   "datei": "audio/SMARTy_08_Heimlicher_Passagier.mp3",
   "hash": "b901148242",
@@ -98,6 +49,207 @@
     1.681
    ]
   ]
+ },
+ "SMARTy_03_Frage": {
+  "datei": "audio/SMARTy_03_Frage.mp3",
+  "hash": "07c10530fc",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 6.39
+ },
+ "SMARTy_04_Aha": {
+  "datei": "audio/SMARTy_04_Aha.mp3",
+  "hash": "b9e3978954",
+  "lufs": -17.2,
+  "tp": -1.9,
+  "dauer": 6.14
+ },
+ "SMARTy_N3_Wetterwarnung": {
+  "datei": "audio/SMARTy_N3_Wetterwarnung.mp3",
+  "hash": "5d64a37247",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 5.57,
+  "teile": [
+   [
+    0.04,
+    0.9
+   ],
+   [
+    1.2,
+    2.593
+   ],
+   [
+    3.193,
+    5.323
+   ]
+  ]
+ },
+ "SMARTy_N4_Regenwasser": {
+  "datei": "audio/SMARTy_N4_Regenwasser.mp3",
+  "hash": "dc6da80a92",
+  "lufs": -16.5,
+  "tp": -1.8,
+  "dauer": 7.27,
+  "teile": [
+   [
+    0.04,
+    4.33
+   ],
+   [
+    4.83,
+    5.848
+   ],
+   [
+    6.298,
+    7.017
+   ]
+  ]
+ },
+ "SMARTy_T1_Sprachbefehl": {
+  "datei": "audio/SMARTy_T1_Sprachbefehl.mp3",
+  "hash": "b82dd7096b",
+  "lufs": -16.7,
+  "tp": -2.2,
+  "dauer": 6.91,
+  "teile": [
+   [
+    0.04,
+    1.361
+   ],
+   [
+    1.861,
+    3.887
+   ],
+   [
+    4.487,
+    6.657
+   ]
+  ]
+ },
+ "SMARTy_T2_Programm_verstanden": {
+  "datei": "audio/SMARTy_T2_Programm_verstanden.mp3",
+  "hash": "d2fddb35c7",
+  "lufs": -16.6,
+  "tp": -2.0,
+  "dauer": 3.21,
+  "teile": [
+   [
+    0.04,
+    1.117
+   ],
+   [
+    1.517,
+    2.959
+   ]
+  ]
+ },
+ "SMARTy_T3_Programmoptimierung": {
+  "datei": "audio/SMARTy_T3_Programmoptimierung.mp3",
+  "hash": "13442f03ac",
+  "lufs": -16.4,
+  "tp": -2.2,
+  "dauer": 6.42,
+  "teile": [
+   [
+    0.04,
+    1.554
+   ],
+   [
+    1.954,
+    3.883
+   ],
+   [
+    4.383,
+    6.172
+   ]
+  ]
+ },
+ "SMARTy_T4_Experiment_erfolgreich": {
+  "datei": "audio/SMARTy_T4_Experiment_erfolgreich.mp3",
+  "hash": "cf20231998",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 5.89,
+  "teile": [
+   [
+    0.04,
+    1.444
+   ],
+   [
+    1.944,
+    5.64
+   ]
+  ]
+ },
+ "SMARTy_T5_Mission_Technik": {
+  "datei": "audio/SMARTy_T5_Mission_Technik.mp3",
+  "hash": "e62f19c573",
+  "lufs": -17.0,
+  "tp": -1.9,
+  "dauer": 3.87,
+  "teile": [
+   [
+    0.04,
+    1.602
+   ],
+   [
+    2.002,
+    3.619
+   ]
+  ]
+ },
+ "SMARTy_T6_Verkehrsproblem": {
+  "datei": "audio/SMARTy_T6_Verkehrsproblem.mp3",
+  "hash": "04eb59471d",
+  "lufs": -17.3,
+  "tp": -2.2,
+  "dauer": 2.41,
+  "teile": [
+   [
+    0.04,
+    0.526
+   ],
+   [
+    0.876,
+    2.157
+   ]
+  ]
+ },
+ "SMARTy_01_Landung": {
+  "datei": "audio/SMARTy_01_Landung.mp3",
+  "hash": "658a66eeda",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 6.96
+ },
+ "SMARTy_02_Entdeckung": {
+  "datei": "audio/SMARTy_02_Entdeckung.mp3",
+  "hash": "65b5e70311",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 5.57
+ },
+ "SMARTy_05_Zukunftsalarm": {
+  "datei": "audio/SMARTy_05_Zukunftsalarm.mp3",
+  "hash": "752c93364c",
+  "lufs": -16.5,
+  "tp": -1.9,
+  "dauer": 6.39
+ },
+ "SMARTy_06_Finale": {
+  "datei": "audio/SMARTy_06_Finale.mp3",
+  "hash": "c9f42aa5bc",
+  "lufs": -16.2,
+  "tp": -1.9,
+  "dauer": 6.3
+ },
+ "SMARTy_07_Stimmtest": {
+  "datei": "audio/SMARTy_07_Stimmtest.mp3",
+  "hash": "8d7e50b27a",
+  "lufs": -17.1,
+  "tp": -1.9,
+  "dauer": 7.1
  },
  "Erzaehler_00_Eroeffnung": {
   "datei": "audio/intro/Eroeffnung_mit_Musik.mp3",

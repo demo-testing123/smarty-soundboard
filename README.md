@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, Eröffnung als Film `Q`, Zeitmaschine `A S D`) |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0` und `W`–`O`, Eröffnung als Film `Q`, Zeitmaschine `A S D`) |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -66,6 +66,25 @@ Der Bordcomputer der Zeitmaschine meldet sich in der Ankunftsszene nach dem Intr
 
 Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einzeln abspielen. Mit ⤓ speichert man sie als WAV.
 
+## SMARTy nach Szenen (Drehbuch vom 16.11.2026)
+
+Die SMARTy-Pads sind nach den Szenen im Drehbuch geordnet. Die Tasten der älteren Sätze sind gleich geblieben.
+
+| Szene | Taste | Clip |
+|---|---|---|
+| Ankunft | `8` `9` `0` | Heimlicher Passagier · Mitgeschmuggelt · Sehr guter Grund |
+| Mission Natur | `3` | N1 · Ich habe 327 Computerspiele gespeichert … |
+| | `4` | N2 · Aha! Menschen brauchen also nicht nur Computer … |
+| | `W` | N3 · Wetterwarnung! Starkregen im Anmarsch … (Textvorschlag, erst nach Freigabe) |
+| | `E` | N4 · Neue Erkenntnis gespeichert: … Regenwasser auffangen … (Textvorschlag, erst nach Freigabe) |
+| Mission Technik | `R` | T1 · Sprachbefehl nicht erkannt … Helligkeitssensor verwenden. |
+| | `T` | T2 · Programm verstanden. Bereit für den Praxistest. |
+| | `Z` | T3 · Programmoptimierung erkannt … Sehr gute Idee, Zukunftsteam! |
+| | `U` | T4 · Experiment erfolgreich … in die Stadtplanung übernommen werden. |
+| | `I` | T5 · Mission Technik abgeschlossen. Zukunftsstadt aktualisiert. |
+| | `O` | T6 · Warnung. Verkehrsproblem erkannt. (optional) |
+| Weitere Sätze | `1` `2` `5` `6` `7` | Landung · Entdeckung · Zukunftsalarm · Finale · Soundcheck (stehen nicht im aktuellen Drehbuch) |
+
 ## In der Turnhalle
 
 - Die Seite **vorher einmal mit Internet öffnen**. Unten erscheint dann „offline bereit“. Ab dann läuft sie im selben Browser auch ohne Netz.
@@ -80,17 +99,18 @@ Alles steht in **`sounds.json`**. Die Datei lässt sich direkt auf GitHub bearbe
 
 ```json
 {
-  "id": "SMARTy_08_Bellen", "stimme": "smarty", "taste": "8",
-  "titel": "08 · Bellen",
+  "id": "SMARTy_11_Bellen", "stimme": "smarty", "taste": "p",
+  "titel": "11 · Bellen", "szene": "Mission Technik – Straßenlaternen",
   "text": "Wuff! Das heißt auf Roboterisch: Hallo!",
   "sprechen": "Wuff! [Pause 0.4] Das heißt auf Roboterisch: Hallo!",
   "einsatz": "Wenn SMARTy die Kinder begrüßt."
 }
 ```
 
-- `id`: eindeutig, wird zum Dateinamen (`audio/SMARTy_08_Bellen.mp3`)
+- `id`: eindeutig, wird zum Dateinamen (`audio/SMARTy_11_Bellen.mp3`)
 - `text`: steht auf dem Pad. `sprechen` (optional) wird gesprochen, mit Pausen wie `[Pause 0.5]` (Sekunden)
 - `taste` (optional): sonst wird eine freie Taste vergeben
+- `szene` (optional): Überschrift im Board; die Pads erscheinen in der Reihenfolge der Datei
 - `tts` (optional): Einstellungen nur für diesen Satz, z. B. `{ "rate": "-10%" }`
 - Töne im Text (selbst berechnet, dezent): `[Ton bestaetigung]`, `[Ton warnung]`, `[Ton scan 1.4]` (Dauer in Sekunden)
 
