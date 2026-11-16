@@ -26,6 +26,7 @@
   const store = {
     get(k, d) { try { const v = localStorage.getItem('smarty.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     set(k, v) { try { localStorage.setItem('smarty.' + k, JSON.stringify(v)); } catch { /* privat */ } },
+    del(k) { try { localStorage.removeItem('smarty.' + k); } catch { /* privat */ } },
   };
 
   const fmt = (s) => (Math.round(s * 10) / 10).toFixed(1).replace('.', ',') + ' s';
@@ -580,6 +581,7 @@
     try {
       cfg = await getJSON('sounds.json');
       manifest = await getJSON('audio/manifest.json').catch(() => ({}));
+      shared = cleanLayout(await getJSON('layout.json').catch(() => null));
     } catch (e) {
       board.innerHTML = '';
       board.append(h('p', { class: 'error-note' },
@@ -640,11 +642,15 @@
     board.dataset.list = 'board';
     probenEl.dataset.list = 'proben';
     for (const list of arrangeLists()) list._default = [...list.children].map((el) => el.dataset.key);
-    applyLayout();
+    // gemeinsame Anordnung; ein ungespeicherter Entwurf dieses Geräts hat Vorrang (Hinweis wird angezeigt)
+    const draft = store.get('layout', null);
+    layout = draft ? cleanLayout(draft) : shared;
+    applyLayout(layout);
+    layout = readLayout();
+    syncLayoutState();
 
     await loadAll([...pads.values()]);
     await loadLocal();
-    applyLayout();   // eigene Sounds an ihren gespeicherten Platz
     await offlineCheck();
     filmPreload().then(warmCache).then(offlineCheck);
   }
@@ -759,14 +765,37 @@
   /* Listen: das Board (Bereiche je Stimme) und jede Pad-Fläche. Jeder Block hat
      data-key; seine Breite ist ein Gewicht --w (1 = Standard). Zwei Blöcke in einer
      Zeile teilen sich beim Ziehen am Griff ihren gemeinsamen Platz.
-     Gespeichert wird nur in diesem Browser (localStorage). */
+     Die gemeinsame Anordnung für alle Geräte steht in layout.json im Repository.
+     Änderungen auf einem Gerät sind ein Entwurf (localStorage), bis sie mit
+     „Für alle Geräte speichern“ in layout.json geschrieben werden. */
   const W_MIN = 0.5, W_MAX = 6;
   const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  let layout = store.get('layout', null);
-  if (!layout || typeof layout !== 'object') layout = {};
-  layout.order = layout.order || {};
-  layout.w = layout.w || {};
+  const EMPTY = () => ({ order: {}, w: {} });
+  let shared = EMPTY();   // aus layout.json – gilt auf allen Geräten
+  let layout = EMPTY();   // gerade angezeigt
   let drag = null;
+  const isLocalKey = (k) => typeof k === 'string' && k.startsWith('lokal_');   // eigene Sounds gibt es nur auf einem Gerät
+
+  function cleanLayout(x) {
+    const out = EMPTY();
+    if (!x || typeof x !== 'object') return out;
+    for (const [k, v] of Object.entries(x.order || {})) {
+      if (Array.isArray(v) && v.length) out.order[k] = v.filter((s) => typeof s === 'string' && !isLocalKey(s));
+    }
+    for (const [k, v] of Object.entries(x.w || {})) {
+      if (typeof v === 'number' && isFinite(v) && Math.abs(v - 1) >= 0.005 && !isLocalKey(k)) {
+        out.w[k] = Math.round(Math.min(W_MAX, Math.max(W_MIN, v)) * 100) / 100;
+      }
+    }
+    return out;
+  }
+  /* feste Schreibweise (sortierte Schlüssel) – für den Vergleich und für layout.json */
+  function layoutText(x) {
+    const c = cleanLayout(x);
+    const sort = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
+    return JSON.stringify({ order: sort(c.order), w: sort(c.w) }, null, 2) + '\n';
+  }
+  const sameLayout = (a, b) => layoutText(a) === layoutText(b);
 
   const arrangeLists = () => [$('#board'), ...document.querySelectorAll('.pads')].filter((l) => l && l.dataset.list);
   const isFull = (el) => el.classList.contains('szene') || el.classList.contains('wide');
@@ -800,23 +829,62 @@
     list.append(...out);
   }
 
-  function applyLayout() {
+  /* Anordnung x vollständig herstellen: erst Standard, dann x darüber */
+  function applyLayout(x, animate) {
     for (const list of arrangeLists()) {
-      applyOrder(list, layout.order[list.dataset.list]);
-      for (const el of list.children) {
-        const w = layout.w[el.dataset.key];
-        if (typeof w === 'number' && !isFull(el)) setW(el, w);
-      }
+      const run = () => {
+        applyOrder(list, list._default);
+        applyOrder(list, x.order[list.dataset.list]);
+        for (const el of list.children) {
+          el.style.removeProperty('--w');
+          const w = x.w[el.dataset.key];
+          if (typeof w === 'number' && !isFull(el)) setW(el, w);
+        }
+      };
+      if (animate) flip(list, run); else run();
     }
   }
 
-  function saveLayout() {
-    layout = { order: {}, w: {} };
+  /* aktuelle Anordnung aus dem Board lesen; Listen in Standard-Reihenfolge entfallen */
+  function readLayout() {
+    const out = EMPTY();
     for (const list of arrangeLists()) {
-      layout.order[list.dataset.list] = [...list.children].map((el) => el.dataset.key).filter(Boolean);
-      for (const el of list.children) if (el.dataset.key && el.style.getPropertyValue('--w')) layout.w[el.dataset.key] = weight(el);
+      const keys = [...list.children].map((el) => el.dataset.key).filter((k) => k && !isLocalKey(k));
+      const def = (list._default || []).filter((k) => k && !isLocalKey(k));
+      if (keys.join('\n') !== def.join('\n')) out.order[list.dataset.list] = keys;
+      for (const el of list.children) {
+        if (el.dataset.key && !isLocalKey(el.dataset.key) && el.style.getPropertyValue('--w')) out.w[el.dataset.key] = weight(el);
+      }
     }
-    store.set('layout', layout);
+    return out;
+  }
+
+  const layoutDirty = () => !sameLayout(layout, shared);
+
+  /* Entwurf merken (oder löschen, wenn er der gemeinsamen Anordnung entspricht) und Anzeige anpassen */
+  let noteTimer = 0;
+  function syncLayoutState(msg) {
+    const dirty = layoutDirty();
+    if (dirty) store.set('layout', layout); else store.del('layout');
+    // Hinweis oben (außerhalb des Anordnen-Modus): Entwurf offen oder kurze Erfolgsmeldung
+    const note = $('#layoutNote');
+    clearTimeout(noteTimer);
+    note.classList.toggle('done', !!msg && !dirty);
+    $('#noteText').textContent = msg && !dirty ? msg : 'Die Anordnung auf diesem Gerät ist noch nicht für alle Geräte gespeichert.';
+    $('#noteSave').hidden = $('#noteDiscard').hidden = !dirty;
+    note.hidden = arranging || !(dirty || msg);
+    if (msg && !dirty) noteTimer = setTimeout(() => syncLayoutState(), 8000);
+    $('#arrangeSave').disabled = !dirty;
+    $('#layoutState').className = 'layout-state ' + (dirty ? 'dirty' : 'ok');
+    $('#layoutState').textContent = msg || (dirty
+      ? '● Nur auf diesem Gerät geändert – noch nicht für alle gespeichert.'
+      : '✓ Gleich auf allen Geräten.');
+    $('#ghForget').hidden = !store.get('ghToken', '');
+  }
+
+  function saveLayout() {
+    layout = readLayout();
+    syncLayoutState();
   }
 
   /* Umstellen mit kurzer Gleitbewegung (FLIP), damit man sieht, wohin die Blöcke wandern. */
@@ -840,19 +908,118 @@
     document.body.classList.toggle('arranging', on);
     $('#arrange').setAttribute('aria-pressed', String(on));
     $('#arrangeBar').hidden = !on;
+    syncLayoutState();
   }
 
   function resetLayout() {
-    if (!confirm('Anordnung und Breiten auf den Standard zurücksetzen?')) return;
-    layout = { order: {}, w: {} };
-    store.set('layout', layout);
-    for (const list of arrangeLists()) {
-      flip(list, () => {
-        applyOrder(list, list._default);
-        for (const el of list.children) el.style.removeProperty('--w');
+    if (!confirm('Anordnung und Breiten auf den Standard zurücksetzen?\nAuf den anderen Geräten ändert sich erst etwas nach „Für alle Geräte speichern“.')) return;
+    applyLayout(EMPTY(), true);
+    saveLayout();
+  }
+
+  /* Entwurf verwerfen: zurück zur gemeinsamen Anordnung */
+  function discardLayout() {
+    applyLayout(shared, true);
+    saveLayout();
+  }
+
+  // ---------- Für alle Geräte speichern (layout.json im GitHub-Repository) ----------
+  function ghTarget() {
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/);
+    const r = location.pathname.split('/').filter(Boolean)[0];
+    if (m && r) return { owner: m[1], repo: r };
+    const c = cfg && typeof cfg.github === 'string' && cfg.github.match(/^([\w.-]+)\/([\w.-]+)$/);
+    return c ? { owner: c[1], repo: c[2] } : null;
+  }
+
+  function b64(text) {
+    const bytes = new TextEncoder().encode(text);
+    let s = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+
+  async function ghPut(token, text) {
+    const t = ghTarget();
+    const url = `https://api.github.com/repos/${t.owner}/${t.repo}/contents/layout.json`;
+    const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    const fail = (status) => Object.assign(new Error('HTTP ' + status), { status });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const cur = await fetch(url + '?ref=main', { headers, cache: 'no-store' });
+      if (cur.status !== 200 && cur.status !== 404) throw fail(cur.status);
+      const sha = cur.status === 200 ? (await cur.json()).sha : undefined;
+      const res = await fetch(url, {
+        method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Anordnung im Soundboard gespeichert', content: b64(text), branch: 'main', ...(sha ? { sha } : {}) }),
       });
+      if (res.ok) return;
+      if ((res.status === 409 || res.status === 422) && attempt === 0) continue;   // inzwischen geändert: neu versuchen
+      throw fail(res.status);
     }
   }
+
+  function ghMessage(e) {
+    const t = ghTarget();
+    if (e.status === 401) return 'GitHub hat den Token abgelehnt (ungültig oder abgelaufen).';
+    if (e.status === 403 || e.status === 404) return `Der Token darf „${t.repo}“ nicht ändern. Nötig: Zugriff auf dieses Repository mit „Contents: Read and write“.`;
+    if (e.status) return `GitHub meldet Fehler ${e.status}.`;
+    return 'Keine Verbindung zu GitHub. Ist das Gerät online?';
+  }
+
+  const syncDlg = $('#syncDlg');
+
+  function openSyncDialog(info) {
+    $('#syncForm').reset();
+    $('#syncInfo').textContent = info || '';
+    $('#syncInfo').hidden = !info;
+    $('#syncManualBox').hidden = true;
+    syncDlg.showModal();
+  }
+
+  async function saveForAll() {
+    if (!layoutDirty()) { syncLayoutState(); return; }
+    if (!ghTarget()) { alert('Speichern für alle Geräte geht nur auf der veröffentlichten GitHub-Seite.'); return; }
+    const token = store.get('ghToken', '');
+    if (!token) { openSyncDialog(); return; }
+    const text = layoutText(layout);
+    const snapshot = cleanLayout(layout);
+    $('#arrangeSave').disabled = true;
+    $('#layoutState').className = 'layout-state';
+    $('#layoutState').textContent = 'Speichere auf GitHub …';
+    try {
+      await ghPut(token, text);
+      shared = snapshot;
+      syncLayoutState('✓ Für alle Geräte gespeichert. Andere Geräte zeigen die Anordnung nach etwa 2 Minuten (Seite neu laden).');
+    } catch (e) {
+      if (e.status === 401 || e.status === 403 || e.status === 404) store.del('ghToken');
+      syncLayoutState();
+      openSyncDialog(ghMessage(e));
+    }
+  }
+
+  syncDlg.addEventListener('close', () => {
+    if (syncDlg.returnValue !== 'ok') return;
+    const token = $('#syncForm').elements.token.value.trim();
+    if (!token) return;
+    store.set('ghToken', token);
+    saveForAll();
+  });
+
+  /* ohne Token: Text kopieren und den GitHub-Editor für layout.json öffnen */
+  $('#syncManual').addEventListener('click', async () => {
+    const t = ghTarget();
+    const text = layoutText(layout);
+    const box = $('#syncManualBox');
+    const ta = $('#syncText');
+    ta.value = text;
+    box.hidden = false;
+    let copied = false;
+    try { await navigator.clipboard.writeText(text); copied = true; } catch { ta.select(); }
+    $('#syncManualHint').textContent = copied
+      ? 'Der Text ist kopiert. Im GitHub-Editor (neuer Tab) alles markieren (Strg+A), einfügen (Strg+V) und „Commit changes“ klicken. Nach etwa 2 Minuten gilt die Anordnung auf allen Geräten.'
+      : 'Text unten markieren und kopieren (Strg+C). Dann im GitHub-Editor (neuer Tab) alles markieren (Strg+A), einfügen (Strg+V) und „Commit changes“ klicken.';
+    window.open(`https://github.com/${t.owner}/${t.repo}/edit/main/layout.json`, '_blank', 'noopener');
+  });
 
   // Ziehen beginnt: Griff = Breite, Pad oder Kopf eines Bereichs = verschieben
   document.addEventListener('pointerdown', (e) => {
@@ -1022,6 +1189,16 @@
   $('#arrange').addEventListener('click', () => setArranging(!arranging));
   $('#arrangeDone').addEventListener('click', () => setArranging(false));
   $('#arrangeReset').addEventListener('click', resetLayout);
+  $('#arrangeSave').addEventListener('click', saveForAll);
+  $('#syncCancel').addEventListener('click', () => syncDlg.close('cancel'));
+  $('#noteSave').addEventListener('click', saveForAll);
+  $('#noteDiscard').addEventListener('click', discardLayout);
+  $('#arrangeDiscard').addEventListener('click', discardLayout);
+  $('#ghForget').addEventListener('click', () => {
+    if (!confirm('Gespeicherten GitHub-Token auf diesem Gerät löschen?')) return;
+    store.del('ghToken');
+    syncLayoutState();
+  });
 
   // ---------- Bedienelemente ----------
   function setMaster(v) {
@@ -1048,7 +1225,7 @@
   const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
   document.addEventListener('keydown', (e) => {
-    if (dlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (dlg.open || syncDlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'Escape' && film.state !== 'idle') { e.preventDefault(); stopAll(); filmClose(); return; }
     if (e.key === 'Escape' && arranging) setArranging(false);
     if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); stopAll(); return; }
@@ -1074,7 +1251,7 @@
   });
   // Leertaste löst sonst beim Loslassen den fokussierten Button aus
   document.addEventListener('keyup', (e) => {
-    if (e.key === ' ' && !dlg.open && !typing(e.target)) e.preventDefault();
+    if (e.key === ' ' && !dlg.open && !syncDlg.open && !typing(e.target)) e.preventDefault();
   });
   document.addEventListener('pointerdown', () => { ensureCtx(); resume(); }, { once: true });
 

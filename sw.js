@@ -1,7 +1,7 @@
 /* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
  * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v6';
-const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'audio/manifest.json'];
+const CACHE = 'smarty-v7';
+const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'layout.json', 'audio/manifest.json'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

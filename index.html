@@ -48,10 +48,18 @@
       <b>Anordnen:</b> Pad oder Kopf eines Bereichs ziehen = verschieben ·
       Griff <span class="grip-demo" aria-hidden="true"></span> zwischen zwei Blöcken nach links/rechts ziehen = Platz verteilen ·
       Tastatur: <kbd>←</kbd><kbd>→</kbd> verschieben, <kbd>Umschalt</kbd>+<kbd>←</kbd><kbd>→</kbd> Breite.
-      Wird in diesem Browser gespeichert.
+      <br><span id="layoutState" class="layout-state"></span>
     </p>
-    <button type="button" id="arrangeReset" class="btn small">Zurücksetzen</button>
-    <button type="button" id="arrangeDone" class="btn small primary">Fertig</button>
+    <button type="button" id="arrangeReset" class="btn small" title="Standard-Anordnung herstellen">Zurücksetzen</button>
+    <button type="button" id="arrangeDiscard" class="btn small" title="Änderungen auf diesem Gerät verwerfen">Verwerfen</button>
+    <button type="button" id="arrangeSave" class="btn small primary" title="Als layout.json im GitHub-Repository speichern">Für alle Geräte speichern</button>
+    <button type="button" id="arrangeDone" class="btn small">Fertig</button>
+    <button type="button" id="ghForget" class="linkish" hidden>Token auf diesem Gerät löschen</button>
+  </div>
+  <div id="layoutNote" class="layout-note" hidden>
+    <span id="noteText">Die Anordnung auf diesem Gerät ist noch nicht für alle Geräte gespeichert.</span>
+    <button type="button" id="noteSave" class="btn small primary">Für alle Geräte speichern</button>
+    <button type="button" id="noteDiscard" class="btn small">Verwerfen</button>
   </div>
 </header>
 
@@ -100,6 +108,37 @@
     <menu>
       <button value="cancel" class="btn" formnovalidate>Abbrechen</button>
       <button value="ok" class="btn primary" id="addOk" disabled>Speichern</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="syncDlg">
+  <form method="dialog" id="syncForm">
+    <h3>Für alle Geräte speichern</h3>
+    <p class="muted small">Die Anordnung wird als <code>layout.json</code> im GitHub-Repository gespeichert.
+      Alle Geräte zeigen sie dann nach etwa 2 Minuten (Seite neu laden).</p>
+    <p class="sync-error small" id="syncInfo" hidden></p>
+    <label class="field">GitHub-Token (einmal pro Gerät, auf dem du anordnest)
+      <input name="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+    </label>
+    <details class="small sync-help">
+      <summary>Token anlegen (einmalig, etwa 1 Minute)</summary>
+      <ol>
+        <li>Auf GitHub einen <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">neuen „Fine-grained token“</a> anlegen.</li>
+        <li><b>Repository access:</b> „Only select repositories“ → <b>smarty-soundboard</b>.</li>
+        <li><b>Permissions:</b> „Contents“ → <b>Read and write</b>.</li>
+        <li>„Generate token“, Token kopieren und oben einfügen.</li>
+      </ol>
+      <p>Der Token bleibt nur in diesem Browser gespeichert und darf nur dieses Repository ändern.</p>
+    </details>
+    <div id="syncManualBox" hidden>
+      <p class="small" id="syncManualHint"></p>
+      <textarea id="syncText" rows="6" readonly spellcheck="false"></textarea>
+    </div>
+    <menu>
+      <button type="button" class="btn" id="syncManual" title="Ohne Token: Text kopieren und im GitHub-Editor einfügen">Ohne Token …</button>
+      <button type="button" class="btn" id="syncCancel">Abbrechen</button>
+      <button value="ok" class="btn primary">Speichern</button>
     </menu>
   </form>
 </dialog>

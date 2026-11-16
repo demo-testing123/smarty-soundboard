@@ -15,7 +15,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 | Robo-Anteil je Stimme | Regler „Robo“ (Standard SMARTy 20 %, Erzähler 0 %; Doppelklick setzt zurück) |
 | Mehrere Sätze gleichzeitig | Haken bei „Überlappen“ |
 | Satz als WAV speichern (mit Effekt) | Symbol ⤓ unten rechts auf dem Pad |
-| Pads und Bereiche umstellen, Platz verteilen | „⇄ Anordnen“: Pad oder Kopf eines Bereichs ziehen = verschieben; Griff zwischen zwei Blöcken nach links/rechts ziehen = Breite zwischen beiden verteilen; Tastatur `←` `→` bzw. `Umschalt`+`←` `→`. „Fertig“ oder `Esc` beendet den Modus. Die Anordnung wird nur in diesem Browser gespeichert, „Zurücksetzen“ stellt den Standard her |
+| Pads und Bereiche umstellen, Platz verteilen | „⇄ Anordnen“: Pad oder Kopf eines Bereichs ziehen = verschieben; Griff zwischen zwei Blöcken nach links/rechts ziehen = Breite zwischen beiden verteilen; Tastatur `←` `→` bzw. `Umschalt`+`←` `→`. Danach „Für alle Geräte speichern“ (siehe unten) |
 
 Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 
@@ -85,6 +85,16 @@ Die SMARTy-Pads sind nach den Szenen im Drehbuch geordnet. Die Tasten der älter
 | | `I` | T5 · Mission Technik abgeschlossen. Zukunftsstadt aktualisiert. |
 | | `O` | T6 · Warnung. Verkehrsproblem erkannt. (optional) |
 | Weitere Sätze | `1` `2` `5` `6` `7` | Landung · Entdeckung · Zukunftsalarm · Finale · Soundcheck (stehen nicht im aktuellen Drehbuch) |
+
+## Anordnung für alle Geräte
+
+Die gemeinsame Anordnung steht in **`layout.json`**. Jedes Gerät lädt sie beim Öffnen der Seite. Auf dem Handy liegen naturgemäß weniger Blöcke nebeneinander, Reihenfolge und Breitenverhältnis sind aber dieselben.
+
+- Was man im Modus „⇄ Anordnen“ ändert, gilt zunächst nur auf diesem Gerät. Oben erscheint dann der Hinweis „noch nicht für alle Geräte gespeichert“.
+- **Für alle Geräte speichern** schreibt `layout.json` ins Repository. Nach etwa 2 Minuten zeigen alle Geräte die neue Anordnung (Seite neu laden). **Verwerfen** holt die gemeinsame Anordnung zurück.
+- **Mit Token (ein Klick):** Beim ersten Speichern fragt die Seite nach einem GitHub-Token. Er wird einmal pro Gerät angelegt, auf dem man anordnet: [neuer Fine-grained Token](https://github.com/settings/personal-access-tokens/new), *Repository access* nur `smarty-soundboard`, *Permissions* „Contents: Read and write“. Der Token bleibt nur in diesem Browser; „Token auf diesem Gerät löschen“ entfernt ihn.
+- **Ohne Token:** „Ohne Token …“ kopiert den Text und öffnet `layout.json` im GitHub-Editor. Dort alles markieren, einfügen und „Commit changes“ klicken.
+- Zum Abspielen braucht kein Gerät einen Token. Offline gilt die zuletzt geladene Anordnung.
 
 ## In der Turnhalle
 
