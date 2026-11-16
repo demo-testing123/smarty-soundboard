@@ -104,11 +104,15 @@ Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-sound
 
 Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/wohnen/**, im Soundboard oben über **🏠 Wohnen**. Experiment mit sechs Wohnmodulen (nebeneinander/stapeln), Varianten A/B/C auf demselben 12 × 12-Raster, Aufstocken mit zwei Holzgeschossen und Materialwissen. Tasten: `1`–`5` Modi, `←`/`→` oder `Leertaste` Schritte, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung, Rastermodell und Einschränkungen: [wohnen/LIESMICH.md](wohnen/LIESMICH.md). Prüfseite: `wohnen/test.html`.
 
+## Mission Natur „Aus Grau wird Grün“ (`natur/`)
+
+Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/natur/**, im Soundboard oben über **🌳 Natur**. Die Spielplatzszene des Drehbuchs als 3D-Simulation in Blockgrafik, mit demselben Platz wie in der Minecraft-Testwelt. Abschnitte: grauer Platz, Abstimmung A/B, Verwandlung „Beides gemeinsam“ Schicht für Schicht, Sommertag mit Schatten und vereinfachter Wärme-Ansicht, Starkregen (grau: Abfluss; grün: Versickern, Regenmulde, tiefer Bereich, Zisterne, Gießen), Endbild. Tasten: `1`–`6` Abschnitte, `←`/`→` oder `Leertaste` Schritte, `A`/`B` Abstimmung, `W` Wärme, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung und Vereinfachungen: [natur/LIESMICH.md](natur/LIESMICH.md). Prüfseite: `natur/test.html`.
+
 ## Minecraft Education: Spielplatz-Test (`minecraft/`)
 
 Seite: **https://demo-testing123.github.io/smarty-soundboard/minecraft/**, im Soundboard oben über **⛏ Minecraft**. Prototyp für Mission Natur: Testwelt (`.mcworld`) mit grauem Platz und zwei Vorlagen-Kammern darunter. Ein Knopf auf dem Regieplatz oder der Chatbefehl `/clone` tauscht den Platz in derselben geöffneten Welt gegen den Natur-Abenteuerspielplatz (Regenmulde, tiefer Spielbereich, Zisterne) und zurück. Dazu gibt es Testplan mit `/testforblocks`, Bestandsanalyse des Stadt-Konfigurators, Technikentscheidung und Grenzen: [minecraft/LIESMICH.md](minecraft/LIESMICH.md). Selbsttests: `minecraft/test.html`. In Minecraft Education selbst noch nicht getestet.
 
-**Ohne Internet auf dem Vorführ-Laptop:** `start-lokal.bat` doppelklicken (braucht Python 3). Dann laufen Soundboard, Verkehr, Wohnen und die Minecraft-Seite unter `http://localhost:8000/`.
+**Ohne Internet auf dem Vorführ-Laptop:** `start-lokal.bat` doppelklicken (braucht Python 3). Dann laufen Soundboard, Verkehr, Wohnen, Natur und die Minecraft-Seite unter `http://localhost:8000/`.
 
 ## In der Turnhalle
 

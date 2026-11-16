@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aus Grau wird Grün</title>
+<meta name="description" content="3D-Simulation „Aus Grau wird Grün“ für START IT SMART – Mission Natur: grauer Platz, Natur-Abenteuerspielplatz, Sommertag und Starkregen.">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='40' width='52' height='16' fill='%2379b04a'/%3E%3Crect x='28' y='22' width='8' height='20' fill='%236b5232'/%3E%3Crect x='14' y='6' width='36' height='20' fill='%233f7f2a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-modus="start">
+<div id="app">
+  <main id="buehne">
+    <div id="welt" aria-label="3D-Modell des Platzes"></div>
+    <div id="lbl1" class="label" hidden></div>
+    <div id="lbl2" class="label" hidden></div>
+    <div id="lbl3" class="label" hidden></div>
+    <div id="lbl4" class="label" hidden></div>
+    <div id="lbl5" class="label" hidden></div>
+
+    <header id="kopf" class="kopf" hidden><h1 id="titel"></h1></header>
+    <p id="frage" class="frage" hidden></p>
+    <aside id="panel" class="panel" hidden aria-live="polite"></aside>
+    <p id="fussnote" class="fussnote" hidden></p>
+
+    <section id="startbild" class="startbild">
+      <h1 id="startTitel">Aus Grau wird Grün</h1>
+      <p id="startUntertitel"></p>
+      <div class="start-knoepfe">
+        <button type="button" data-aktion="grau"><kbd>1</kbd>Grauer Platz</button>
+        <button type="button" data-aktion="abstimmung"><kbd>2</kbd>Abstimmung</button>
+        <button type="button" data-aktion="beides"><kbd>3</kbd>Beides gemeinsam</button>
+        <button type="button" data-aktion="sommer"><kbd>4</kbd>Sommertag</button>
+        <button type="button" data-aktion="regen"><kbd>5</kbd>Starkregen</button>
+        <button type="button" data-aktion="ende"><kbd>6</kbd>Endbild</button>
+      </div>
+    </section>
+
+    <aside id="info" class="info" hidden>
+      <h2>Info für Moderation</h2>
+      <ul id="infoListe"></ul>
+      <p class="info-tasten">Tasten: <kbd>1</kbd>–<kbd>6</kbd> Abschnitte · <kbd>←</kbd> <kbd>→</kbd> oder <kbd>Leertaste</kbd> nächster Schritt · <kbd>A</kbd>/<kbd>B</kbd> Abstimmung · <kbd>W</kbd> Wärme · <kbd>R</kbd> Zurücksetzen · <kbd>F</kbd> Vollbild · <kbd>0</kbd> Start · <kbd>I</kbd> schließen</p>
+    </aside>
+
+    <div class="leisten">
+      <nav id="sub" class="sub-leiste" hidden aria-label="Schritte"></nav>
+      <nav id="haupt" class="haupt-leiste" aria-label="Abschnitte">
+        <button type="button" data-aktion="start" data-modus="start" title="Startbildschirm (0)">⌂</button>
+        <button type="button" data-aktion="grau" data-modus="grau">Grauer Platz <kbd>1</kbd></button>
+        <button type="button" data-aktion="abstimmung" data-modus="abstimmung">Abstimmung <kbd>2</kbd></button>
+        <button type="button" data-aktion="beides" data-modus="beides">Beides gemeinsam <kbd>3</kbd></button>
+        <button type="button" data-aktion="sommer" data-modus="sommer">Sommertag <kbd>4</kbd></button>
+        <button type="button" data-aktion="regen" data-modus="regen">Starkregen <kbd>5</kbd></button>
+        <button type="button" data-aktion="ende" data-modus="ende">Endbild <kbd>6</kbd></button>
+        <span class="trenner"></span>
+        <button type="button" data-aktion="reset">Zurücksetzen <kbd>R</kbd></button>
+        <button type="button" data-aktion="info" id="btnInfo" aria-pressed="false">Info <kbd>I</kbd></button>
+        <button type="button" data-aktion="vollbild" title="Vollbild (F)">⛶</button>
+      </nav>
+    </div>
+
+    <div id="laden" class="laden">Lade 3D-Modell …</div>
+    <div id="fehler" class="fehler" hidden></div>
+  </main>
+</div>
+<script>
+  setTimeout(function () {
+    if (window.__naturOk) return;
+    var l = document.getElementById('laden'); if (l) l.hidden = true;
+    var f = document.getElementById('fehler');
+    if (f && f.hidden) { f.textContent = 'Die Anwendung konnte nicht geladen werden. Bitte über GitHub Pages oder einen lokalen Webserver öffnen (nicht per Doppelklick auf die Datei).'; f.hidden = false; }
+  }, 8000);
+</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
