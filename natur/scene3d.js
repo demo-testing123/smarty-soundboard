@@ -67,6 +67,60 @@ const GEO = {
   feld: new THREE.BoxGeometry(0.98, 0.04, 0.98),
 };
 
+// wiederverwendete Hilfsobjekte: pro Bild entsteht kein neuer Speicher (keine Ruckler durch Aufräumen)
+const T = {
+  m4: new THREE.Matrix4(), q: new THREE.Quaternion(), v: new THREE.Vector3(), s: new THREE.Vector3(),
+  qOst: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2),
+};
+
+// Viele einfarbige Quader zu EINEM Objekt zusammenfassen: ein Zeichenaufruf statt vieler
+function quaderVerbund(liste) {      // Einträge: [x1, y1, z1, x2, y2, z2, farbe]
+  const pos = [], nor = [], col = [], idx = [], c = new THREE.Color();
+  for (const [x1, y1, z1, x2, y2, z2, farbe] of liste) {
+    const g = new THREE.BoxGeometry(x2 - x1, y2 - y1, z2 - z1).translate((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
+    const basis = pos.length / 3;
+    pos.push(...g.attributes.position.array); nor.push(...g.attributes.normal.array);
+    c.set(farbe);
+    for (let k = 0; k < g.attributes.position.count; k++) col.push(c.r, c.g, c.b);
+    for (const i of g.index.array) idx.push(basis + i);
+    g.dispose();
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+  m.receiveShadow = true;
+  return m;
+}
+
+// Fensterfassaden aller Hochhäuser als ein Objekt: je Seite ein Rechteck knapp vor der Wand, Fenster wiederholt (1 Feld = 4 × 4)
+function fassadenVerbund(haeuser) {    // Einträge: [xa, za, xb, zb, hoehe] in Weltkoordinaten
+  const pos = [], nor = [], uv = [], idx = [], e = 0.02;
+  const rechteck = (ecken, n, u, v) => {
+    const b = pos.length / 3;
+    for (const p of ecken) { pos.push(...p); nor.push(...n); }
+    uv.push(0, 0, u, 0, u, v, 0, v);
+    idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  };
+  for (const [xa, za, xb, zb, h] of haeuser) {
+    const bx = (xb - xa) / 4, bz = (zb - za) / 4, bh = h / 4;
+    rechteck([[xa, 0, zb + e], [xb, 0, zb + e], [xb, h, zb + e], [xa, h, zb + e]], [0, 0, 1], bx, bh);    // Süd
+    rechteck([[xb, 0, za - e], [xa, 0, za - e], [xa, h, za - e], [xb, h, za - e]], [0, 0, -1], bx, bh);   // Nord
+    rechteck([[xb + e, 0, zb], [xb + e, 0, za], [xb + e, h, za], [xb + e, h, zb]], [1, 0, 0], bz, bh);    // Ost
+    rechteck([[xa - e, 0, za], [xa - e, 0, zb], [xa - e, h, zb], [xa - e, h, za]], [-1, 0, 0], bz, bh);   // West
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: FASSADE }));
+  m.receiveShadow = true;
+  return m;
+}
+
 // leichte, feste Farbschwankung je Block – wirkt natürlicher
 const zufall = (x, y, z) => { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); };
 function blockFarbeVariiert(id, x, y, z, laub) {
@@ -142,8 +196,9 @@ export class Welt {
     this.c = c;
     this.container = container;
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // mehr bringt am Beamer nichts, kostet aber Leistung
     r.shadowMap.enabled = true;
+    r.shadowMap.autoUpdate = false;                                 // Schatten nur bei Änderungen neu (siehe render)
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     container.append(r.domElement);
     r.domElement.style.width = '100%';
@@ -186,25 +241,21 @@ export class Welt {
     this.tiereAn = false;
     this.kinderAn = false;
     this.letzte = performance.now();
-    this.setzeZustand('grau');
+    this.statistik = { bilder: 0, schatten: 0 };
+    this.regenStaerke = 0;
     this.resize();
+    this.setzeZustand('grau');
+    this.vorwaermen();
   }
 
   /* ---------- Umgebung: Straßenplatte mit Bodenschnitt, graue Hochhäuser ---------- */
   _umgebung() {
-    const g = new THREE.Group();
-    const kasten = (x1, y1, z1, x2, y2, z2, m, schatten = false) => {
-      const o = new THREE.Mesh(new THREE.BoxGeometry(x2 - x1, y2 - y1, z2 - z1), m);
-      o.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
-      o.receiveShadow = true; o.castShadow = schatten;
-      g.add(o);
-      return o;
-    };
-    // Bänder rund um den Platz (Norden + Westen), in Blockkoordinaten der Vorlage
+    const g = new THREE.Group(), platte = [];
+    // Bänder rund um den Platz (Norden + Westen), in Blockkoordinaten der Vorlage – alles ein einziges Objekt
     const band = (a, b, farbe) => {
       for (const [x1, z1, x2, z2] of [[a, a, GROESSE.dx, b + 1], [a, b + 1, b + 1, GROESSE.dz]]) {
-        kasten(x1 + OX, OY, z1 + OZ, x2 + OX, B + OY, z2 + OZ, mat('#8b6a4a'));           // Erde
-        kasten(x1 + OX, B + OY, z1 + OZ, x2 + OX, B + 1 + OY, z2 + OZ, mat(farbe));       // Oberfläche
+        platte.push([x1 + OX, OY, z1 + OZ, x2 + OX, B + OY, z2 + OZ, '#8b6a4a']);          // Erde
+        platte.push([x1 + OX, B + OY, z1 + OZ, x2 + OX, B + 1 + OY, z2 + OZ, farbe]);      // Oberfläche
       }
     };
     band(-22, -15, '#79b04a');     // Grünstreifen mit Hochhäusern
@@ -212,26 +263,17 @@ export class Welt {
     band(-12, -5, '#2c2d33');      // Fahrbahn
     band(-4, -2, '#b9b8b4');       // Gehweg
     band(-1, -1, '#8f979e');       // Bordstein
-    const weiss = mat('#e6e6e2');
-    for (let k = -12; k < GROESSE.dx; k += 3) kasten(k + OX + 0.2, 0, -8.6 + OZ, k + OX + 1.8, 0.03, -8.4 + OZ, weiss);
-    for (let k = -4; k < GROESSE.dz; k += 3) kasten(-8.6 + OX, 0, k + OZ + 0.2, -8.4 + OX, 0.03, k + OZ + 1.8, weiss);
-    // graue Hochhäuser („zentraler versiegelter Platz zwischen markanten Hochhäusern“)
-    const haus = (x1, z1, x2, z2, h) => {
-      const w = x2 - x1 + 1, d = z2 - z1 + 1;
-      const seite = (n) => { const t = FASSADE.clone(); t.needsUpdate = true; t.repeat.set(n / 4, h / 4); return new THREE.MeshLambertMaterial({ map: t }); };
-      const dach = mat('#8e949b');
-      const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [seite(d), seite(d), dach, dach, seite(w), seite(w)]);
-      o.position.set(x1 + w / 2 + OX, h / 2, z1 + d / 2 + OZ);
-      o.castShadow = true; o.receiveShadow = true;
-      g.add(o);
-    };
-    haus(-21, -21, -16, -16, 26);
-    haus(-6, -21, 1, -16, 32);
-    haus(8, -21, 14, -16, 22);
-    haus(21, -21, 28, -16, 36);
-    haus(-21, 0, -16, 6, 24);
-    haus(-21, 13, -16, 20, 30);
-    haus(-21, 26, -16, 31, 16);
+    for (let k = -12; k < GROESSE.dx; k += 3) platte.push([k + OX + 0.2, 0, -8.6 + OZ, k + OX + 1.8, 0.03, -8.4 + OZ, '#e6e6e2']);
+    for (let k = -4; k < GROESSE.dz; k += 3) platte.push([-8.6 + OX, 0, k + OZ + 0.2, -8.4 + OX, 0.03, k + OZ + 1.8, '#e6e6e2']);
+    g.add(quaderVerbund(platte));
+    // graue Hochhäuser („zentraler versiegelter Platz zwischen markanten Hochhäusern“):
+    // alle Baukörper ein Objekt (wirft Schatten), alle Fensterfassaden ein zweites Objekt – zwei Zeichenaufrufe statt 42
+    const haeuser = [[-21, -21, -16, -16, 26], [-6, -21, 1, -16, 32], [8, -21, 14, -16, 22], [21, -21, 28, -16, 36],
+      [-21, 0, -16, 6, 24], [-21, 13, -16, 20, 30], [-21, 26, -16, 31, 16]]
+      .map(([x1, z1, x2, z2, h]) => [x1 + OX, z1 + OZ, x2 + 1 + OX, z2 + 1 + OZ, h]);
+    const koerper = quaderVerbund(haeuser.map(([xa, za, xb, zb, h]) => [xa, 0, za, xb, h, zb, '#8e949b']));
+    koerper.castShadow = true;
+    g.add(koerper, fassadenVerbund(haeuser));
     return g;
   }
 
@@ -264,8 +306,9 @@ export class Welt {
   _teilchen() {
     // Regen: Striche über dem ganzen Modell
     const N = 1400, pos = new Float32Array(N * 6), rnd = (a, b) => a + Math.random() * (b - a);
-    this.regenDaten = [];
-    for (let k = 0; k < N; k++) this.regenDaten.push({ x: rnd(-38, 18), y: rnd(-2, 46), z: rnd(-38, 18), v: rnd(26, 34) });
+    // Tropfen als Zahlenfelder (x, y, z, Tempo) – schneller als einzelne Objekte
+    this.regenDaten = { n: N, x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), v: new Float32Array(N) };
+    for (let k = 0; k < N; k++) { this.regenDaten.x[k] = rnd(-38, 18); this.regenDaten.y[k] = rnd(-2, 46); this.regenDaten.z[k] = rnd(-38, 18); this.regenDaten.v[k] = rnd(26, 34); }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     this.regen = new THREE.LineSegments(geo, M.regen);
@@ -323,12 +366,19 @@ export class Welt {
     const S = B + 1;
     this.kinder = [
       [kind('#ef4444'), 13.5, S + 4, 4.5, 0.5],          // auf dem Kletterturm
-      [kind('#22c55e'), 22.5, S + 1.5, 2.5, 3.1],        // Schaukel
+      [kind('#22c55e'), 22.5, S + 1.5, 2.5, 3.1, 'schaukel'], // Schaukel (bewegt sich, wirft keinen Schatten)
       [kind('#3b82f6'), 24.5, S + 1, 8.5, 1.6],          // Balancierbalken
       [kind('#eab308'), 14.5, B - 1, 15.5, 2.2, 'tief'], // im tiefen Spielbereich
       [kind('#ec4899'), 19.5, S, 4.5, -1.2],             // unten an der Rutsche
       [kind('#14b8a6'), 19.5, S, 28.5, 3.4],             // Picknick
-    ].map(([g, x, y, z, rot, wo]) => { const v = p(x, y, z); g.position.copy(v); g.rotation.y = rot; g.userData.wo = wo; this.scene.add(g); return g; });
+    ].map(([g, x, y, z, rot, wo]) => {
+      g.position.copy(p(x, y, z)); g.rotation.y = rot; g.userData.wo = wo; g.visible = false;
+      if (wo === 'schaukel') g.traverse((o) => { o.castShadow = false; });
+      this.scene.add(g);
+      return g;
+    });
+    this.falter.forEach((f) => { f.visible = false; });
+    this.voegel.forEach((v) => { v.visible = false; });
   }
 
   /* ---------- Beschriftungs-Punkte ---------- */
@@ -344,39 +394,63 @@ export class Welt {
   }
 
   /* ---------- Steuerung ---------- */
+  // Jede Änderung meldet „neu zeichnen“; Änderungen am Platz zusätzlich „Schatten neu berechnen“.
+  _neu(schatten = false) { this.dirty = true; if (schatten) this.schattenNeu = true; }
   setzeZustand(z) {
     this.zustand = z;
     this.verwandlung = null;
     for (const k of ['grau', 'gruen']) for (const g of this.schichten[k]) { g.visible = k === z; g.scale.y = 1; }
     this._waermeAnzeigen();
+    this._neu(true);
   }
   verwandeln() {
     this.setzeZustand('grau');
     this.verwandlung = { t0: performance.now() };
   }
   verwandlungLaeuft() { return !!this.verwandlung; }
-  setzeWaerme(an) { this.waermeAn = an; this._waermeAnzeigen(); }
+  setzeWaerme(an) { this.waermeAn = an; this._waermeAnzeigen(); this._neu(); }
   _waermeAnzeigen() {
     for (const k of ['grau', 'gruen']) this.waermeNetz[k].visible = this.waermeAn && k === this.zustand && !this.verwandlung;
     M.laub.opacity = this.waermeAn ? 0.22 : 1;
     M.laub.depthWrite = !this.waermeAn;
   }
-  setzeTiere(an) { this.tiereAn = an; }
-  setzeKinder(an) { this.kinderAn = an; }
-  // Wasser: zustand des Platzes, Regen an/aus, Gießen, Startfüllung der Zisterne
+  setzeTiere(an) { this.tiereAn = an; this._neu(); }
+  setzeKinder(an) { this.kinderAn = an; this._neu(); }
+  // Wasser: Zustand des Platzes, Regen an/aus, Gießen, Startfüllung der Zisterne
   wasserSetzen({ regen = false, giessen = false, zisterne = null, neu = false } = {}) {
-    if (neu) { this.wasser.reset(this.zustand, zisterne ?? 0.3); this.regenStaerke = regen ? 1 : 0; }   // neuer Abschnitt: Himmel sofort passend
+    if (neu) { this.wasser.reset(this.zustand, zisterne ?? 0.3); this.regenStaerke = regen ? 1 : 0; this._himmel(); }   // neuer Abschnitt: Himmel sofort passend
     this.wasser.zustand = this.zustand;
     this.wasser.regen = regen;
     this.wasser.giessen = giessen;
+    this._neu();
   }
-  wasserZiel(werte) { Object.assign(this.wasser, werte); }
+  wasserZiel(werte) { Object.assign(this.wasser, werte); this._neu(); }
+  _himmel() {
+    const rs = this.regenStaerke;
+    this.scene.background.copy(HIMMEL).lerp(HIMMEL_REGEN, rs);
+    this.sonne.intensity = 2.4 - 1.7 * rs;
+    this.hemi.intensity = 1.6 - 0.4 * rs;
+  }
+
+  /* Beim Laden alles einmal unsichtbar vorbereiten: Grafikprogramme übersetzen und alle Daten auf die
+   * Grafikkarte laden. Sonst ruckelt es beim ersten Umschalten auf Regen, Wärme oder Grün. */
+  vorwaermen() {
+    const alles = [...this.schichten.grau, ...this.schichten.gruen, ...Object.values(this.wk), this.regen, this.tropfen, this.sickern,
+      this.giessTeile, this.waermeNetz.grau, this.waermeNetz.gruen, ...this.falter, ...this.voegel, ...this.kinder];
+    const vorher = alles.map((o) => o.visible);
+    alles.forEach((o) => { o.visible = true; });
+    this.renderer.compile(this.scene, this.camera);
+    this.renderer.shadowMap.needsUpdate = true;
+    this.renderer.render(this.scene, this.camera);
+    alles.forEach((o, k) => { o.visible = vorher[k]; });
+    this.setzeZustand(this.zustand);
+  }
 
   /* ---------- Bild ---------- */
   bildpunkt(name) {
     const a = this.anker[name];
     if (!a) return null;
-    const v = a.clone().project(this.camera);
+    const v = T.v.copy(a).project(this.camera);
     const w = this.container.clientWidth, h = this.container.clientHeight;
     return { x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h };
   }
@@ -387,128 +461,147 @@ export class Welt {
     // Modell links der Mitte; rechts Platz für Texte, unten für die Bedienleisten
     Object.assign(this.camera, { left: -0.4 * W, right: 0.6 * W, top: 0.52 * H, bottom: -0.48 * H });
     this.camera.updateProjectionMatrix();
+    this._neu();
   }
 
+  /* Ein Bildschritt. Gezeichnet wird nur, wenn sich etwas bewegt oder geändert hat – ruhige Ansichten
+   * (grauer Platz, Abstimmung) kosten dann fast nichts, der Laptop bleibt kühl und leise.
+   * Die Schattenkarte wird nur neu berechnet, wenn sich der Platz ändert. Rückgabe: true = gezeichnet. */
   render(jetzt = performance.now()) {
     const dt = Math.min(0.1, (jetzt - this.letzte) / 1000);
     this.letzte = jetzt;
     const t = jetzt / 1000;
+    let bewegt = this.dirty;
+    this.dirty = false;
 
     // Verwandlung Schicht für Schicht
     if (this.verwandlung) {
       const pr = aufbau((jetzt - this.verwandlung.t0) / 1000, this.c.dauer.verwandeln);
       this.schichten.grau.forEach((g, L) => { g.visible = pr <= L; });
       this.schichten.gruen.forEach((g, L) => { const w = schichtWuchs(pr, L); g.visible = w > 0; g.scale.y = Math.max(0.02, w); });
+      bewegt = true; this.schattenNeu = true;
       if (pr >= GROESSE.dy + 1) { this.verwandlung = null; this.zustand = 'gruen'; this.setzeZustand('gruen'); }
     }
 
     // Wasser
-    const w = this.wasser;
+    const w = this.wasser, summe = () => w.mulde + 3 * w.tief + 7 * w.zisterne + 11 * w.abfluss + 13 * w.versickern;
+    const vorher = summe();
     w.zustand = this.zustand;
     w.schritt(dt);
+    if (Math.abs(summe() - vorher) > 1e-7) bewegt = true;
     const gruen = this.zustand === 'gruen' && !this.verwandlung;
     this._fuellstand(this.wk.mulde, gruen ? w.mulde : 0);
     this._fuellstand(this.wk.tief, gruen ? w.tief : 0);
     this._fuellstand(this.wk.tiefRand, gruen ? Math.max(0, (w.tief - 0.55) / 0.45) : 0);
     this._fuellstand(this.wk.zisterne, gruen ? w.zisterne : 0);
 
-    // Himmel und Licht bei Regen
-    const r = w.regen ? 1 : 0;
-    this.regenStaerke = (this.regenStaerke ?? 0) + (r - (this.regenStaerke ?? 0)) * Math.min(1, dt * 2);
-    const rs = this.regenStaerke;
-    this.scene.background.copy(HIMMEL).lerp(HIMMEL_REGEN, rs);
-    this.sonne.intensity = 2.4 - 1.7 * rs;
-    this.hemi.intensity = 1.6 - 0.4 * rs;
+    // Himmel und Licht bei Regen (weicher Übergang)
+    const ziel = w.regen ? 1 : 0, rsAlt = this.regenStaerke;
+    let rs = rsAlt + (ziel - rsAlt) * Math.min(1, dt * 2);
+    if (Math.abs(ziel - rs) < 0.003) rs = ziel;
+    if (rs !== rsAlt) { this.regenStaerke = rs; this._himmel(); bewegt = true; }
 
-    this._regenBewegen(dt, rs);
-    this._abflussBewegen(dt, w);
-    this._sickernBewegen(dt, w);
-    this._giessenBewegen(t, w);
-    this._lebewesenBewegen(t, gruen && rs < 0.2, w);
+    if (this._regenBewegen(dt, rs)) bewegt = true;
+    if (this._abflussBewegen(dt, w)) bewegt = true;
+    if (this._sickernBewegen(dt, w)) bewegt = true;
+    if (this._giessenBewegen(t, w)) bewegt = true;
+    if (this._lebewesenBewegen(t, gruen && rs < 0.2, w)) bewegt = true;
 
+    if (!bewegt) return false;
+    if (this.schattenNeu) { this.renderer.shadowMap.needsUpdate = true; this.schattenNeu = false; this.statistik.schatten++; }
     this.renderer.render(this.scene, this.camera);
+    this.statistik.bilder++;
+    return true;
   }
 
   _regenBewegen(dt, rs) {
-    this.regen.visible = rs > 0.03;
-    if (!this.regen.visible) return;
+    const sichtbar = rs > 0.03;
+    if (this.regen.visible !== sichtbar) { this.regen.visible = sichtbar; this.dirty = true; }
+    if (!sichtbar) return false;
     M.regen.opacity = 0.6 * rs;
-    const a = this.regen.geometry.attributes.position.array;
-    this.regenDaten.forEach((d, k) => {
-      d.y -= d.v * dt; d.x += 2 * dt;
-      if (d.y < (d.x > OX && d.z > OZ ? 0 : 0)) { d.y = 40 + Math.random() * 6; d.x = -38 + Math.random() * 56; d.z = -38 + Math.random() * 56; }
-      a.set([d.x, d.y, d.z, d.x - 0.12, d.y + 1.1, d.z], k * 6);
-    });
+    const a = this.regen.geometry.attributes.position.array, d = this.regenDaten;
+    for (let k = 0; k < d.n; k++) {
+      d.y[k] -= d.v[k] * dt; d.x[k] += 2 * dt;
+      if (d.y[k] < 0) { d.y[k] = 40 + Math.random() * 6; d.x[k] = -38 + Math.random() * 56; d.z[k] = -38 + Math.random() * 56; }
+      const o = k * 6;
+      a[o] = d.x[k]; a[o + 1] = d.y[k]; a[o + 2] = d.z[k];
+      a[o + 3] = d.x[k] - 0.12; a[o + 4] = d.y[k] + 1.1; a[o + 5] = d.z[k];
+    }
     this.regen.geometry.attributes.position.needsUpdate = true;
+    return true;
   }
   _abflussBewegen(dt, w) {
     const sichtbar = this.zustand === 'grau' && !this.verwandlung && w.abfluss > 0.02;
-    this.tropfen.visible = sichtbar;
-    if (!sichtbar) return;
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), s = new THREE.Vector3();
+    if (this.tropfen.visible !== sichtbar) { this.tropfen.visible = sichtbar; this.dirty = true; }
+    if (!sichtbar) return false;
     const n = Math.round(this.tropfenDaten.length * w.abfluss);
     this.tropfenDaten.forEach((d, k) => {
       const dx = d.zx - d.x, dz = d.zz - d.z, e = Math.hypot(dx, dz);
       if (e < 0.3) this._neuerTropfen(d); else { d.x += dx / e * d.v * dt; d.z += dz / e * d.v * dt; }
-      const an = k < n ? 1 : 0;
-      v.set(d.x + OX, 0.05, d.z + OZ); s.setScalar(an);
-      this.tropfen.setMatrixAt(k, m4.compose(v, q, s));
+      T.v.set(d.x + OX, 0.05, d.z + OZ); T.s.setScalar(k < n ? 1 : 0); T.q.identity();
+      this.tropfen.setMatrixAt(k, T.m4.compose(T.v, T.q, T.s));
     });
     this.tropfen.instanceMatrix.needsUpdate = true;
+    return true;
   }
   _sickernBewegen(dt, w) {
     const sichtbar = this.zustand === 'gruen' && !this.verwandlung && w.versickern > 0.02;
-    this.sickern.visible = sichtbar;
-    if (!sichtbar) return;
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), s = new THREE.Vector3(), q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+    if (this.sickern.visible !== sichtbar) { this.sickern.visible = sichtbar; this.dirty = true; }
+    if (!sichtbar) return false;
     const n = Math.round(this.sickerDaten.length * w.versickern), tiefe = B + 0.4;
     this.sickerDaten.forEach((d, k) => {
       d.t += dt * 0.28;
       if (d.t > 1) { d.t = 0; d.a = Math.random() * (d.seite ? GROESSE.dz : GROESSE.dx); }
       const y = OY + B + 0.7 - d.t * tiefe;
-      if (d.seite === 0) v.set(d.a + OX, y, GROESSE.dz + OZ + 0.04); else v.set(GROESSE.dx + OX + 0.04, y, d.a + OZ);
-      s.setScalar(k < n ? 1 : 0);
-      this.sickern.setMatrixAt(k, m4.compose(v, d.seite ? q2 : q, s));
+      if (d.seite === 0) T.v.set(d.a + OX, y, GROESSE.dz + OZ + 0.04); else T.v.set(GROESSE.dx + OX + 0.04, y, d.a + OZ);
+      T.s.setScalar(k < n ? 1 : 0);
+      if (d.seite) T.q.copy(T.qOst); else T.q.identity();
+      this.sickern.setMatrixAt(k, T.m4.compose(T.v, T.q, T.s));
     });
     this.sickern.instanceMatrix.needsUpdate = true;
+    return true;
   }
   _giessenBewegen(t, w) {
     const sichtbar = this.zustand === 'gruen' && w.giessen && w.zisterne > 0.25 && !w.regen;
-    this.giessTeile.visible = sichtbar;
-    if (!sichtbar) return;
-    const [, , zx2, zz2] = GRUEN_TEILE.zisterne, m4 = new THREE.Matrix4();
+    if (this.giessTeile.visible !== sichtbar) { this.giessTeile.visible = sichtbar; this.dirty = true; }
+    if (!sichtbar) return false;
+    const [, , zx2, zz2] = GRUEN_TEILE.zisterne;
     for (let k = 0; k < 18; k++) {
       const f = (t * 0.6 + k / 18) % 1;
-      m4.makeTranslation(zx2 + 0.5 + OX, B + 2.08 + OY, zz2 + 0.6 + f * 4.2 + OZ);
-      this.giessTeile.setMatrixAt(k, m4);
+      this.giessTeile.setMatrixAt(k, T.m4.makeTranslation(zx2 + 0.5 + OX, B + 2.08 + OY, zz2 + 0.6 + f * 4.2 + OZ));
     }
     this.giessTeile.instanceMatrix.needsUpdate = true;
+    return true;
   }
   _lebewesenBewegen(t, draussen, w) {
     const tiere = this.tiereAn && draussen;
+    let bewegt = false;
     this.falter.forEach((f) => {
-      f.visible = tiere;
+      if (f.visible !== tiere) { f.visible = tiere; bewegt = true; }
       if (!tiere) return;
       const k = f.userData.k, cx = [4, 7, 20, 26][k], cz = [5, 3, 28, 12][k];
-      f.position.copy(p(cx + Math.sin(t * 0.7 + k) * 2.2, B + 2.2 + Math.sin(t * 1.9 + k * 2) * 0.6, cz + Math.cos(t * 0.5 + k * 1.3) * 2.2));
+      f.position.set(cx + Math.sin(t * 0.7 + k) * 2.2 + OX, B + 2.2 + Math.sin(t * 1.9 + k * 2) * 0.6 + OY, cz + Math.cos(t * 0.5 + k * 1.3) * 2.2 + OZ);
       f.rotation.y = t * 0.7 + k;
       const a = Math.sin(t * 14 + k) * 0.9;
       f.userData.fluegel[0].rotation.z = a; f.userData.fluegel[1].rotation.z = -a;
+      bewegt = true;
     });
     this.voegel.forEach((v) => {
-      v.visible = tiere;
+      if (v.visible !== tiere) { v.visible = tiere; bewegt = true; }
       if (!tiere) return;
       const k = v.userData.k, wkl = t * 0.35 + k * Math.PI;
-      v.position.copy(p(16 + Math.cos(wkl) * 13, B + 14 + k * 1.5, 16 + Math.sin(wkl) * 13));
+      v.position.set(16 + Math.cos(wkl) * 13 + OX, B + 14 + k * 1.5 + OY, 16 + Math.sin(wkl) * 13 + OZ);
       v.rotation.y = -wkl;
       const a = Math.sin(t * 6 + k) * 0.5;
       v.userData.fluegel[0].rotation.z = a; v.userData.fluegel[1].rotation.z = -a;
     });
     const kinder = this.kinderAn && draussen;
-    this.kinder.forEach((g, k) => {
-      g.visible = kinder && !(g.userData.wo === 'tief' && w.tief > 0.02);
-      if (g.visible && k === 1) g.position.z = p(0, 0, 2.5).z + Math.sin(t * 2.2) * 0.35;   // schaukeln
+    this.kinder.forEach((g) => {
+      const sicht = kinder && !(g.userData.wo === 'tief' && w.tief > 0.02);
+      if (g.visible !== sicht) { g.visible = sicht; bewegt = true; if (g.userData.wo !== 'schaukel') this.schattenNeu = true; }
+      if (sicht && g.userData.wo === 'schaukel') { g.position.z = 2.5 + OZ + Math.sin(t * 2.2) * 0.35; bewegt = true; }   // schaukeln
     });
+    return bewegt;
   }
 
   info() {
@@ -518,6 +611,7 @@ export class Welt {
       objekte, geometrien: this.renderer.info.memory.geometries, texturen: this.renderer.info.memory.textures,
       zustand: this.zustand, verwandlung: !!this.verwandlung,
       sichtbarGrau: this.schichten.grau.filter((g) => g.visible).length, sichtbarGruen: this.schichten.gruen.filter((g) => g.visible).length,
+      bilder: this.statistik.bilder, schatten: this.statistik.schatten, aufrufe: this.renderer.info.render.calls,
     };
   }
 }

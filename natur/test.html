@@ -91,6 +91,24 @@ frame.addEventListener('load', async () => {
   if (!fw.__naturOk) { check('… App geladen', false, 'App nicht geladen'); return zeigen(); }
   const api = fw.__natur, welt = api.welt();
   const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Erstes Umschalten ohne Ruckler (alles wurde beim Laden vorgewärmt): erstes Bild kaum langsamer als das zweite
+  const zeit = () => { const t = fw.performance.now(); welt._neu(); welt.render(fw.performance.now()); return fw.performance.now() - t; };
+  const erst = {};
+  for (const [name, f] of [['Regen grün', () => { api.modus('regen'); api.schritt(1); }], ['Wärme', () => { api.modus('sommer'); api.schritt(1); api.waermeUmschalten(); }], ['Endbild', () => api.modus('ende')]]) {
+    f(); const a = zeit(), b = zeit(); erst[name] = [a, b];
+  }
+  check('… erstes Umschalten ohne Ruckler (Regen, Wärme, Endbild)', Object.values(erst).every(([a, b]) => a <= 2 * b + 8), Object.entries(erst).map(([n, [a, b]]) => `${n}: ${a.toFixed(1)} ms / danach ${b.toFixed(1)} ms`).join(' · '));
+
+  // Ruhige Ansicht: kein Dauer-Zeichnen, keine Schattenberechnung; lebendige Ansicht: läuft flüssig
+  api.modus('grau'); await pause(600);
+  let i0 = welt.info(); await pause(1000); let i1 = welt.info();
+  check('… ruhige Ansicht (grauer Platz) zeichnet nicht ständig neu', i1.bilder - i0.bilder <= 1 && i1.schatten === i0.schatten, `${i1.bilder - i0.bilder} Bilder, ${i1.schatten - i0.schatten} Schattenberechnungen in 1 s`);
+  welt._neu(); welt.render(fw.performance.now());
+  check('… wenige Zeichenaufrufe (Straßenplatte und Hochhäuser zusammengefasst)', welt.info().aufrufe <= 25, `${welt.info().aufrufe} Aufrufe für den grauen Platz`);
+  api.modus('ende'); await pause(600);
+  i0 = welt.info(); await pause(1000); i1 = welt.info();
+  check('… lebendige Ansicht (Endbild mit Tieren) läuft weiter', i1.bilder - i0.bilder >= 20 && i1.schatten - i0.schatten <= 1, `${i1.bilder - i0.bilder} Bilder, ${i1.schatten - i0.schatten} Schattenberechnungen in 1 s`);
   const runde = async (ms = 30) => {
     api.modus('grau'); api.weiter(1); await pause(ms);
     api.modus('abstimmung'); api.waehlen('A'); api.weiter(1); await pause(ms);

@@ -166,15 +166,29 @@ function beschriftungen() {
     const [a, b, c, d] = C.ende.punkte;
     liste.push(['schatten', a, 'gruen'], ['tiere', b, 'gruen'], ['turm', c, ''], ['tief', d, 'wasser']);
   }
+  // Nur ändern, was sich geändert hat (kein Neu-Layout in jedem Bild); überlappende Schilder weichen nach oben aus
+  const belegt = [];
   LABELS.forEach((el, k) => {
-    const e = liste[k], pt = e && welt.bildpunkt(e[0]);
-    if (!pt) { el.hidden = true; return; }
-    el.hidden = false;
-    if (el.textContent !== e[1]) el.textContent = e[1];
-    el.className = 'label ' + e[2];
-    el.style.transform = `translate(${pt.x}px, ${pt.y}px) translate(-50%, -100%)`;
+    const e = liste[k], pt = e && welt.bildpunkt(e[0]), st = LABEL_STAND[k];
+    if (!pt) { if (st.sichtbar) { el.hidden = true; st.sichtbar = false; } return; }
+    if (!st.sichtbar) { el.hidden = false; st.sichtbar = true; st.w = 0; }
+    if (st.text !== e[1] || st.klasse !== e[2]) {
+      el.textContent = e[1]; el.className = 'label ' + e[2];
+      st.text = e[1]; st.klasse = e[2]; st.w = 0;
+    }
+    if (!st.w) { st.w = el.offsetWidth; st.h = el.offsetHeight; }
+    let y = Math.round(pt.y);
+    const x = Math.round(pt.x), rand = 6;
+    for (let n = 0; n < 8; n++) {
+      const hit = belegt.find((b) => x - st.w / 2 < b.r && x + st.w / 2 > b.l && y - st.h < b.u && y > b.o);
+      if (!hit) break;
+      y = Math.round(hit.o - rand);
+    }
+    belegt.push({ l: x - st.w / 2, r: x + st.w / 2, o: y - st.h, u: y });
+    if (st.x !== x || st.y !== y) { el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`; st.x = x; st.y = y; }
   });
 }
+const LABEL_STAND = LABELS.map(() => ({ text: '', klasse: '', sichtbar: false, w: 0, h: 0, x: NaN, y: NaN }));
 
 /* ---------- Schleife ---------- */
 function frame(now) {
@@ -221,7 +235,7 @@ document.addEventListener('keydown', (e) => {
   const welt3d = await import('./scene3d.js');
   if (!welt3d.webglMoeglich()) throw Object.assign(new Error(C.keinWebGL), { anzeigen: true });
   welt = new welt3d.Welt($('#welt'), C);
-  new ResizeObserver(() => welt.resize()).observe($('#welt'));
+  new ResizeObserver(() => { welt.resize(); LABEL_STAND.forEach((s) => { s.w = 0; s.x = NaN; }); }).observe($('#welt'));
   modus('start');
   window.__natur = { S, welt: () => welt, modus, schritt, weiter, zuruecksetzen, waermeUmschalten, waehlen };
   window.__naturOk = true;

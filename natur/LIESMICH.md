@@ -20,7 +20,7 @@ Die Grafik ist eigenständig: schlichte Blöcke in eigenen Farben, keine Texture
 | `model.js` | ohne Grafik: sichtbare Blöcke, Wärme (vereinfacht), Wasser bei Starkregen, Zeitplan der Verwandlung |
 | `scene3d.js` | 3D mit Three.js: Platz als Modell-Ausschnitt mit Bodenschnitt, Hochhäuser, Regen, Tiere, Kinder |
 | `main.js` | Bedienung: Abschnitte, Schritte, Tasten, Beschriftungen |
-| `test.html` | Abnahmetests (24 Prüfungen, inkl. 10 × alle Abschnitte wechseln) |
+| `test.html` | Abnahmetests (28 Prüfungen, inkl. 10 × alle Abschnitte wechseln und Leistung) |
 
 Es gibt keinen Build-Schritt. Offline geht es über den gemeinsamen Service Worker oder `start-lokal.bat`.
 
@@ -48,6 +48,18 @@ Weitere Tasten: `←` zurück, `R` Abschnitt neu, `I` Info für Moderation (Dreh
   in Stunden. Auch das steht auf der Leinwand. Wie im Drehbuch ist der tiefe Bereich „voll Wasser“ nicht bespielbar: Das Kind dort verschwindet,
   und die Beschriftung sagt es.
 - **Abstimmung:** Laut Drehbuch folgt nach jeder Wahl „Beides gemeinsam!“. Deshalb gibt es keine eigenen A- oder B-Modelle.
+
+## Leistung (für schwache Schul-Laptops am Beamer)
+
+- **Kein Ruckler beim ersten Umschalten:** Beim Laden wird alles einmal unsichtbar vorbereitet (Grafikprogramme, Daten auf der Grafikkarte).
+  Das erste Bild nach dem Umschalten auf Starkregen braucht etwa 3 ms statt 40 ms.
+- **Gezeichnet wird nur, wenn sich etwas bewegt:** Ruhige Ansichten (grauer Platz, Abstimmung) zeichnen 0 statt 60 Bilder pro Sekunde.
+  Regen, Tiere und die Verwandlung laufen weiter flüssig.
+- **Schatten nur bei Änderungen:** Die Schattenkarte wird nur berechnet, wenn sich der Platz ändert (Verwandlung, Wechsel grau/grün),
+  nicht in jedem Bild.
+- **Wenige Zeichenaufrufe:** Die Straßenplatte, alle Hochhäuser und alle Fassaden sind zusammengefasst. Der graue Platz braucht 13 Aufrufe statt 93.
+- **Kein Wegwerf-Speicher pro Bild** (Regen, Tropfen, Tiere). Damit gibt es keine kurzen Hänger durch das Aufräumen des Browsers.
+- Die Bildschärfe ist auf das 1,5-Fache begrenzt. Am Beamer (Faktor 1) ändert das nichts, auf hochauflösenden Laptop-Bildschirmen spart es Rechenzeit.
 
 ## Anpassen
 
