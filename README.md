@@ -100,6 +100,12 @@ Die gemeinsame Anordnung steht in **`layout.json`**. Jedes Gerät lädt sie beim
 
 Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, im Soundboard oben über **🚦 Verkehr** (öffnet ein neues Fenster für den Beamer). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
 
+## Wohnen, Bauen und CO₂ „Wie bauen wir unsere Zukunftsstadt?“ (`wohnen/`)
+
+Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/wohnen/**, im Soundboard oben über **🏠 Wohnen**. Experiment mit sechs Wohnmodulen (nebeneinander/stapeln), Varianten A/B/C auf demselben 12 × 12-Raster, Aufstocken mit zwei Holzgeschossen und Materialwissen. Tasten: `1`–`5` Modi, `←`/`→` oder `Leertaste` Schritte, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung, Rastermodell und Einschränkungen: [wohnen/LIESMICH.md](wohnen/LIESMICH.md). Prüfseite: `wohnen/test.html`.
+
+**Ohne Internet auf dem Vorführ-Laptop:** `start-lokal.bat` doppelklicken (braucht Python 3). Dann laufen Soundboard, Verkehr und Wohnen unter `http://localhost:8000/`.
+
 ## In der Turnhalle
 
 - Die Seite **vorher einmal mit Internet öffnen**. Unten erscheint dann „offline bereit“. Ab dann läuft sie im selben Browser auch ohne Netz.

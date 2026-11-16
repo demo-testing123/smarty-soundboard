@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wie bauen wir unsere Zukunftsstadt?</title>
+<meta name="description" content="3D-Simulation „Wohnen, Bauen und CO₂“ für START IT SMART: Experiment mit sechs Wohnmodulen, drei Wohnvarianten und Aufstocken im Bestand.">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 30 32 10l24 20v26H8z' fill='%23f4a261'/%3E%3Crect x='26' y='38' width='12' height='18' fill='%237c2d12'/%3E%3Crect x='14' y='34' width='8' height='8' fill='%239fd3ef'/%3E%3Crect x='42' y='34' width='8' height='8' fill='%239fd3ef'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-modus="start">
+<div id="app">
+  <main id="buehne">
+    <div id="welt" aria-label="3D-Modell"></div>
+    <div id="lbl1" class="label" hidden></div>
+    <div id="lbl2" class="label holz" hidden></div>
+    <div id="lbl3" class="label gruen" hidden></div>
+
+    <header id="kopf" class="kopf" hidden>
+      <h1 id="titel"></h1>
+    </header>
+    <p id="frage" class="frage" hidden></p>
+
+    <aside id="panel" class="panel" hidden aria-live="polite"></aside>
+    <p id="fussnote" class="fussnote" hidden></p>
+    <p id="lernziel" class="lernziel"></p>
+
+    <section id="vermutung" class="vermutung" hidden>
+      <span class="vm-icon">?</span>
+      <p id="vermutungText"></p>
+    </section>
+
+    <section id="startbild" class="startbild">
+      <h1 id="startTitel">Wie bauen wir unsere Zukunftsstadt?</h1>
+      <p id="startUntertitel">Sechs Familien. Sechs Wohnungen. Ein begrenztes Grundstück.</p>
+      <div class="start-knoepfe">
+        <button type="button" data-aktion="experiment"><kbd>1</kbd>Experiment</button>
+        <button type="button" data-aktion="A"><kbd>2</kbd>Variante A</button>
+        <button type="button" data-aktion="B"><kbd>3</kbd>Variante B</button>
+        <button type="button" data-aktion="C"><kbd>4</kbd>Variante C</button>
+        <button type="button" data-aktion="aufstocken"><kbd>5</kbd>Aufstocken &amp; CO₂</button>
+      </div>
+    </section>
+
+    <aside id="info" class="info" hidden>
+      <h2>Info für Moderation</h2>
+      <ul id="infoListe"></ul>
+      <p class="info-tasten">Tasten: <kbd>1</kbd>–<kbd>5</kbd> Modi · <kbd>←</kbd> <kbd>→</kbd> oder <kbd>Leertaste</kbd> nächster Schritt · <kbd>R</kbd> Zurücksetzen · <kbd>F</kbd> Vollbild · <kbd>0</kbd> Start · <kbd>I</kbd> schließen</p>
+    </aside>
+
+    <div class="leisten">
+      <nav id="sub" class="sub-leiste" hidden aria-label="Schritte"></nav>
+      <nav id="haupt" class="haupt-leiste" aria-label="Modi">
+        <button type="button" data-aktion="start" data-modus="start" title="Startbildschirm (0)">⌂</button>
+        <button type="button" data-aktion="experiment" data-modus="experiment">Experiment <kbd>1</kbd></button>
+        <button type="button" data-aktion="A" data-modus="A">Variante A <kbd>2</kbd></button>
+        <button type="button" data-aktion="B" data-modus="B">Variante B <kbd>3</kbd></button>
+        <button type="button" data-aktion="C" data-modus="C">Variante C <kbd>4</kbd></button>
+        <button type="button" data-aktion="aufstocken" data-modus="aufstocken">Aufstocken &amp; CO₂ <kbd>5</kbd></button>
+        <span class="trenner"></span>
+        <button type="button" data-aktion="reset">Zurücksetzen <kbd>R</kbd></button>
+        <button type="button" data-aktion="info" id="btnInfo" aria-pressed="false">Info für Moderation <kbd>I</kbd></button>
+        <button type="button" data-aktion="vollbild" title="Vollbild (F)">⛶</button>
+      </nav>
+    </div>
+
+    <div id="laden" class="laden">Lade 3D-Modell …</div>
+    <div id="fehler" class="fehler" hidden></div>
+  </main>
+</div>
+<script>
+  setTimeout(function () {
+    if (window.__wohnenOk) return;
+    var l = document.getElementById('laden'); if (l) l.hidden = true;
+    var f = document.getElementById('fehler');
+    if (f && f.hidden) { f.textContent = 'Die Anwendung konnte nicht geladen werden. Bitte über GitHub Pages oder einen lokalen Webserver öffnen (nicht per Doppelklick auf die Datei).'; f.hidden = false; }
+  }, 8000);
+</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
