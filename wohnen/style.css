@@ -40,6 +40,8 @@ kbd {
   background: #fff7d6; border: .35cqh solid #f5c84c; padding: 1.2cqh 2cqh; border-radius: 1.8cqh;
   box-shadow: 0 .8cqh 2cqh rgba(15,23,42,.15);
 }
+/* Experiment: Modell ist größer und reicht nach unten links – Frage deshalb oben unter den Titel */
+[data-gruppe="experiment"] .frage { top: 9.5cqh; bottom: auto; max-width: 31%; }
 .frage::before { content: '?'; display: inline-grid; place-items: center; width: 4.6cqh; height: 4.6cqh; margin-right: 1.2cqh; border-radius: 50%; background: #f5c84c; font-weight: 900; vertical-align: middle; }
 
 /* ---------- Zahlen rechts ---------- */
@@ -107,14 +109,14 @@ kbd {
 
 /* ---------- Vermutung ---------- */
 .vermutung {
-  position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); width: 64%;
+  position: absolute; left: 2cqh; top: 45%; transform: translateY(-50%); width: 60%;
   display: flex; align-items: center; gap: 3cqh; padding: 3cqh 4cqh; border-radius: 3cqh;
   background: #fff; border: .5cqh solid #f5c84c; box-shadow: 0 2cqh 6cqh rgba(15,23,42,.3);
   animation: rein .3s ease-out;
 }
 .vermutung p { margin: 0; font-size: 5cqh; font-weight: 800; line-height: 1.2; }
 .vm-icon { flex: none; width: 12cqh; height: 12cqh; border-radius: 50%; display: grid; place-items: center; font-size: 8cqh; font-weight: 900; background: #f5c84c; }
-@keyframes rein { from { opacity: 0; transform: translate(-50%, -46%); } }
+@keyframes rein { from { opacity: 0; transform: translateY(-46%); } }
 
 /* ---------- Startbildschirm ---------- */
 .startbild {

@@ -84,19 +84,21 @@ der Hof (B) gehört den Nachbarn gemeinsam, nur der Park (C) ist öffentlich. Di
   oder Erschließung im Gebäude. Ein echtes Hochhaus spart nicht immer genau so viel Boden.
 - Der Aufstocken-Block ist ein schematisches Modell nach dem Vorbild der Frankfurter Platensiedlung,
   nicht maßstabsgetreu. Er nennt bewusst keine CO₂-Mengen oder Prozentwerte.
-- Das Experiment nutzt denselben Maßstab wie die Varianten und wirkt deshalb kleiner als die Varianten.
+- Das Experiment wird 1,6-mal größer gezeigt als die Varianten (eigener Maßstab, `experimentAnsicht` in `config.js`),
+  damit es im Saal gut zu sehen ist. A, B und C untereinander haben exakt denselben Maßstab und dieselbe Kamera.
 - Ohne WebGL (sehr alte Rechner oder ausgeschaltete Hardwarebeschleunigung) erscheint nur ein Hinweis,
   es gibt keine 2D-Ersatzansicht.
 - Offline klappt erst, nachdem die Seite einmal mit Internet geöffnet wurde (oder lokal über `start-lokal.bat`).
 
 ## 5. Mögliche Verbesserungen (nach der ersten Version)
 
-1. **Experiment größer zeigen:** eigene Zoomstufe nur für das Experiment, damit die sechs Module auch
-   in der letzten Reihe groß wirken (dann mit Hinweis „anderer Maßstab als bei A/B/C“).
-2. **Moderationsfenster auf zweitem Bildschirm:** Notizen und Tasten auf dem Laptop, die Leinwand
+1. **Moderationsfenster auf zweitem Bildschirm:** Notizen und Tasten auf dem Laptop, die Leinwand
    zeigt nur das Modell.
-3. **Wege in A/B/C einblendbar:** auf Knopfdruck Zugänge von der Straße farbig hervorheben, damit
+2. **Wege in A/B/C einblendbar:** auf Knopfdruck Zugänge von der Straße farbig hervorheben, damit
    die unterschiedlichen Erschließungen der Varianten noch deutlicher werden.
+
+3. **Experiment mit eigener Vermutung der Kinder:** vor dem Stapeln per Knopf eine geschätzte Zahl
+   frei werdender Felder eintragen und nach dem Stapeln mit dem Ergebnis vergleichen.
 
 ## Prüfen
 

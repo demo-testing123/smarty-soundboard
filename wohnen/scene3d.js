@@ -215,7 +215,12 @@ export class Welt {
       g.add(grp);
       return grp;
     });
-    this.anker.frei = new THREE.Vector3(this._feld(2) + 1.2, 0.3, this._feld(1) + 1.2);
+    // eigener, größerer Maßstab fürs Experiment; Ankerpunkt mitverschieben
+    const ansicht = this.c.experimentAnsicht || { groesse: 1, versatz: [0, 0, 0] };
+    g.scale.setScalar(ansicht.groesse);
+    g.position.set(...ansicht.versatz);
+    g.updateMatrixWorld(true);
+    this.anker.frei = new THREE.Vector3(this._feld(2) + 1.2, 0.3, this._feld(1) + 1.2).applyMatrix4(g.matrixWorld);
     return g;
   }
 

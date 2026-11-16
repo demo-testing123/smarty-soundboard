@@ -15,6 +15,10 @@ export const CONFIG = {
   untertitel: 'Sechs Familien. Sechs Wohnungen. Ein begrenztes Grundstück.',
 
   raster: { modul: 2, etage: 2, experimentFelder: 3 },
+  // Das Experiment wird größer gezeigt als die Varianten (eigener Maßstab), damit es im Saal gut zu sehen ist.
+  // versatz: in Rasterfeldern; schiebt das Modell nach rechts in die freie Mitte und etwas nach unten,
+  // damit weder die Türme an den Titel noch die Frage unten links an das Modell stoßen
+  experimentAnsicht: { groesse: 1.6, versatz: [4.4, 0, 0.6] },
   dauer: { stapeln: 2.8, aufstocken: 3.0 },   // Sekunden, ruhig und kurz
 
   experiment: {
@@ -126,7 +130,7 @@ export const CONFIG = {
   // Lernzielkarte (max. zwei Sätze) und Notizen für die Moderation je Modus
   moderation: {
     start: { lernziel: 'Sechs Familien brauchen sechs Wohnungen. Wir probieren aus, wie man sie auf ein Grundstück baut.', notizen: ['Hauptknöpfe 1–5 oder unten anklicken. Nichts läuft von allein weiter.', 'Abstimmungen im Saal per Handzeichen.'] },
-    experiment: { lernziel: 'Gestapelt brauchen dieselben sechs Wohnungen weniger Bodenfläche. Die Zahl der Wohnungen bleibt gleich.', notizen: ['Frage: „Wir brauchen sechs Wohnungen. Brauchen sie immer gleich viel Platz am Boden?“', 'Erst Kinder vermuten lassen („Vermutung zeigen“), dann „Stapeln“.', 'Vereinfachtes Modell: Echte Hochhäuser sparen nicht immer genau so viel Boden (Wege, Abstände, Treppenhäuser).'] },
+    experiment: { lernziel: 'Gestapelt brauchen dieselben sechs Wohnungen weniger Bodenfläche. Die Zahl der Wohnungen bleibt gleich.', notizen: ['Frage: „Wir brauchen sechs Wohnungen. Brauchen sie immer gleich viel Platz am Boden?“', 'Erst Kinder vermuten lassen („Vermutung zeigen“), dann „Stapeln“.', 'Vereinfachtes Modell: Echte Hochhäuser sparen nicht immer genau so viel Boden (Wege, Abstände, Treppenhäuser).', 'Das Experiment ist größer dargestellt als die Varianten A/B/C (eigener Maßstab).'] },
     varianten: { lernziel: 'Gleiches Grundstück, gleich viele Wohnungen – aber verschiedene Freiflächen. Wichtig ist, wer sie nutzen darf.', notizen: ['Frage: „Alle drei bieten Platz für sechs Familien. Welche Grünflächen entstehen – und wer darf sie nutzen?“', 'Danach Handabstimmung A / B / C. Die Varianten sind keine Rangfolge.', 'Zahlen sind Rasterfelder des Modells (12 × 12), keine echten Quadratmeter.'] },
     aufstocken: { lernziel: 'Ein vorhandenes Haus kann weitergenutzt und erweitert werden. Höher bauen ist nicht automatisch klimafreundlicher.', notizen: ['Frage: „Muss ein altes Haus immer abgerissen werden? Was passiert, wenn wir zwei Stockwerke ergänzen?“', 'Reihenfolge: Bestand → Aufstocken → Materialwissen → Was wird eingespart? → Mini-Check.', 'Keine Prozentzahlen oder CO₂-Mengen nennen: Dafür bräuchte man eine echte Klimabilanz.'] },
   },
