@@ -308,7 +308,7 @@ export const MISSIONEN = [
         art: 'finale', kicker: 'Finale · SMARTys Zukunftscheck', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
         text: 'Ihr habt die Stadt verbessert – mit euren Ideen und Entscheidungen.',
         regie: ['Nur tatsächlich übernommene Beschlüsse sind zu sehen.', '„Vorher / Nachher“ vergleicht mit der grauen Stadt.', '„Rundgang“: Station für Station mit → oder automatisch.'],
-        smarty: [['F1 · Zukunftsanalyse', '#'], ['F2 · Mission erfolgreich', '6']],
+        smarty: [['F1 · Zukunftsanalyse', '#'], ['F2 · Mission erfolgreich', '6'], ['Erzähler · Grüße aus dem Jahr 2050', '-']],
       },
     ],
   },

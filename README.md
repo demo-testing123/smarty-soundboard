@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `Y`–`,`; Eröffnung als Film `Q`, Zeitmaschine `A S D`). `Ü Ö Ä + #` gelten für die deutsche Tastatur. |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `Y`–`,`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä + #` gelten für die deutsche Tastatur. |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -21,7 +21,10 @@ Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 
 ## Eröffnung „Die Zukunft braucht euch“ (Taste `Q`)
 
-Der Erzähler hat genau einen Sound: die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
+Der Erzähler hat zwei Sounds:
+
+- **Eröffnung** (Taste `Q`): die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
+- **Grüße aus dem Jahr 2050** (Taste `-`): Botschaft zum Showende, etwa 1:43, nur Stimme. Erzeugt mit der Erzählerstimme des Soundboards (Sprachausgabe Christoph mit Erzähler-Klang), **nicht** mit der ElevenLabs-Stimme der Eröffnung.
 
 - **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“, der Countdown kommt etwa im Sekundentakt.
 - **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
