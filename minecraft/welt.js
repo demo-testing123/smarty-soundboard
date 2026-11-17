@@ -71,6 +71,43 @@ export const BLOECKE = {
   befehlsblock: ['command_block', { conditional_bit: b(0), facing_direction: i(3) }, '#c08050'],
   knopf: ['stone_button', { button_pressed_bit: b(0), facing_direction: i(1) }, '#888888'],
   schildNord: schild(2), schildSued: schild(3), schildWest: schild(4), schildOst: schild(5),
+  // ---- ab hier für den Stadt-Konfigurator (../stadt/) angehängt; die Nummern oben bleiben dadurch gleich.
+  // Alle Namen mit PyMCTranslate geprüft: gültig in Bedrock 1.20.70 und sauber übersetzbar in die aktuelle Version.
+  ziegel: ['brick_block', {}, '#a9604a'],
+  quarz: ['quartz_block', { chisel_type: s('default'), pillar_axis: s('y') }, '#ece4d6'],
+  sandstein: ['sandstone', { sand_stone_type: s('default') }, '#dcc597'],
+  tiefschiefer: ['deepslate_tiles', {}, '#4b515d'],
+  cyanGlas: ['cyan_stained_glass', {}, '#4d8890'],
+  grauGlas: ['gray_stained_glass', {}, '#5f666c'],
+  glas: ['glass', {}, '#cfe9ee'],
+  blau: ['blue_concrete', {}, '#3c5aa6'],
+  gruenBeton: ['green_concrete', {}, '#5b7a38'],
+  limette: ['lime_concrete', {}, '#78bd3f'],
+  orange: ['orange_concrete', {}, '#de7420'],
+  braun: ['brown_concrete', {}, '#6a4a31'],
+  cyanBeton: ['cyan_concrete', {}, '#2a7884'],
+  lampeAus: ['redstone_lamp', {}, '#7d553a'],
+  lampeAn: ['lit_redstone_lamp', {}, '#ffd27a'],
+  redstone: ['redstone_block', {}, '#9e2a1e'],
+  sensor: ['daylight_detector_inverted', { redstone_signal: i(0) }, '#c9bda2'],
+  gitter: ['iron_bars', {}, '#6c6c6c'],
+  schieneOW: ['rail', { rail_direction: i(1) }, '#857560'],
+  sperre: ['barrier', {}, null],
+  werkbank: ['crafting_table', {}, '#9a6a3a'],
+  pfad: ['grass_path', {}, '#a88a55'],
+  wolleWeiss: ['white_wool', {}, '#e8ebeb'],
+  wolleRot: ['red_wool', {}, '#a3302a'],
+  wolleGruen: ['green_wool', {}, '#55702a'],
+  wolleGelb: ['yellow_wool', {}, '#f0c02c'],
+  kupfer: ['cut_copper', {}, '#c06a49'],
+  knopfSued: ['stone_button', { button_pressed_bit: b(0), facing_direction: i(3) }, '#888888'],
+  limGlas: ['lime_stained_glass', {}, '#8fcf5a'],
+  schwarzGlas: ['black_stained_glass', {}, '#2a2d33'],
+  zaun: ['oak_fence', {}, '#b8945f'],
+  terrakotta: ['orange_terracotta', {}, '#a0583a'],
+  fass: ['barrel', { facing_direction: i(1), open_bit: b(0) }, '#8a6a42'],
+  bienen: ['bee_nest', { direction: i(0), honey_level: i(0) }, '#d8b25a'],
+  bretterBirke: ['birch_planks', {}, '#d6c28c'],
 };
 export const NAMEN = Object.keys(BLOECKE);
 export const ID = Object.fromEntries(NAMEN.map((n, k) => [n, k]));
@@ -309,13 +346,15 @@ function baum(v, x, z, art, h) {
 
 /* ---------- Welt ---------- */
 export class Welt {
-  constructor() {
-    const { nx, nz, ny } = BEREICH;
+  // bereich: erzeugter Ausschnitt (Standard: Spielplatz-Testwelt). Der Stadt-Konfigurator nutzt einen größeren.
+  constructor(bereich = BEREICH) {
+    const { nx, nz, ny } = bereich;
+    this.bereich = bereich;
     this.daten = new Uint8Array(nx * nz * ny);
     this.entities = new Map();             // "x,y,z" -> { art: 'schild', zeilen } | { art: 'befehl', befehl, name }
   }
   index(x, y, z) {
-    const { x0, z0, y0, nx, nz, ny } = BEREICH;
+    const { x0, z0, y0, nx, nz, ny } = this.bereich;
     const a = x - x0, c = z - z0, h = y - y0;
     if (a < 0 || c < 0 || h < 0 || a >= nx || c >= nz || h >= ny) return -1;
     return (h * nz + c) * nx + a;

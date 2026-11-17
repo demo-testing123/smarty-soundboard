@@ -1,0 +1,558 @@
+/* START IT SMART – Stadt-Konfigurator: REGIEANSICHT (Bedienung, Schritte, Karten, Tafeln).
+ * Nichts schaltet von selbst weiter. Keine Pop-ups ohne Klick. Läuft ohne Internet. */
+import { webglMoeglich, Ansicht } from './ansicht3d.js';
+import { MISSIONEN, KAMERAS, TAFELN, BUCHSTABEN_FARBE, RUNDGANG, beschlussText } from './daten.js';
+import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
+import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, bebauteFlaeche, wohnungen, LADEN } from './stadtmodell.js';
+import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, WELTNAME } from './minecraft-ausgabe.js';
+
+const $ = (s) => document.querySelector(s);
+function h(tag, attrs = {}, ...kinder) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'style') el.style.cssText = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kinder.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+
+// ?test: eigener, leerer Speicher (die Abnahmetests verändern nie den Stand der Regie)
+const TEST = new URLSearchParams(location.search).has('test');
+if (TEST) try { localStorage.removeItem(SPEICHER_SCHLUESSEL + '-test'); } catch { /* ohne Speicher */ }
+const Z = TEST ? new Zustand(undefined, SPEICHER_SCHLUESSEL + '-test') : new Zustand();
+let ansicht = null, welt = null;
+const angezeigt = {};                    // Bereich → aktuell in 3D gezeigte Variante
+let pos = { mission: 0, schritt: 0 };
+let vorschau = {};                       // Bereich → Variante (nur Ansicht, kein Beschluss)
+let vorherAn = false, nacht = false, regenAn = false, regenModus = 'gruen', wegeGemessen = false;
+let rundgang = { station: -1, timer: null };
+let resetBereit = null;
+const bilder = new Map(), wegeCache = new Map();
+
+const mission = () => MISSIONEN[pos.mission];
+const schritt = () => mission().schritte[pos.schritt];
+const grund = (b) => BEREICHE[b].grund;
+
+/* ---------- Stand der Stadt ---------- */
+export function sollStand() {
+  const m = mission(), s = schritt(), soll = {};
+  for (const b of BEREICH_IDS) soll[b] = Z.variante(b);
+  if (s.zeige === 'vorher-alle') for (const b of BEREICH_IDS) soll[b] = grund(b);
+  if (s.zeige === 'vorher') for (const b of (s.bereich ? [s.bereich] : m.bereiche)) soll[b] = grund(b);
+  for (const [b, v] of Object.entries(vorschau)) soll[b] = v;
+  if (vorherAn) for (const b of (m.bereiche.length ? m.bereiche : BEREICH_IDS)) soll[b] = grund(b);
+  return soll;
+}
+function stadtAktualisieren() {
+  const soll = sollStand();
+  for (const b of BEREICH_IDS) {
+    if (angezeigt[b] === soll[b]) continue;
+    einsetzen(welt, b, vorlage(b, soll[b]));
+    angezeigt[b] = soll[b];
+    ansicht.setzeBereich(b, soll[b], welt);
+  }
+}
+
+/* ---------- Navigation ---------- */
+function verlassen() {
+  vorschau = {}; vorherAn = false;
+  if (regenAn) { regenAn = false; ansicht.setzeRegen(null); }
+  rundgangStopp();
+  rundgang.station = -1;
+}
+function gehe(m, s = 0, { kamera = true } = {}) {
+  m = Math.max(0, Math.min(MISSIONEN.length - 1, m));
+  s = Math.max(0, Math.min(MISSIONEN[m].schritte.length - 1, s));
+  const missionWechsel = m !== pos.mission;
+  verlassen();
+  pos = { mission: m, schritt: s };
+  Z.setzePosition(m, s);
+  if (missionWechsel) wegeGemessen = false;
+  const st = schritt();
+  if (st.art === 'loesung') vorschau = { [st.bereich]: st.variante };
+  if (st.art === 'regen') regenVorschau();
+  if (!st.tagNacht && nacht) nachtSetzen(false);
+  if (kamera) ansicht.kamera(KAMERAS[st.kamera] || KAMERAS.gesamt);
+  anzeigen();
+}
+function weiter() {
+  if (mission().id === 'finale' && rundgang.station >= 0) return station(rundgang.station + 1);
+  if (pos.schritt < mission().schritte.length - 1) gehe(pos.mission, pos.schritt + 1);
+  else if (pos.mission < MISSIONEN.length - 1) gehe(pos.mission + 1, 0);
+}
+function zurueck() {
+  if (mission().id === 'finale' && rundgang.station > 0) return station(rundgang.station - 1);
+  if (pos.schritt > 0) gehe(pos.mission, pos.schritt - 1);
+  else if (pos.mission > 0) gehe(pos.mission - 1, MISSIONEN[pos.mission - 1].schritte.length - 1);
+}
+
+/* ---------- Aktionen ---------- */
+function melden(text) {
+  const el = $('#meldung');
+  el.textContent = text; el.classList.add('an');
+  clearTimeout(melden.t); melden.t = setTimeout(() => el.classList.remove('an'), 2200);
+}
+function vorschauSetzen(b, v) {
+  vorschau[b] = v;
+  vorherAn = false;
+  anzeigen();
+}
+function uebernehmen(b, v) {
+  if (!b || !v) return;
+  if (Z.nurVorschau(b, v)) { melden('Das ist nur ein Diskussionsbild – gebaut wird die gemeinsame Lösung.'); return; }
+  Z.uebernehmen(b, v);
+  delete vorschau[b];
+  const t = beschlussText(b, v) || BEREICHE[b].titel;
+  melden(`Übernommen: ${t}`);
+  anzeigen();
+}
+function nachtSetzen(an) {
+  nacht = !!an;
+  ansicht.setzeNacht(nacht);
+  document.querySelector('[data-aktion="nacht"]').setAttribute('aria-pressed', String(nacht));
+}
+function regenSetzen(an, modus = regenModus) {
+  regenModus = modus;
+  regenAn = !!an;
+  if (schritt().art === 'regen') regenVorschau();
+  ansicht.setzeRegen(regenAn ? modus : null);
+  anzeigen();
+}
+function regenVorschau() {
+  const ziel = regenModus === 'grau' ? 'grau' : 'gruen';
+  vorschau = ziel === Z.variante('spielplatz') ? {} : { spielplatz: ziel };
+}
+function resetMission() {
+  const m = mission();
+  if (!m.bereiche.length) { melden('Diese Szene hat keine Baufläche. „Neu beginnen“ im Regie-Menü.'); return; }
+  const k = $('[data-aktion="reset"]');
+  if (resetBereit !== m.id) {
+    resetBereit = m.id; k.textContent = 'Wirklich zurücksetzen?'; k.classList.add('sicher');
+    clearTimeout(resetMission.t); resetMission.t = setTimeout(() => { resetBereit = null; k.textContent = 'Reset'; k.classList.remove('sicher'); }, 3500);
+    return;
+  }
+  resetBereit = null; k.textContent = 'Reset'; k.classList.remove('sicher');
+  Z.zuruecksetzenMission(m.id);
+  vorschau = {};
+  melden(`${m.kurz}: zurückgesetzt – Fläche wieder grau`);
+  anzeigen();
+}
+function neuBeginnen() {
+  Z.neuBeginnen();
+  wegeGemessen = false;
+  nachtSetzen(false);
+  gehe(0, 0);
+  melden('Neu begonnen: graue Stadt');
+}
+
+/* ---------- Vorschaubilder für Karten ---------- */
+function bildFuer(b, v) {
+  const k = `${b}:${v}`;
+  if (!bilder.has(k)) { try { bilder.set(k, ansicht.vorschaubild(b, v)); } catch { bilder.set(k, ''); } }
+  return bilder.get(k);
+}
+const SVG_LATERNE = (sonne, an1, an2) => `<svg viewBox="0 0 220 120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="110" height="120" fill="#cfe8f6"/><rect x="110" y="0" width="110" height="120" fill="#1d2b49"/>
+  <circle cx="30" cy="26" r="13" fill="#ffd15c"/><path d="M178 16a14 14 0 1 0 14 22a11 11 0 1 1 -14 -22z" fill="#e8eefc"/>
+  ${[[70, an1, false], [180, an2, true]].map(([x, an, dunkel]) => `
+  ${an ? `<ellipse cx="${x}" cy="112" rx="34" ry="7" fill="${dunkel ? '#ffd98666' : '#ffd98699'}"/>` : ''}
+  <rect x="${x - 3}" y="48" width="6" height="64" fill="#4a4d57"/>
+  <rect x="${x - 11}" y="34" width="22" height="16" rx="3" fill="${an ? '#ffd986' : '#8a6446'}" ${an ? 'stroke="#fff2c4" stroke-width="2"' : ''}/>
+  ${sonne ? `<rect x="${x - 10}" y="28" width="20" height="6" fill="#d8ccaf"/>` : ''}`).join('')}
+  <rect x="0" y="112" width="220" height="8" fill="#9ea5ab"/></svg>`;
+function kartenBild(b, v) {
+  if (b === 'laternen') return h('div', { class: 'bild', html: v === 'immer' ? SVG_LATERNE(false, true, true) : SVG_LATERNE(true, false, true) });
+  const img = h('img', { alt: '' });
+  const bild = h('div', { class: 'bild' }, img);
+  const k = `${b}:${v}`;
+  if (bilder.has(k)) img.src = bilder.get(k);
+  else setTimeout(() => { img.src = bildFuer(b, v); }, 20);
+  return bild;
+}
+
+/* ---------- Wege (Kurze Wege) ---------- */
+function weg(v) { if (!wegeCache.has(v)) wegeCache.set(v, einkaufsweg(v)); return wegeCache.get(v); }
+const wegLaenge = (v) => { const w = weg(v); return w ? w.length - 1 : null; };
+
+/* ---------- Anzeige ---------- */
+function leisteZeichnen() {
+  const ol = $('#missionen');
+  ol.replaceChildren(...MISSIONEN.map((m, i) => {
+    const st = Z.status(m.id);
+    return h('li', {}, h('button', {
+      type: 'button', class: `mission-knopf ${st}`, 'aria-current': i === pos.mission ? 'step' : null, title: `${m.titel} (Taste ${i})`,
+      onclick: () => gehe(i, 0),
+    }, h('span', { class: 'nr' }, st === 'beschlossen' ? '✓' : String(i)), h('span', { class: 'name' }, m.navi || m.kurz)));
+  }));
+}
+function markenFuer(m) {
+  const out = [];
+  for (const b of m.bereiche) {
+    const v = Z.beschluesse[b];
+    if (v) out.push(h('span', { class: 'marke gold' }, '✓ ', beschlussText(b, v) || v));
+  }
+  return out;
+}
+function anzeigen() {
+  const m = mission(), s = schritt();
+  leisteZeichnen();
+  // Titel
+  const hero = $('#hero');
+  hero.classList.toggle('loesung', s.art === 'loesung');
+  $('#kicker').textContent = s.kicker || m.titel;
+  $('#titel').textContent = s.titel;
+  $('#intro').textContent = s.text || '';
+  $('#intro').hidden = !s.text;
+  $('#marken').replaceChildren(...(s.art === 'finale' ? [] : markenFuer(m)));
+  // Fußnote
+  const fn = $('#fussnote');
+  const vorschauHinweis = Object.entries(vorschau).some(([b, v]) => v !== Z.variante(b)) && !vorherAn ? 'Vorschau – noch nicht übernommen. ' : '';
+  const vorherHinweis = vorherAn ? 'Vorher: so sah die Stadt grau aus. ' : '';
+  fn.textContent = vorherHinweis + vorschauHinweis + (s.fussnote || '');
+  fn.hidden = !fn.textContent;
+  // Bereiche je Schrittart
+  const panel = $('#panel'), seite = $('#seite');
+  panel.replaceChildren(); seite.replaceChildren();
+  panel.hidden = true; seite.hidden = true;
+  let wege = [], versatz = 0;
+  const reihe = h('div', { class: 'knopfreihe' });
+
+  if (s.art === 'wahl') {
+    const b = s.bereich;
+    const karten = h('div', { class: `karten ${s.optionen.length === 2 ? 'zwei' : 'drei'}`, style: `--n:${s.optionen.length}` });
+    for (const o of s.optionen) {
+      const beschluss = Z.beschluesse[b] === o.v;
+      const aktiv = vorschau[b] ? vorschau[b] === o.v : beschluss;
+      const k = h('button', {
+        type: 'button', class: `karte ${beschluss ? 'beschluss' : ''} ${Z.mehrheit[m.id] === o.b ? 'mehrheit' : ''}`, 'aria-pressed': String(aktiv),
+        style: `--farbe:${BUCHSTABEN_FARBE[o.b]}`, title: `Vorschau ${o.b} (Taste ${o.b})`, onclick: () => vorschauSetzen(b, o.v),
+      },
+      kartenBild(b, o.v),
+      h('span', { class: 'buchstabe' }, o.b),
+      h('span', { class: 'stempel vorschau' }, 'Vorschau'), h('span', { class: 'stempel beschluss' }, '✓ Beschluss'),
+      h('div', { class: 'text' },
+        h('h2', {}, o.titel),
+        h('div', { class: 'handel' }, h('span', { class: 'z' }, '+'), h('span', {}, o.pro)),
+        h('div', { class: 'handel contra' }, h('span', { class: 'z' }, '−'), h('span', {}, o.contra)),
+        s.wohnwerte ? h('div', { class: 'wert' }, h('b', {}, `${wohnungen(o.v)} Wohnungen`), ` · bebaute Fläche im Modell: `, h('b', {}, `${bebauteFlaeche(o.v)} Felder`)) : null,
+        s.wege ? h('div', { class: 'wert' }, 'Weg vom Wohnhaus: ', h('b', {}, wegeGemessen ? `${wegLaenge(o.v)} Blöcke` : '? (messen)')) : null,
+      ));
+      karten.append(k);
+    }
+    panel.append(karten);
+    if (s.fragen) panel.append(h('div', { class: 'fragen' }, ...s.fragen.map((f) => h('span', {}, f))));
+    reihe.append(h('span', { class: 'hinweis' }, s.hinweis || ''));
+    if (s.tagNacht) reihe.append(tagNachtGruppe());
+    if (s.wege) reihe.append(h('button', { type: 'button', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); }, 'aria-pressed': String(wegeGemessen) }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
+    if (s.denkimpuls) reihe.append(h('span', { class: 'status-marke' }, 'Diskussionsbild – gebaut wird die gemeinsame Lösung'));
+    else {
+      const v = vorschau[b], neu = v && v !== Z.variante(b);
+      reihe.append(Z.beschluesse[b] && !neu ? h('span', { class: 'status-marke ok' }, `✓ ${s.optionen.find((o) => o.v === Z.beschluesse[b])?.b || ''} übernommen`) : h('span', { class: 'status-marke' }, v ? 'Vorschau' : 'noch nicht entschieden'));
+      reihe.append(h('button', { type: 'button', class: 'haupt', disabled: !v || (v === Z.variante(b) && Z.beschluesse[b] === v) || null, onclick: () => uebernehmen(b, v), title: 'Übernehmen (Enter)' }, 'Übernehmen ⏎'));
+    }
+    panel.append(reihe);
+    panel.hidden = false;
+    versatz = 0.24;
+    if (s.wege) { const v = vorschau[b] || Z.beschluesse[b]; if (v) wege.push({ punkte: weg(v), farbe: BUCHSTABEN_FARBE[v] }); }
+  }
+
+  if (s.art === 'loesung') {
+    panel.append(h('div', { class: 'loesung-band' }, ...s.punkte.map((p) => h('span', {}, p))));
+    const fertig = Z.beschluesse[s.bereich] === s.variante;
+    reihe.append(h('span', { class: 'hinweis' }, fertig ? 'Der grüne Natur-Abenteuerspielplatz ist in der Stadt.' : 'Vorschau. Mit „Übernehmen“ wird der Platz in der Stadt gebaut (Minecraft: SPIELPLATZ GRUEN).'));
+    reihe.append(fertig ? h('span', { class: 'status-marke ok' }, '✓ übernommen') : h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(s.bereich, s.variante) }, 'Übernehmen ⏎'));
+    panel.append(reihe); panel.hidden = false; versatz = 0.14;
+  }
+
+  if (s.art === 'regen') {
+    seite.append(h('h2', {}, 'Was passiert mit dem Regen?'), h('ul', {}, ...s.punkte.map((p) => h('li', {}, h('span', { class: 'zeichen' }, '•'), h('span', {}, p)))));
+    seite.hidden = false;
+    reihe.append(
+      h('span', { class: 'gruppe' },
+        h('button', { type: 'button', 'aria-pressed': String(regenModus === 'grau'), onclick: () => regenSetzen(regenAn, 'grau') }, 'Versiegelt (grau)'),
+        h('button', { type: 'button', 'aria-pressed': String(regenModus === 'gruen'), onclick: () => regenSetzen(regenAn, 'gruen') }, 'Mit Grün')),
+      h('button', { type: 'button', class: 'haupt', onclick: () => regenSetzen(!regenAn) }, regenAn ? 'Regen stoppen (R)' : 'Starkregen starten (R)'),
+      s.link ? h('button', { type: 'button', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗') : null,
+    );
+    panel.append(reihe); panel.hidden = false; versatz = 0.06;
+  }
+
+  if (s.art === 'schalter') {
+    const b = s.bereich, gezeigt = vorschau[b] || Z.variante(b);
+    const knopf = (v, text) => h('button', { type: 'button', 'aria-pressed': String(gezeigt === v), onclick: () => vorschauSetzen(b, v) }, text);
+    reihe.append(h('span', { class: 'gruppe' }, knopf(s.vorher, s.vorherText || 'Vorher'), knopf(s.nachher, s.nachherText || 'Nachher')));
+    if (s.tagNacht) reihe.append(tagNachtGruppe());
+    if (s.weitereKamera) reihe.append(h('button', { type: 'button', onclick: () => ansicht.kamera(KAMERAS[s.weitereKamera]) }, KAMERAS[s.weitereKamera].titel + ' zeigen'), h('button', { type: 'button', onclick: () => ansicht.kamera(KAMERAS[s.kamera]) }, KAMERAS[s.kamera].titel + ' zeigen'));
+    const v = vorschau[b];
+    if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(b, v) }, 'Übernehmen ⏎'));
+    else reihe.append(h('span', { class: `status-marke ${Z.beschluesse[b] ? 'ok' : ''}` }, Z.beschluesse[b] ? `✓ ${beschlussText(b, Z.beschluesse[b])}` : 'Stadt: Ausgangszustand'));
+    panel.append(reihe); panel.hidden = false;
+    if (s.material) { seite.append(h('h2', {}, 'Material und Klima'), h('div', { class: 'material' }, ...s.material.map(([t, x]) => h('div', {}, h('b', {}, t), x)))); seite.hidden = false; }
+  }
+
+  if (s.art === 'extern') {
+    panel.append(h('div', { class: 'live' }, h('span', { class: 'punkt' }), h('div', {}, h('b', {}, 'Jetzt live'), h('span', {}, s.live)),
+      s.link ? h('button', { type: 'button', class: 'haupt', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗') : h('span')));
+    panel.hidden = false; versatz = 0.1;
+  }
+
+  if (s.art === 'wege') {
+    const liste = h('div', { class: 'wegliste' });
+    for (const v of ['A', 'B', 'C']) {
+      const w = weg(v);
+      if (w) wege.push({ punkte: w, farbe: BUCHSTABEN_FARBE[v] });
+      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), h('b', {}, wegeGemessen ? `${wegLaenge(v)}` : '?')));
+    }
+    panel.append(liste);
+    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Blöcke Fußweg von der Haustür bis zum Eingang (über Gehwege und Zebrastreifen).' : 'Erst schätzen – dann messen.'),
+      h('button', { type: 'button', class: wegeGemessen ? '' : 'haupt', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); } }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
+    panel.append(reihe); panel.hidden = false; versatz = 0.04;
+  }
+
+  if (s.art === 'finale') {
+    seite.append(h('h2', {}, 'SMARTys Zukunftscheck'));
+    const ul = h('ul');
+    for (const mm of MISSIONEN.filter((x) => x.bereiche.length)) for (const b of mm.bereiche) {
+      const v = Z.beschluesse[b], t = v ? beschlussText(b, v) : null;
+      ul.append(h('li', { class: v ? '' : 'nein' }, h('span', { class: 'zeichen' }, v ? '✓' : '–'), h('span', {}, t || `${BEREICHE[b].titel}: nicht entschieden`, h('small', {}, mm.kurz + (Z.mehrheit[mm.id] ? ` · Abstimmung: Mehrheit ${Z.mehrheit[mm.id]}` : '')))));
+    }
+    seite.append(ul); seite.hidden = false;
+    const st = rundgang.station >= 0 ? RUNDGANG[rundgang.station] : null;
+    reihe.append(
+      h('button', { type: 'button', 'aria-pressed': String(vorherAn), onclick: () => { vorherAn = !vorherAn; anzeigen(); } }, vorherAn ? 'Nachher zeigen' : 'Vorher zeigen (V)'),
+      h('button', { type: 'button', onclick: () => station(Math.max(0, rundgang.station - 1)) }, '◀ Station'),
+      h('button', { type: 'button', class: 'haupt', onclick: () => (rundgang.timer ? rundgangStopp() : rundgangStart()) }, rundgang.timer ? '■ Rundgang anhalten' : '▶ Rundgang'),
+      h('button', { type: 'button', onclick: () => station(rundgang.station + 1) }, 'Station ▶'),
+      h('span', { class: 'hinweis' }, st ? `Station ${rundgang.station + 1}/${RUNDGANG.length}: ${st.text}` : 'Rundgang: Wohnhaus → Laden → grüner Platz → Kreuzung → Treffpunkt'),
+    );
+    panel.append(reihe); panel.hidden = false;
+  }
+
+  // Tafeln, Wege, Hervorhebung
+  const tafelKeys = [...(s.tafeln || [])];
+  if (s.art === 'wahl' && s.wege) tafelKeys.push('wohnhaus');
+  if (s.art === 'finale' && rundgang.station >= 0 && RUNDGANG[rundgang.station].tafel) tafelKeys.push(RUNDGANG[rundgang.station].tafel);
+  if (mission().id === 'finale' && Z.beschluesse.einkaufen) wege.push({ punkte: weg(Z.beschluesse.einkaufen), farbe: BUCHSTABEN_FARBE[Z.beschluesse.einkaufen] });
+  tafelnSetzen(tafelKeys);
+  ansicht.setzeWege(wege);
+  const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : [];
+  ansicht.setzeMarkierung(markiert);
+  ansicht.setzeVersatz(versatz);
+  // Navigation
+  $('#schrittInfo').textContent = `${m.kurz} · ${pos.schritt + 1}/${m.schritte.length}`;
+  $('[data-aktion="vorher"]').setAttribute('aria-pressed', String(vorherAn));
+  $('[data-aktion="vorher"]').textContent = vorherAn ? 'Nachher' : 'Vorher';
+  $('[data-aktion="zurueck"]').disabled = pos.mission === 0 && pos.schritt === 0;
+  $('[data-aktion="weiter"]').disabled = pos.mission === MISSIONEN.length - 1 && pos.schritt === m.schritte.length - 1 && !(m.id === 'finale' && rundgang.station >= 0 && rundgang.station < RUNDGANG.length - 1);
+  stadtAktualisieren();
+  if (!$('#regie').hidden) regieZeichnen();
+}
+function tagNachtGruppe() {
+  return h('span', { class: 'gruppe' },
+    h('button', { type: 'button', 'aria-pressed': String(!nacht), onclick: () => { nachtSetzen(false); anzeigen(); } }, '☀ Tag'),
+    h('button', { type: 'button', 'aria-pressed': String(nacht), onclick: () => { nachtSetzen(true); anzeigen(); } }, '☾ Nacht'));
+}
+
+/* ---------- Gebäudetafeln ---------- */
+let tafelEls = [];
+function tafelnSetzen(keys) {
+  const box = $('#tafeln');
+  tafelEls = keys.filter((k) => TAFELN[k]).map((k) => {
+    const t = TAFELN[k];
+    const el = h('div', { class: 'tafel' }, t.buchstabe ? h('span', { class: 'b', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}` }, t.buchstabe) : null, t.buchstabe ? t.text.replace(/^[ABC] · /, '') : t.text);
+    return { el, pos: t.pos };
+  });
+  box.replaceChildren(...tafelEls.map((t) => t.el));
+  positionieren();
+}
+function positionieren() {
+  for (const t of tafelEls) {
+    const p = ansicht.projiziere(...t.pos);
+    t.el.style.left = `${p.x}px`; t.el.style.top = `${p.y}px`;
+    t.el.style.visibility = p.sichtbar ? 'visible' : 'hidden';
+  }
+}
+
+/* ---------- Rundgang (Finale) ---------- */
+function station(i) {
+  if (i < 0) i = 0;
+  if (i >= RUNDGANG.length) { rundgangStopp(); i = RUNDGANG.length - 1; }
+  rundgang.station = i;
+  const st = RUNDGANG[i];
+  ansicht.kamera(KAMERAS[st.kamera]);
+  nachtSetzen(!!st.nacht && Z.beschluesse.laternen === 'sensor');
+  anzeigen();
+}
+function rundgangStart() {
+  rundgangStopp();
+  station(rundgang.station < 0 || rundgang.station >= RUNDGANG.length - 1 ? 0 : rundgang.station + 1);
+  rundgang.timer = setInterval(() => { if (rundgang.station >= RUNDGANG.length - 1) { rundgangStopp(); anzeigen(); } else station(rundgang.station + 1); }, 6000);
+  anzeigen();
+}
+function rundgangStopp() { if (rundgang.timer) clearInterval(rundgang.timer); rundgang.timer = null; }
+
+/* ---------- Regie ---------- */
+function regieZeichnen() {
+  const m = mission(), s = schritt(), r = $('#regie');
+  const smarty = (s.smarty || []).map(([t, k]) => h('li', {}, t, ' – ', k === '–' ? h('i', {}, 'noch nicht im Soundboard') : h('span', {}, 'Soundboard-Taste ', h('kbd', {}, k))));
+  const tabelle = h('table', {}, ...BEREICH_IDS.map((b) => {
+    const v = Z.variante(b), bf = befehle(b, v);
+    return h('tr', {}, h('td', {}, BEREICHE[b].titel), h('td', {}, Z.beschluesse[b] ? h('b', {}, beschlussText(b, v) || v) : h('span', { style: 'color:#6b7f7d' }, 'grau / Ausgang')), h('td', {}, bf ? h('code', { style: 'font-size:1.4cqh' }, bf.bauen) : null));
+  }));
+  const mehrheit = m.schritte.some((x) => x.art === 'wahl') ? h('div', { class: 'reihe' }, 'Mehrheit merken:', ...['A', 'B', 'C'].slice(0, (m.schritte.find((x) => x.art === 'wahl').optionen || []).length).map((b) =>
+    h('button', { type: 'button', 'aria-pressed': String(Z.mehrheit[m.id] === b), onclick: () => { Z.merkeMehrheit(m.id, Z.mehrheit[m.id] === b ? null : b); anzeigen(); } }, b))) : null;
+  r.replaceChildren(
+    h('h2', {}, m.titel), h('div', { class: 'mono', style: 'font-size:1.4cqh;color:#44666c' }, `Typ: ${m.typ}`),
+    h('h3', {}, 'Drehbuch-Stichworte'), h('ul', {}, ...(s.regie || ['—']).map((x) => h('li', {}, x))),
+    smarty.length ? [h('h3', {}, 'SMARTy (Soundboard, extern)'), h('ul', {}, ...smarty)] : null,
+    mehrheit,
+    h('h3', {}, 'Beschlüsse und Minecraft-Befehl der aktuellen Variante'), tabelle,
+    h('div', { class: 'reihe' },
+      h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, '⛏ Bauauftrag (M)'),
+      h('button', { type: 'button', onclick: () => resetMission() }, 'Mission zurücksetzen'),
+      h('button', { type: 'button', onclick: () => $('#neu').showModal() }, 'Neu beginnen …')),
+    h('h3', {}, 'Tasten'),
+    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt'], ['A B C', 'Vorschau'], ['Enter', 'Übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Bauauftrag'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
+    h('h3', {}, 'Verlauf'), h('ul', {}, ...Z.verlauf.slice(-8).reverse().map(([t, x]) => h('li', {}, `${t} ${x}`))),
+  );
+}
+
+/* ---------- Minecraft-Bauauftrag ---------- */
+function kopieren(text, knopf) {
+  const fertig = () => { const alt = knopf.textContent; knopf.textContent = 'kopiert'; setTimeout(() => (knopf.textContent = alt), 1200); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(fertig, () => { prompt('Kopieren:', text); });
+  else prompt('Kopieren:', text);
+}
+function befehlZeile(name, text) {
+  const k = h('button', { type: 'button' }, 'Kopieren');
+  k.addEventListener('click', () => kopieren(text, k));
+  return h('div', { class: 'befehl' }, h('small', {}, name), h('code', {}, text), k);
+}
+function bauauftragOeffnen() {
+  const m = mission(), inhalt = $('#bauInhalt');
+  const bereiche = m.bereiche.length ? m.bereiche : BEREICH_IDS;
+  $('#bauTitel').textContent = m.bereiche.length ? `Bauauftrag · ${m.kurz}` : 'Bauaufträge · ganze Stadt';
+  inhalt.replaceChildren(
+    h('div', { class: 'auftrag' }, h('h3', {}, 'Einmal vor der Vorlesung'),
+      h('p', {}, `Welt „${WELTNAME}“ einmal importieren. Danach bleibt sie geöffnet; jeder Beschluss wird nur noch per Knopf oder Befehl getauscht.`),
+      befehlZeile('Einrichten', ALLGEMEIN.ticking), befehlZeile('Regieraum', ALLGEMEIN.regieraum), befehlZeile('Ruhig', ALLGEMEIN.ruhe)),
+    ...bereiche.map((b) => {
+      const box = h('div', { class: 'auftrag' });
+      const aktuell = Z.variante(b), sb = befehle(b, BEREICHE[b].mc[0]);
+      box.append(h('h3', {}, BEREICHE[b].titel, Z.beschluesse[b] ? h('span', { class: 'marke2' }, `Beschluss: ${beschlussText(b, aktuell) || aktuell}`) : null),
+        h('p', {}, `Baufläche ${sb.flaeche} · ${sb.bloecke.toLocaleString('de-DE')} Blöcke · Ansicht: `, h('code', {}, tp(KAMERA_ZU_BEREICH[b] || 'gesamt'))));
+      const liste = h('div', { class: 'varianten' });
+      for (const v of BEREICHE[b].mc) {
+        const bf = befehle(b, v);
+        liste.append(h('div', { class: `variante-zeile ${v === aktuell ? 'aktiv' : ''}` },
+          h('b', {}, (beschlussText(b, v) || (v === grund(b) ? 'Ausgangszustand (grau)' : v)) + (v === aktuell ? ' – aktueller Stand' : '')),
+          h('p', {}, `Vorlage in der Kammer ${bf.kammer}`),
+          befehlZeile('Bauen', bf.bauen), befehlZeile('Prüfen', bf.pruefen)));
+      }
+      if (b === 'spielplatz') liste.append(h('p', {}, 'Die Diskussionsbilder A und B gibt es nur im Browser – in Minecraft wird nur die gemeinsame Lösung gebaut.'));
+      box.append(liste);
+      return box;
+    }),
+    h('div', { class: 'auftrag' }, h('h3', {}, 'Tag und Nacht (Laternen)'), befehlZeile('Tag', ALLGEMEIN.tag), befehlZeile('Nacht', ALLGEMEIN.nacht)),
+  );
+  $('#bauStatus').textContent = '';
+  $('#bauauftrag').showModal();
+}
+const KAMERA_ZU_BEREICH = { spielplatz: 'platz', laternen: 'laternen', parken: 'wohnstrasse', kreuzung: 'kreuzung', wohnen: 'wohnen', aufstocken: 'aufstocken', einkaufen: 'einkaufen', bildung: 'bildung' };
+function herunterladen(daten, name, typ) {
+  const url = URL.createObjectURL(new Blob([daten], { type: typ }));
+  const a = h('a', { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- Tasten und Knöpfe ---------- */
+function aktion(a) {
+  if (a === 'gesamt') ansicht.kamera(KAMERAS.gesamt);
+  else if (a === 'szene') ansicht.kamera(KAMERAS[schritt().kamera] || KAMERAS.gesamt);
+  else if (a === 'nacht') { nachtSetzen(!nacht); anzeigen(); }
+  else if (a === 'minecraft') bauauftragOeffnen();
+  else if (a === 'regie') { const r = $('#regie'); r.hidden = !r.hidden; $('[data-aktion="regie"]').setAttribute('aria-pressed', String(!r.hidden)); if (!r.hidden) regieZeichnen(); }
+  else if (a === 'vollbild') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
+  else if (a === 'vorher') { vorherAn = !vorherAn; anzeigen(); }
+  else if (a === 'reset') resetMission();
+  else if (a === 'zurueck') zurueck();
+  else if (a === 'weiter') weiter();
+}
+function tasten(e) {
+  if (e.target.closest('dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const s = schritt(), k = e.key;
+  if (/^[0-7]$/.test(k)) { gehe(Number(k), 0); e.preventDefault(); return; }
+  const map = { ArrowRight: 'weiter', PageDown: 'weiter', ' ': 'weiter', ArrowLeft: 'zurueck', PageUp: 'zurueck', g: 'gesamt', s: 'szene', n: 'nacht', m: 'minecraft', i: 'regie', f: 'vollbild', v: 'vorher' };
+  const lk = k.length === 1 ? k.toLowerCase() : k;
+  if (map[lk]) { aktion(map[lk]); e.preventDefault(); return; }
+  if (s.art === 'wahl' && /^[abc]$/i.test(k)) { const o = s.optionen.find((x) => x.b === k.toUpperCase()); if (o) vorschauSetzen(s.bereich, o.v); e.preventDefault(); return; }
+  if (k === 'Enter') {
+    if (s.art === 'wahl' && !s.denkimpuls && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
+    else if (s.art === 'loesung') uebernehmen(s.bereich, s.variante);
+    else if (s.art === 'schalter' && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
+    e.preventDefault(); return;
+  }
+  if (lk === 'r' && s.art === 'regen') { regenSetzen(!regenAn); e.preventDefault(); return; }
+  if (lk === 'h') { document.body.classList.toggle('ohne-bedienung'); e.preventDefault(); return; }
+  if (k === 'Escape') { if (Object.keys(vorschau).length && s.art !== 'loesung' && s.art !== 'regen') { vorschau = {}; anzeigen(); } }
+}
+
+/* ---------- Start ---------- */
+async function start() {
+  if (!webglMoeglich()) {
+    $('#laden').hidden = true;
+    const f = $('#fehler'); f.hidden = false;
+    f.replaceChildren(h('div', {}, h('b', {}, 'Dieser Browser kann keine 3D-Grafik (WebGL) anzeigen.'), h('span', {}, 'Bitte einen aktuellen Chrome, Edge oder Firefox verwenden.')));
+    return;
+  }
+  await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));   // Ladehinweis zuerst zeichnen
+  ansicht = new Ansicht($('#welt'));
+  ansicht.nachBild = positionieren;
+  const zustand = Z.alle();
+  welt = stadtFuer(zustand);
+  Object.assign(angezeigt, zustand);
+  ansicht.setzeStadt(welt, zustand);
+  pos = { ...Z.position };
+  if (!MISSIONEN[pos.mission] || !MISSIONEN[pos.mission].schritte[pos.schritt]) pos = { mission: 0, schritt: 0 };
+  const st = MISSIONEN[pos.mission].schritte[pos.schritt];
+  ansicht.kamera(KAMERAS[st.kamera] || KAMERAS.gesamt, true);
+  gehe(pos.mission, pos.schritt, { kamera: false });
+  document.querySelectorAll('[data-aktion]').forEach((b) => b.addEventListener('click', () => aktion(b.dataset.aktion)));
+  document.addEventListener('keydown', tasten);
+  document.querySelectorAll('dialog .schliessen').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
+  $('#neuJa').addEventListener('click', () => { $('#neu').close(); neuBeginnen(); });
+  $('#textLaden').addEventListener('click', () => herunterladen(alleBauauftraege(), 'START-IT-SMART_Bauauftraege.txt', 'text/plain;charset=utf-8'));
+  $('#mcworldLaden').addEventListener('click', async () => {
+    const st2 = $('#bauStatus');
+    st2.textContent = 'Welt wird erzeugt …';
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const t0 = performance.now(), { daten } = await stadtMcworld();
+      herunterladen(daten, 'START-IT-SMART_Stadt-2050.mcworld', 'application/octet-stream');
+      st2.textContent = `Fertig (${(daten.length / 1024 / 1024).toFixed(1)} MB, ${Math.round(performance.now() - t0)} ms). Doppelklick öffnet sie in Minecraft Education.`;
+    } catch (e) { st2.textContent = 'Fehler beim Erzeugen: ' + e.message; }
+  });
+  $('#laden').classList.add('weg');
+  setTimeout(() => ($('#laden').hidden = true), 450);
+  // Vorschaubilder im Leerlauf vorbereiten (Karten erscheinen dann sofort)
+  const vorbereiten = [];
+  for (const m of MISSIONEN) for (const s of m.schritte) if (s.art === 'wahl' && s.bereich !== 'laternen') for (const o of s.optionen) vorbereiten.push([s.bereich, o.v]);
+  const naechstes = () => { const x = vorbereiten.shift(); if (!x) return; bildFuer(...x); setTimeout(naechstes, 60); };
+  setTimeout(naechstes, 800);
+  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, station };
+  window.__stadtOk = true;
+}
+start().catch((e) => {
+  console.error(e);
+  const f = $('#fehler'); f.hidden = false;
+  f.replaceChildren(h('div', {}, h('b', {}, 'Die Stadt konnte nicht gebaut werden.'), h('span', {}, String(e && e.message || e))));
+  $('#laden').hidden = true;
+  window.__stadtFehler = String(e && e.stack || e);
+});

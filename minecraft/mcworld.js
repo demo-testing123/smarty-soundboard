@@ -118,8 +118,10 @@ export const blockNbt = (name) => { const [n, z] = BLOECKE[name]; return { name:
 const PALETTE_BYTES = NAMEN.map((n) => nbtBytes(blockNbt(n)));
 
 /* ---------- Chunks ---------- */
-const MIN_Y = BEREICH.y0;  // -64
+// Der erzeugte Ausschnitt kommt aus der Welt selbst (welt.bereich); Standard ist die Spielplatz-Testwelt.
+const bereichVon = (welt) => welt.bereich || BEREICH;
 function subchunk(welt, cx, sy, cz) {
+  const MIN_Y = bereichVon(welt).y0;
   const x0 = cx * 16, y0 = MIN_Y + sy * 16, z0 = cz * 16;
   const pal = [], map = new Map(), idx = new Uint16Array(4096);
   for (let x = 0; x < 16; x++) for (let z = 0; z < 16; z++) for (let y = 0; y < 16; y++) {
@@ -134,9 +136,9 @@ function subchunk(welt, cx, sy, cz) {
   return verbinde([Uint8Array.of(9, 1, (MIN_Y / 16 + sy) & 255, bits << 1), new Uint8Array(worte.buffer), le32(pal.length), ...pal.map((id) => PALETTE_BYTES[id])]);
 }
 function data3d(welt, cx, cz) {
-  const a = new Uint8Array(512 + 24 * 5), dv = new DataView(a.buffer);
+  const a = new Uint8Array(512 + 24 * 5), dv = new DataView(a.buffer), { ny, y0: MIN_Y } = bereichVon(welt);
   for (let z = 0; z < 16; z++) for (let x = 0; x < 16; x++) {
-    let h = BEREICH.ny - 1;
+    let h = ny - 1;
     while (h > 0 && !welt.hole(cx * 16 + x, MIN_Y + h, cz * 16 + z)) h--;
     dv.setInt16((z * 16 + x) * 2, h + 1, true);
   }
@@ -226,8 +228,8 @@ export async function zip(dateien, komprimieren = true) {
 
 /* ---------- .mcworld ---------- */
 export function weltDateien(welt, name, spawn) {
-  const eintraege = [];
-  const cx0 = BEREICH.x0 / 16, cz0 = BEREICH.z0 / 16, ncx = BEREICH.nx / 16, ncz = BEREICH.nz / 16;
+  const eintraege = [], B = bereichVon(welt), MIN_Y = B.y0;
+  const cx0 = B.x0 / 16, cz0 = B.z0 / 16, ncx = B.nx / 16, ncz = B.nz / 16;
   const proChunk = new Map();
   for (const [k, e] of welt.entities) {
     const [x, , z] = k.split(',').map(Number), ck = `${Math.floor(x / 16)},${Math.floor(z / 16)}`;
@@ -241,7 +243,7 @@ export function weltDateien(welt, name, spawn) {
     dazu(43, data3d(welt, cx, cz));
     const ents = proChunk.get(`${cx},${cz}`);
     if (ents) dazu(49, verbinde(ents));
-    for (let sy = 0; sy < BEREICH.ny / 16; sy++) {
+    for (let sy = 0; sy < B.ny / 16; sy++) {
       const sc = subchunk(welt, cx, sy, cz);
       if (sc) dazu(47, sc, (MIN_Y / 16 + sy) & 255);
     }

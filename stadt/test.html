@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stadt-Konfigurator · Abnahmetests</title>
+<style>
+  :root { --bg: #f6f7f4; --ink: #17201a; --ok: #1f7a34; --nein: #b3261e; --linie: #dde3da; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 18px 16px 40px; }
+  h1 { font-size: 24px; margin: 0 0 6px; } h2 { font-size: 17px; margin: 18px 0 6px; }
+  #summe { font-weight: 800; font-size: 19px; margin: 10px 0 14px; }
+  li { margin: 4px 0; list-style: none; padding: 6px 10px; border: 1px solid var(--linie); border-radius: 8px; background: #fff; }
+  ul { padding: 0; }
+  .ok b { color: var(--ok); } .nein b { color: var(--nein); }
+  small { display: block; opacity: .75; overflow-wrap: anywhere; }
+  iframe { width: 1280px; height: 720px; border: 1px solid var(--linie); transform: scale(.5); transform-origin: 0 0; margin-bottom: -360px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stadt-Konfigurator · Abnahmetests</h1>
+  <p>Prüft Modell, Bauflächen, Minecraft-Welt (zurückgelesen, Block für Block) und die Abnahmetests 1–10 des Auftrags in der echten Oberfläche
+    (eigener Test-Speicher, der Stand der Regie bleibt unberührt). Ob Minecraft Education die Welt öffnet, zeigt nur der Test in Minecraft selbst.</p>
+  <div id="summe">läuft …</div>
+  <div id="bereiche"></div>
+  <iframe id="app" title="Stadt-Konfigurator im Testmodus"></iframe>
+</main>
+<script type="module">
+import * as W from '../minecraft/welt.js';
+import { mcworld, crcMaskiert, crc32 } from '../minecraft/mcworld.js';
+import * as M from './stadtmodell.js';
+import * as MC from './minecraft-ausgabe.js';
+import { MISSIONEN, KAMERAS, RUNDGANG } from './daten.js';
+
+const bereiche = document.getElementById('bereiche'), erg = [];
+let liste;
+const abschnitt = (t) => { bereiche.append(Object.assign(document.createElement('h2'), { textContent: t })); liste = document.createElement('ul'); bereiche.append(liste); };
+function pruefe(name, ok, info = '') {
+  erg.push(!!ok);
+  const li = document.createElement('li'); li.className = ok ? 'ok' : 'nein';
+  li.innerHTML = `<b>${ok ? '✓' : '✗'}</b> ${name}` + (info ? `<small>${info}</small>` : '');
+  liste.append(li);
+  document.getElementById('summe').textContent = `${erg.filter(Boolean).length} von ${erg.length} bestanden …`;
+}
+const warte = (ms) => new Promise((r) => setTimeout(r, ms));
+const dv = (a) => new DataView(a.buffer, a.byteOffset, a.byteLength);
+const dec = new TextDecoder();
+const IDS = M.BEREICH_IDS, B = M.BEREICHE;
+const box3 = (id) => { const b = M.boxVon(id); return [b.slice(0, 3), b.slice(3)]; };
+const ueberlapp = (a, b) => a[0].every((_, k) => a[0][k] <= b[1][k] && b[0][k] <= a[1][k]);
+const gleich = (a, b) => a.dx === b.dx && a.dy === b.dy && a.dz === b.dz && a.daten.every((v, k) => v === b.daten[k]);
+
+/* ---------- Leser für die .mcworld (wie im Spielplatz-Test) ---------- */
+async function unzip(z) {
+  const d = dv(z); let e = z.length - 22; while (d.getUint32(e, true) !== 0x06054b50) e--;
+  const n = d.getUint16(e + 10, true); let o = d.getUint32(e + 16, true); const out = {}, crcFehler = [];
+  for (let k = 0; k < n; k++) {
+    const meth = d.getUint16(o + 10, true), crc = d.getUint32(o + 16, true), cs = d.getUint32(o + 20, true), nl = d.getUint16(o + 28, true), xl = d.getUint16(o + 30, true), cl = d.getUint16(o + 32, true), lo = d.getUint32(o + 42, true);
+    const name = dec.decode(z.subarray(o + 46, o + 46 + nl));
+    const lnl = d.getUint16(lo + 26, true), lxl = d.getUint16(lo + 28, true), roh = z.subarray(lo + 30 + lnl + lxl, lo + 30 + lnl + lxl + cs);
+    const daten = meth === 0 ? roh : new Uint8Array(await new Response(new Blob([roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    if (crc32(daten) !== crc) crcFehler.push(name);
+    out[name] = daten; o += 46 + nl + xl + cl;
+  }
+  return { dateien: out, crcFehler };
+}
+function leseLog(a) {
+  const records = [], fehler = []; let o = 0, teil = [];
+  while (o + 7 <= a.length) {
+    const rest = 32768 - (o % 32768); if (rest < 7) { o += rest; continue; }
+    const d = dv(a), crc = d.getUint32(o, true), len = d.getUint16(o + 4, true), typ = a[o + 6], daten = a.subarray(o + 7, o + 7 + len);
+    if (len === 0 && typ === 0) break;
+    if (crcMaskiert(typ, daten) !== crc) fehler.push(`CRC bei ${o}`);
+    if (typ === 1) records.push(daten); else if (typ === 2) teil = [daten]; else if (typ === 3) teil.push(daten);
+    else if (typ === 4) { teil.push(daten); const n = teil.reduce((s, t) => s + t.length, 0), g = new Uint8Array(n); let p = 0; for (const t of teil) { g.set(t, p); p += t.length; } records.push(g); }
+    o += 7 + len;
+  }
+  return { records, fehler };
+}
+const varint = (a, o) => { let v = 0, s = 0, b; do { b = a[o++]; v |= (b & 127) << s; s += 7; } while (b & 128); return [v >>> 0, o]; };
+function leseBatch(a) {
+  const d = dv(a), anzahl = d.getUint32(8, true), m = new Map(); let o = 12;
+  for (let k = 0; k < anzahl; k++) {
+    const typ = a[o++]; let kl, vl; [kl, o] = varint(a, o); const key = a.slice(o, o + kl); o += kl;
+    [vl, o] = varint(a, o); const val = a.subarray(o, o + vl); o += vl;
+    if (typ === 1) m.set(Array.from(key).join(','), { key, val });
+  }
+  return { m, anzahl, rest: a.length - o };
+}
+function leseNbt(a, o = 0) {
+  const d = dv(a);
+  const str = () => { const n = d.getUint16(o, true); o += 2; const s = dec.decode(a.subarray(o, o + n)); o += n; return s; };
+  const wert = (t) => {
+    switch (t) {
+      case 1: return d.getInt8(o++);
+      case 2: { const v = d.getInt16(o, true); o += 2; return v; }
+      case 3: { const v = d.getInt32(o, true); o += 4; return v; }
+      case 4: { const v = d.getBigInt64(o, true); o += 8; return v; }
+      case 5: { const v = d.getFloat32(o, true); o += 4; return v; }
+      case 6: { const v = d.getFloat64(o, true); o += 8; return v; }
+      case 8: return str();
+      case 9: { const et = a[o++], n = d.getInt32(o, true); o += 4; const l = []; for (let k = 0; k < n; k++) l.push(wert(et)); return l; }
+      case 10: { const c = {}; for (;;) { const tt = a[o++]; if (tt === 0) return c; const k = str(); c[k] = wert(tt); } }
+      default: throw new Error('NBT-Typ ' + t + ' bei ' + o);
+    }
+  };
+  const t = a[o++]; str(); const v = wert(t); return { v, ende: o, typ: t };
+}
+const schluessel = (name, states) => name + JSON.stringify(Object.keys(states).sort().map((k) => [k, typeof states[k] === 'bigint' ? Number(states[k]) : states[k]]));
+const NACH_SCHLUESSEL = new Map(W.NAMEN.map((n, id) => { const [bn, z] = W.BLOECKE[n]; return [schluessel('minecraft:' + bn, Object.fromEntries(Object.entries(z).map(([k, [, v]]) => [k, v]))), id]; }));
+
+/* ---------- Bauregeln für Minecraft (Wasser dicht, Kies gestützt, Pflanzen auf Erde, Schilder befestigt) ---------- */
+const fest = (id) => id !== W.ID.luft && id !== W.ID.wasser && !W.istPflanze(id) && !W.istSchild(id) && id !== W.ID.knopf && id !== W.ID.knopfSued;
+function bauregeln(hole, [a, e]) {
+  const fehler = [];
+  for (let y = a[1]; y <= e[1]; y++) for (let z = a[2]; z <= e[2]; z++) for (let x = a[0]; x <= e[0]; x++) {
+    const id = hole(x, y, z);
+    if (!id) continue;
+    if (id === W.ID.wasser) for (const [p, q, r] of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0]]) { const w = hole(x + p, y + q, z + r); if (w !== W.ID.wasser && !fest(w)) fehler.push(`Wasser offen ${x} ${y} ${z}`); }
+    if ((id === W.ID.kies || id === W.ID.sandstein) && !fest(hole(x, y - 1, z))) fehler.push(`ohne Halt ${W.NAMEN[id]} ${x} ${y} ${z}`);
+    if (W.istPflanze(id) && ![W.ID.gras, W.ID.erde, W.ID.moos, W.ID.grobeErde].includes(hole(x, y - 1, z)) && W.NAMEN[id] !== 'farn' && hole(x, y - 1, z) !== W.ID.fass) fehler.push(`Pflanze ohne Erde ${x} ${y} ${z}`);
+    if (W.istSchild(id)) { const r = W.NAMEN[id].replace('schild', ''); const [p, q] = { Nord: [0, 1], Sued: [0, -1], West: [1, 0], Ost: [-1, 0] }[r]; if (!fest(hole(x + p, y, z + q))) fehler.push(`Schild ohne Halt ${x} ${y} ${z}`); }
+    if (fehler.length > 6) return fehler;
+  }
+  return fehler;
+}
+
+try {
+  /* ================= A: Stadtmodell und Bauflächen ================= */
+  abschnitt('A · Stadtmodell und Bauflächen');
+  const t0 = performance.now();
+  const g = M.grundstadt3D();
+  pruefe('Graue Grundstadt erzeugt', g.daten.some(Boolean), `${(performance.now() - t0).toFixed(0)} ms, 160 × 160 Blöcke`);
+  const boxen = IDS.map(box3);
+  pruefe('Bauflächen überlappen sich nicht und liegen in der Stadt', boxen.every((a, i) => boxen.every((b, j) => i === j || !ueberlapp(a, b))) && boxen.every(([a, e]) => a[0] >= M.STADT.x1 && e[0] <= M.STADT.x2 && a[2] >= M.STADT.z1 && e[2] <= M.STADT.z2), IDS.join(', '));
+  pruefe('Jede Baufläche ≤ 655 360 Blöcke (Grenze von /clone)', IDS.every((id) => MC.anzahlBloecke(id) <= 655360), IDS.map((id) => `${id} ${MC.anzahlBloecke(id).toLocaleString('de-DE')}`).join(' · '));
+  let raus = [], zuHoch = [], grundOk = [];
+  for (const id of IDS) for (const v of B[id].varianten) { const t = M.vorlage(id, v); if (t.draussen) raus.push(`${id}:${v} (${t.draussen})`); }
+  pruefe('Keine Variante baut außerhalb ihrer Baufläche', raus.length === 0, raus.join(' · ') || `${IDS.reduce((n, id) => n + B[id].varianten.length, 0)} Varianten geprüft`);
+  for (const id of IDS) {
+    const [a, e] = box3(id);
+    for (let y = e[1] + 1; y < M.BEREICH_3D.y0 + M.BEREICH_3D.ny && zuHoch.length < 3; y++) for (let z = a[2]; z <= e[2]; z++) for (let x = a[0]; x <= e[0]; x++) if (g.hole(x, y, z)) { zuHoch.push(`${id} ${x} ${y} ${z}`); break; }
+    const t = M.vorlage(id, B[id].grund);
+    grundOk.push(gleich(g.ausschnitt(box3(id)), t) ? null : id);
+  }
+  pruefe('Über den Bauflächen steht nichts (alles Veränderliche liegt im Quader)', zuHoch.length === 0, zuHoch.join(' · '));
+  pruefe('Ausgangs-Vorlage jeder Fläche = graue Grundstadt an dieser Stelle', grundOk.every((x) => !x), grundOk.filter(Boolean).join(', '));
+  const versch = IDS.every((id) => B[id].varianten.every((v, i) => B[id].varianten.every((w, j) => i >= j || !gleich(M.vorlage(id, v), M.vorlage(id, w)))));
+  pruefe('Alle Varianten einer Fläche sind wirklich verschieden', versch);
+  pruefe('Spielplatz = Vorlagen aus dem Spielplatz-Test (gleiche Befehle in Minecraft)', gleich(M.vorlage('spielplatz', 'gruen'), W.vorlageGruen()) && gleich(M.vorlage('spielplatz', 'grau'), W.vorlageGrau()));
+  // Wohnen
+  const wo = ['A', 'B', 'C'].map((v) => [M.wohnungen(v), M.bebauteFlaeche(v)]);
+  pruefe('Wohnen: jede Variante 6 Wohnungen, bebaute Fläche verschieden (A > B > C)', wo.every(([n]) => n === 6) && wo[0][1] > wo[1][1] && wo[1][1] > wo[2][1], wo.map(([n, f], k) => `${'ABC'[k]}: ${n} Wohnungen, ${f} Felder`).join(' · '));
+  // jede Zelle eines Umrisses ist überbaut (Wand, Decke oder Dach über der Standhöhe)
+  const geb = (v) => { const t = M.vorlage('wohnen', v), [a] = box3('wohnen'); let n = 0; for (const [x1, z1, x2, z2] of M.WOHNHAEUSER[v].umrisse) for (let z = z1; z <= z2; z++) for (let x = x1; x <= x2; x++) { for (let y = M.S; y < M.S + 21; y++) if (t.hole(x - a[0], y - a[1], z - a[2])) { n++; break; } } return n; };
+  pruefe('Wohnen: gemessene Umrisse sind wirklich bebaut (Umriss = Gebäude im Modell)', ['A', 'B', 'C'].every((v) => geb(v) === M.bebauteFlaeche(v)), ['A', 'B', 'C'].map((v) => `${v}: ${geb(v)}/${M.bebauteFlaeche(v)}`).join(' · '));
+  // Wege
+  const wl = ['A', 'B', 'C'].map((v) => M.einkaufsweg(v));
+  pruefe('Kurze Wege: drei Fußwege gefunden, enden an der Ladentür', wl.every((w, k) => w && w.at(-1).join() === M.LADEN['ABC'[k]].tuer.join() && w[0].join() === M.ORTE.wohnhaus.tuer.join()), wl.map((w, k) => `${'ABC'[k]}: ${w ? w.length - 1 : '–'} Blöcke`).join(' · '));
+  pruefe('Kurze Wege: C kürzer als B kürzer als A (gemessen, nicht angenommen)', wl[2].length < wl[1].length && wl[1].length < wl[0].length);
+  // Regeln für alle Vorlagen
+  const regelFehler = [];
+  for (const id of IDS) for (const v of B[id].mc) {
+    const t = M.vorlage(id, v), [a, e] = box3(id);
+    const hole = (x, y, z) => { const p = x - a[0], q = y - a[1], r = z - a[2]; return t.innen(p, q, r) ? t.hole(p, q, r) : g.hole(x, y, z); };
+    const f = bauregeln(hole, [a, e]);
+    if (f.length) regelFehler.push(`${id}:${v}: ${f.slice(0, 2).join(', ')}`);
+  }
+  pruefe('Minecraft-Bauregeln in allen Vorlagen (Wasser dicht, Kies gestützt, Pflanzen auf Erde, Schilder befestigt)', regelFehler.length === 0, regelFehler.slice(0, 4).join(' · '));
+  // Texte
+  const alleTexte = JSON.stringify(MISSIONEN) + JSON.stringify(KAMERAS) + JSON.stringify(RUNDGANG) + MC.alleBauauftraege();
+  pruefe('Keine Figur „Mika“ in Texten, Kameras und Bauaufträgen', !/mika/i.test(alleTexte));
+  pruefe('Keine erfundenen Einheiten (°C, kWh, Tonnen, Liter, Prozent, km, Meter) in den Texten', !/(°C|kWh|Tonnen|Liter|\d\s*%|\bkm\b|\d\s*Meter)/.test(JSON.stringify(MISSIONEN)));
+  pruefe('Natur: A/B sind nur Diskussionsbilder (keine Minecraft-Kammer, kein Beschluss)', !B.spielplatz.mc.includes('A') && !B.spielplatz.mc.includes('B') && MISSIONEN[1].schritte.find((s) => s.art === 'wahl').denkimpuls === true && MISSIONEN[1].schritte.some((s) => s.art === 'loesung' && s.variante === 'gruen'));
+
+  /* ================= B: Minecraft-Welt ================= */
+  abschnitt('B · Minecraft-Welt (Bauaufträge, Kammern, Datei)');
+  const startB = erg.length;
+  const t1 = performance.now();
+  const welt = MC.erzeugeStadtWelt();
+  pruefe('Welt mit allen Kammern erzeugt', true, `${(performance.now() - t1).toFixed(0)} ms`);
+  const kammern = IDS.flatMap((id) => B[id].mc.map((v) => [id, v, MC.kammer(id, v)]));
+  const alleQ = [...kammern.map((k) => k[2]), ...IDS.map(box3)];
+  pruefe('Kammern: über y −64, überlappen weder einander noch Bauflächen', kammern.every(([, , [a]]) => a[1] >= -63) && alleQ.every((a, i) => alleQ.every((b, j) => i === j || !ueberlapp(a, b))), `${kammern.length} Kammern, tiefste bei y ${Math.min(...kammern.map(([, , [a]]) => a[1]))}`);
+  pruefe('Jede Kammer liegt unter ihrer Baufläche (gleiche Chunks)', kammern.every(([id, , [a, e]]) => { const [p, q] = box3(id); return a[0] === p[0] && a[2] === p[2] && e[0] === q[0] && e[2] === q[2]; }));
+  const R = MC.REGIERAUM, regieQ = [[R.x1 - 1, R.boden, R.z1 - 1], [R.x2 + 1, R.boden + 8, R.z2 + 1]];
+  pruefe('Regieraum überlappt keine Kammer und keine Baufläche', alleQ.every((q) => !ueberlapp(q, regieQ)));
+  pruefe('Ticking-Bereich: ganze Stadt, genau 10 × 10 = 100 Chunks', (MC.TICKING.bis[0] - MC.TICKING.von[0] + 1) / 16 * (MC.TICKING.bis[1] - MC.TICKING.von[1] + 1) / 16 === 100, MC.ALLGEMEIN.ticking);
+  let kammerOk = [];
+  for (const [id, v, kb] of kammern) if (!gleich(welt.ausschnitt(kb), M.vorlage(id, v))) kammerOk.push(`${id}:${v}`);
+  pruefe('Jede Kammer enthält genau ihre Vorlage', kammerOk.length === 0, kammerOk.join(', ') || `${kammern.length} Kammern verglichen`);
+  pruefe('Bauflächen in der Welt im Ausgangszustand', IDS.every((id) => gleich(welt.ausschnitt(box3(id)), M.vorlage(id, B[id].grund))));
+  const cmd = [...welt.entities.entries()].filter(([, e]) => e.art === 'befehl');
+  const brauchte = kammern.map(([id, v]) => MC.befehle(id, v).bauen.slice(1));
+  pruefe('Regieraum: ein Knopf je Variante mit dem richtigen /clone', brauchte.every((b) => cmd.some(([, e]) => e.befehl === b)), `${cmd.length} Befehlsblöcke, ${brauchte.length} Bauaufträge`);
+  pruefe('Jeder Befehlsblock hat einen Knopf daneben', cmd.every(([k]) => { const [x, y, z] = k.split(',').map(Number); return [[0, 1, 0], [0, 0, 1]].some(([a, b, c]) => [W.ID.knopf, W.ID.knopfSued].includes(welt.hole(x + a, y + b, z + c))); }));
+  const ans = MC.ANSICHTEN.map((k) => [k, MC.ansicht(k)]);
+  pruefe('Ansichtspunkte: in der Welt, frei, nicht in einer Baufläche', ans.every(([, { stand: [x, y, z] }]) => welt.index(x, y, z) >= 0 && !welt.hole(x, y, z) && !welt.hole(x, y + 1, z) && welt.hole(x, y - 1, z) === W.ID.sperre && !IDS.some((id) => { const [a, e] = box3(id); return x >= a[0] && x <= e[0] && z >= a[2] && z <= e[2] && y >= a[1] && y <= e[1]; })), ans.map(([k, a]) => `${k} ${a.stand.join(' ')}`).join(' · '));
+  // Tausch simulieren
+  const original = welt.daten.slice();
+  let simOk = true, simInfo = '';
+  const { x0, z0, y0, nx, nz } = M.BEREICH_MC;
+  for (const id of IDS) {
+    const [a, e] = box3(id);
+    for (const v of B[id].mc) {
+      welt.klonen(MC.kammer(id, v), a);
+      if (!gleich(welt.ausschnitt([a, e]), M.vorlage(id, v))) { simOk = false; simInfo = `${id}:${v} nicht exakt`; break; }
+    }
+    // außerhalb der Fläche unverändert?
+    for (let k = 0; k < welt.daten.length && simOk; k++) if (welt.daten[k] !== original[k]) {
+      const x = x0 + (k % nx), z = z0 + (Math.floor(k / nx) % nz), y = y0 + Math.floor(k / (nx * nz));
+      if (!(x >= a[0] && x <= e[0] && y >= a[1] && y <= e[1] && z >= a[2] && z <= e[2])) { simOk = false; simInfo = `${id}: außerhalb geändert ${x} ${y} ${z}`; }
+    }
+    welt.klonen(MC.kammer(id, B[id].grund), a);
+    if (!welt.daten.every((v, k) => v === original[k])) { simOk = false; simInfo = `${id}: nach Zurücksetzen nicht wie am Anfang`; }
+    if (!simOk) break;
+  }
+  pruefe('Jeder Bauauftrag im Modell von /clone: Fläche exakt, außerhalb nichts geändert, Zurücksetzen stellt alles her', simOk, simInfo || `${kammern.length} Tauschvorgänge`);
+  // Datei
+  const t2 = performance.now();
+  const zipDaten = await mcworld(welt, MC.WELTNAME, MC.REGIERAUM.stand);
+  const { dateien, crcFehler } = await unzip(zipDaten);
+  pruefe('.mcworld erzeugt, ZIP und Prüfsummen in Ordnung', crcFehler.length === 0 && ['level.dat', 'levelname.txt', 'db/CURRENT', 'db/MANIFEST-000001', 'db/000002.log'].every((n) => dateien[n]), `${(zipDaten.length / 1024 / 1024).toFixed(2)} MB in ${((performance.now() - t2) / 1000).toFixed(1)} s`);
+  const log = leseLog(dateien['db/000002.log']);
+  const batch = leseBatch(log.records[0]);
+  pruefe('LevelDB-Protokoll gültig und vollständig', log.fehler.length === 0 && batch.rest === 0 && batch.m.size === batch.anzahl, `${batch.anzahl} Einträge`);
+  const lev = leseNbt(dateien['level.dat'], 8).v;
+  pruefe('level.dat: Startpunkt im Regieraum, Befehle und Befehlsblöcke an, keine Zufallsticks', lev.SpawnX === R.stand[0] && lev.SpawnY === R.stand[1] && lev.SpawnZ === R.stand[2] && lev.commandsEnabled === 1 && lev.commandblocksenabled === 1 && lev.randomtickspeed === 0 && lev.dodaylightcycle === 0, `„${lev.LevelName}“`);
+  const le = (x, z) => { const a = new Uint8Array(8); const d = dv(a); d.setInt32(0, x, true); d.setInt32(4, z, true); return Array.from(a).join(','); };
+  let gepr = 0, abw = [], subs = 0;
+  const ny = M.BEREICH_MC.ny;
+  for (let cx = x0 / 16; cx < (x0 + nx) / 16; cx++) for (let cz = z0 / 16; cz < (z0 + nz) / 16; cz++) {
+    const kopf = le(cx, cz);
+    for (let sy = 0; sy < ny / 16; sy++) {
+      const e = batch.m.get(kopf + ',47,' + ((y0 / 16 + sy) & 255));
+      if (!e) continue;
+      subs++;
+      const a = e.val, d = dv(a), bits = a[3] >> 1, pw = Math.floor(32 / bits), nw = Math.ceil(4096 / pw);
+      let o = 4 + nw * 4; const np = d.getInt32(o, true); o += 4; const pal = [];
+      for (let k = 0; k < np; k++) { const r = leseNbt(a, o); o = r.ende; pal.push(NACH_SCHLUESSEL.get(schluessel(r.v.name, r.v.states)) ?? -1); }
+      for (let k = 0; k < 4096; k++) {
+        const w = d.getUint32(4 + Math.floor(k / pw) * 4, true), p = (w >>> (bits * (k % pw))) & ((1 << bits) - 1);
+        const x = cx * 16 + (k >> 8), z = cz * 16 + ((k >> 4) & 15), y = y0 + sy * 16 + (k & 15);
+        gepr++;
+        if (pal[p] !== welt.hole(x, y, z) && abw.length < 4) abw.push(`${x} ${y} ${z}`);
+      }
+    }
+  }
+  pruefe('Alle Blöcke der Datei stimmen mit dem Modell überein', abw.length === 0 && subs > 0, `${gepr.toLocaleString('de-DE')} Blöcke in ${subs} Subchunks` + (abw.length ? ' · ' + abw.join(' · ') : ''));
+  let ents = 0, entOk = true;
+  for (const { key, val } of batch.m.values()) if (key.length === 9 && key[8] === 49) {
+    let o = 0; while (o < val.length) { const r = leseNbt(val, o); o = r.ende; ents++; const m = welt.entities.get(`${r.v.x},${r.v.y},${r.v.z}`); if (!m || (m.art === 'befehl' ? r.v.Command !== m.befehl : r.v.FrontText.Text !== m.zeilen.join('\n'))) entOk = false; }
+  }
+  pruefe('Schilder und Befehlsblöcke in der Datei', entOk && ents === welt.entities.size, `${ents} Block-Entitäten`);
+
+  const endeB = erg.length;
+  /* ================= C: Abnahmetests in der Oberfläche ================= */
+  abschnitt('C · Abnahmetests 1–10 in der Oberfläche (Testmodus)');
+  const fr = document.getElementById('app');
+  fr.src = 'index.html?test';
+  for (let k = 0; k < 200 && !(fr.contentWindow && fr.contentWindow.__stadtOk); k++) await warte(100);
+  const A = fr.contentWindow.__stadt;
+  pruefe('Oberfläche startet im Testmodus', !!A, A ? '' : String(fr.contentWindow.__stadtFehler || 'kein Start'));
+  const zust = () => ({ ...A.angezeigt });
+  const imBild = (id, v) => { const w = A.welt(), t = M.vorlage(id, v); return gleich(w.ausschnitt(box3(id)), t); };
+  // 1
+  A.gehe(0, 0); await warte(50);
+  const grau = IDS.every((id) => A.angezeigt[id] === B[id].grund && imBild(id, B[id].grund));
+  A.gehe(1, 1); A.vorschauSetzen('spielplatz', 'A'); const a1 = A.angezeigt.spielplatz === 'A';
+  A.vorschauSetzen('spielplatz', 'B'); const b1 = A.angezeigt.spielplatz === 'B';
+  let abgelehnt = false; A.uebernehmen('spielplatz', 'A'); abgelehnt = !A.Z.beschluesse.spielplatz;
+  A.gehe(1, 2); A.uebernehmen('spielplatz', 'gruen');
+  A.gehe(1, 3); fr.contentWindow.document.querySelector('.knopfreihe .haupt').click(); await warte(300);
+  const regenAn = !!A.ansicht().regen;
+  pruefe('1 · Ausgangsstadt grau; Spielplatz A/B als Denkimpuls; kombinierter grüner Spielplatz mit Regenansicht', grau && a1 && b1 && abgelehnt && A.Z.beschluesse.spielplatz === 'gruen' && imBild('spielplatz', 'gruen') && regenAn,
+    `grau ${grau}, A ${a1}, B ${b1}, A nicht baubar ${abgelehnt}, grün ${A.Z.beschluesse.spielplatz}, Regen ${regenAn}`);
+  // 2
+  A.gehe(2, 0); A.vorschauSetzen('laternen', 'sensor'); A.uebernehmen('laternen', 'sensor'); A.nachtSetzen(true); await warte(50);
+  const lampen = A.ansicht().info().lampen;
+  A.nachtSetzen(false);
+  pruefe('2 · Beleuchtung ändern, ohne den Spielplatz zurückzusetzen', A.Z.beschluesse.laternen === 'sensor' && A.Z.beschluesse.spielplatz === 'gruen' && imBild('spielplatz', 'gruen') && imBild('laternen', 'sensor') && lampen.nacht === 16, `${lampen.nacht} Sensor-Laternen leuchten nachts`);
+  // 3
+  A.gehe(3, 1);
+  let ok3 = true, info3 = [];
+  for (const v of ['A', 'B', 'C']) {
+    const vor = A.welt().daten.slice();
+    A.vorschauSetzen('parken', v); A.uebernehmen('parken', v);
+    const w = A.welt(), [a, e] = box3('parken'), Bx = M.BEREICH_3D;
+    let aussen = 0;
+    for (let k = 0; k < w.daten.length; k++) if (w.daten[k] !== vor[k]) { const x = Bx.x0 + (k % Bx.nx), z = Bx.z0 + (Math.floor(k / Bx.nx) % Bx.nz), y = Bx.y0 + Math.floor(k / (Bx.nx * Bx.nz)); if (!(x >= a[0] && x <= e[0] && z >= a[2] && z <= e[2] && y >= a[1] && y <= e[1])) aussen++; }
+    const ok = imBild('parken', v) && aussen === 0 && A.Z.beschluesse.spielplatz === 'gruen' && A.Z.beschluesse.laternen === 'sensor';
+    ok3 = ok3 && ok; info3.push(`${v}: ${ok ? 'ok' : 'Fehler'} (außerhalb geändert: ${aussen})`);
+  }
+  pruefe('3 · Parkoption A, B, C nacheinander; Straße und Freiflächen ändern sich, andere Stadtteile bleiben', ok3, info3.join(' · '));
+  // 4
+  A.gehe(4, 1);
+  let ok4 = true;
+  for (const v of ['A', 'B', 'C']) { A.vorschauSetzen('wohnen', v); ok4 = ok4 && imBild('wohnen', v) && M.wohnungen(v) === 6; }
+  A.uebernehmen('wohnen', 'C');
+  const karten4 = fr.contentWindow.document.querySelectorAll('.karte .wert');
+  pruefe('4 · Wohnoptionen A/B/C mit sechs Wohnungen und erkennbarem Flächenunterschied', ok4 && karten4.length === 3 && [...karten4].every((k) => /6 Wohnungen/.test(k.textContent)), [...karten4].map((k) => k.textContent).join(' · '));
+  // 5
+  A.gehe(5, 1); A.vorschauSetzen('einkaufen', 'C'); A.uebernehmen('einkaufen', 'C');
+  A.gehe(6, 1); A.vorschauSetzen('bildung', 'B'); A.uebernehmen('bildung', 'B');
+  const vor5 = { ...A.Z.beschluesse };
+  A.vorschauSetzen('bildung', 'A'); A.uebernehmen('bildung', 'A');
+  const nach5 = { ...A.Z.beschluesse };
+  const ok5 = nach5.einkaufen === 'C' && nach5.bildung === 'A' && Object.keys(vor5).every((k) => k === 'bildung' || vor5[k] === nach5[k]) && imBild('einkaufen', 'C') && imBild('bildung', 'A');
+  pruefe('5 · Einkauf C und Bildung B wählen, dann Bildung auf A: Einkauf C und alle anderen Beschlüsse bleiben', ok5, JSON.stringify(nach5));
+  // 6
+  A.gehe(7, 0); await warte(100);
+  const doc = fr.contentWindow.document;
+  const ok6 = IDS.every((id) => A.angezeigt[id] === A.Z.variante(id) && imBild(id, A.Z.variante(id))) && !/mika/i.test(doc.body.innerText) && doc.querySelectorAll('.seite li:not(.nein)').length === Object.keys(A.Z.beschluesse).length;
+  pruefe('6 · Gesamtansicht: alle tatsächlich gewählten Maßnahmen vorhanden, kein Mika-Text', ok6, `${Object.keys(A.Z.beschluesse).length} Beschlüsse im Zukunftscheck`);
+  // Rundgang und Vorher/Nachher
+  A.aktion('vorher'); await warte(50);
+  const vorherGrau = IDS.every((id) => A.angezeigt[id] === B[id].grund);
+  A.aktion('vorher'); await warte(50);
+  pruefe('Finale: Vorher/Nachher wechselt zwischen grauer und verbesserter Stadt', vorherGrau && IDS.every((id) => A.angezeigt[id] === A.Z.variante(id)));
+  // 7
+  A.neuBeginnen(); await warte(50);
+  pruefe('7 · Neu beginnen stellt die graue Stadt wieder her (Grundstadt unverändert)', Object.keys(A.Z.beschluesse).length === 0 && IDS.every((id) => A.angezeigt[id] === B[id].grund && imBild(id, B[id].grund)) && gleich(M.grundstadt3D().ausschnitt([[-64, 56, -64], [95, 119, 95]]), g.ausschnitt([[-64, 56, -64], [95, 119, 95]])));
+  // 8
+  const fremd = fr.contentWindow.performance.getEntriesByType('resource').map((r) => r.name).filter((n) => !n.startsWith(location.origin) && !n.startsWith('data:') && !n.startsWith('blob:'));
+  pruefe('8 · Keine externen Ressourcen (läuft offline)', fremd.length === 0, fremd.slice(0, 3).join(' · ') || `${fr.contentWindow.performance.getEntriesByType('resource').length} Dateien, alle aus diesem Ordner`);
+  // 9 + 10 (technisch geprüft in Abschnitt B; Dokumentation siehe LIESMICH.md)
+  pruefe('9 · Minecraft-Artefakte technisch geprüft (Abschnitt B); in Minecraft Education selbst: noch nicht ausgeführt', erg.slice(startB, endeB).every(Boolean), 'Nur als „getestet“ markieren, wenn der Testplan in Minecraft Education durchlaufen ist.');
+  // Leistung
+  await warte(2500);                                   // Kameraflug und Vorschaubilder fertig
+  const an = A.ansicht(), i0 = an.info().bilder; await warte(600);
+  const ruhig = an.info().bilder - i0;
+  pruefe('Leistung: Stillstand zeichnet nichts, wenige Zeichenaufrufe', ruhig === 0 && an.info().aufrufe <= 60, `${ruhig} Bilder in 0,6 s Ruhe, ${an.info().aufrufe} Zeichenaufrufe, ${an.info().dreiecke.toLocaleString('de-DE')} Dreiecke`);
+  const t5 = performance.now(); A.gehe(4, 1); A.vorschauSetzen('wohnen', 'A'); const dauer = performance.now() - t5;
+  pruefe('Leistung: Vorschau einer Variante baut nur diese Fläche neu (unter 250 ms)', dauer < 250, `${dauer.toFixed(0)} ms`);
+} catch (err) {
+  abschnitt('Fehler');
+  pruefe('Ausnahme', false, err.stack || err.message);
+}
+const n = erg.filter(Boolean).length;
+document.getElementById('summe').textContent = `${n} von ${erg.length} Prüfungen bestanden`;
+document.title = `${n}/${erg.length} · Stadt-Konfigurator · Abnahmetests`;
+window.__ergebnis = { bestanden: n, gesamt: erg.length };
+</script>
+</body>
+</html>
