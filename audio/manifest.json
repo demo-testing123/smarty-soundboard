@@ -216,6 +216,389 @@
    ]
   ]
  },
+ "SMARTy_M1_Verkehrsanalyse": {
+  "datei": "audio/SMARTy_M1_Verkehrsanalyse.mp3",
+  "hash": "37d44fcc2f",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 7.21,
+  "teile": [
+   [
+    0.04,
+    1.087
+   ],
+   [
+    1.437,
+    2.703
+   ],
+   [
+    3.103,
+    4.315
+   ],
+   [
+    4.865,
+    6.959
+   ]
+  ]
+ },
+ "SMARTy_M2_Parkplatz_Flaeche": {
+  "datei": "audio/SMARTy_M2_Parkplatz_Flaeche.mp3",
+  "hash": "a23c7e4020",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 7.46,
+  "teile": [
+   [
+    0.04,
+    1.651
+   ],
+   [
+    2.151,
+    7.211
+   ]
+  ]
+ },
+ "SMARTy_M3_Vorschlag": {
+  "datei": "audio/SMARTy_M3_Vorschlag.mp3",
+  "hash": "0a39c0fda3",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 5.06,
+  "teile": [
+   [
+    0.04,
+    0.707
+   ],
+   [
+    1.057,
+    4.814
+   ]
+  ]
+ },
+ "SMARTy_M4_Geduld": {
+  "datei": "audio/SMARTy_M4_Geduld.mp3",
+  "hash": "ec99df0cca",
+  "lufs": -17.1,
+  "tp": -2.1,
+  "dauer": 6.61,
+  "teile": [
+   [
+    0.04,
+    0.736
+   ],
+   [
+    1.086,
+    2.399
+   ],
+   [
+    2.749,
+    3.812
+   ],
+   [
+    4.312,
+    4.807
+   ],
+   [
+    5.607,
+    6.36
+   ]
+  ]
+ },
+ "SMARTy_M5_Funkverbindung": {
+  "datei": "audio/SMARTy_M5_Funkverbindung.mp3",
+  "hash": "d64f0fdbbd",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 3.77,
+  "teile": [
+   [
+    0.04,
+    1.472
+   ],
+   [
+    1.922,
+    3.515
+   ]
+  ]
+ },
+ "SMARTy_M6_Niemand_gefaehrden": {
+  "datei": "audio/SMARTy_M6_Niemand_gefaehrden.mp3",
+  "hash": "4a60756b9f",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 7.27,
+  "teile": [
+   [
+    0.04,
+    2.549
+   ],
+   [
+    3.049,
+    4.652
+   ],
+   [
+    4.952,
+    7.017
+   ]
+  ]
+ },
+ "SMARTy_M7_Test_erfolgreich": {
+  "datei": "audio/SMARTy_M7_Test_erfolgreich.mp3",
+  "hash": "4129a7b9c7",
+  "lufs": -16.9,
+  "tp": -1.9,
+  "dauer": 7.24,
+  "teile": [
+   [
+    0.04,
+    1.044
+   ],
+   [
+    1.494,
+    4.354
+   ],
+   [
+    4.854,
+    6.987
+   ]
+  ]
+ },
+ "SMARTy_M8_Mission_Mobilitaet": {
+  "datei": "audio/SMARTy_M8_Mission_Mobilitaet.mp3",
+  "hash": "16768cee97",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 5.62,
+  "teile": [
+   [
+    0.04,
+    1.861
+   ],
+   [
+    2.261,
+    3.589
+   ],
+   [
+    3.989,
+    5.37
+   ]
+  ]
+ },
+ "SMARTy_W1_Bauauftrag": {
+  "datei": "audio/SMARTy_W1_Bauauftrag.mp3",
+  "hash": "89ec726c54",
+  "lufs": -16.6,
+  "tp": -2.0,
+  "dauer": 5.1,
+  "teile": [
+   [
+    0.04,
+    1.131
+   ],
+   [
+    1.531,
+    2.47
+   ],
+   [
+    2.77,
+    3.6
+   ],
+   [
+    3.9,
+    4.851
+   ]
+  ]
+ },
+ "SMARTy_W2_Messung": {
+  "datei": "audio/SMARTy_W2_Messung.mp3",
+  "hash": "3d09f29d01",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 5.0,
+  "teile": [
+   [
+    0.04,
+    1.168
+   ],
+   [
+    1.568,
+    2.679
+   ],
+   [
+    3.029,
+    4.752
+   ]
+  ]
+ },
+ "SMARTy_W3_Drei_Entwuerfe": {
+  "datei": "audio/SMARTy_W3_Drei_Entwuerfe.mp3",
+  "hash": "c05f90244e",
+  "lufs": -16.6,
+  "tp": -1.9,
+  "dauer": 5.42,
+  "teile": [
+   [
+    0.04,
+    2.094
+   ],
+   [
+    2.594,
+    5.168
+   ]
+  ]
+ },
+ "SMARTy_W4_Aufstocken": {
+  "datei": "audio/SMARTy_W4_Aufstocken.mp3",
+  "hash": "3f6466240c",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 4.94,
+  "teile": [
+   [
+    0.04,
+    1.259
+   ],
+   [
+    1.609,
+    4.694
+   ]
+  ]
+ },
+ "SMARTy_W5_Klimacheck": {
+  "datei": "audio/SMARTy_W5_Klimacheck.mp3",
+  "hash": "5a1fb699be",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 6.76,
+  "teile": [
+   [
+    0.04,
+    0.754
+   ],
+   [
+    1.104,
+    2.821
+   ],
+   [
+    3.271,
+    6.511
+   ]
+  ]
+ },
+ "SMARTy_K1_Wegvergleich": {
+  "datei": "audio/SMARTy_K1_Wegvergleich.mp3",
+  "hash": "366c8e5036",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 5.98,
+  "teile": [
+   [
+    0.04,
+    1.342
+   ],
+   [
+    1.792,
+    5.727
+   ]
+  ]
+ },
+ "SMARTy_K2_Kurze_Wege": {
+  "datei": "audio/SMARTy_K2_Kurze_Wege.mp3",
+  "hash": "726163dfeb",
+  "lufs": -16.6,
+  "tp": -2.2,
+  "dauer": 5.37,
+  "teile": [
+   [
+    0.04,
+    1.183
+   ],
+   [
+    1.533,
+    5.121
+   ]
+  ]
+ },
+ "SMARTy_B1_Raumanalyse": {
+  "datei": "audio/SMARTy_B1_Raumanalyse.mp3",
+  "hash": "e2f00d6247",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 6.55,
+  "teile": [
+   [
+    0.04,
+    0.956
+   ],
+   [
+    1.306,
+    2.525
+   ],
+   [
+    2.875,
+    4.094
+   ],
+   [
+    4.544,
+    6.304
+   ]
+  ]
+ },
+ "SMARTy_B2_Zugang": {
+  "datei": "audio/SMARTy_B2_Zugang.mp3",
+  "hash": "2242191807",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 5.87,
+  "teile": [
+   [
+    0.04,
+    0.883
+   ],
+   [
+    1.233,
+    5.62
+   ]
+  ]
+ },
+ "SMARTy_B3_Mitmachen": {
+  "datei": "audio/SMARTy_B3_Mitmachen.mp3",
+  "hash": "2702fa336e",
+  "lufs": -16.7,
+  "tp": -1.9,
+  "dauer": 4.56,
+  "teile": [
+   [
+    0.04,
+    2.242
+   ],
+   [
+    2.692,
+    4.307
+   ]
+  ]
+ },
+ "SMARTy_F1_Zukunftsanalyse": {
+  "datei": "audio/SMARTy_F1_Zukunftsanalyse.mp3",
+  "hash": "e10a1803fe",
+  "lufs": -16.4,
+  "tp": -1.9,
+  "dauer": 5.84,
+  "teile": [
+   [
+    0.04,
+    1.703
+   ],
+   [
+    2.153,
+    3.985
+   ],
+   [
+    4.335,
+    5.592
+   ]
+  ]
+ },
  "SMARTy_01_Landung": {
   "datei": "audio/SMARTy_01_Landung.mp3",
   "hash": "658a66eeda",

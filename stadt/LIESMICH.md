@@ -148,7 +148,7 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 
 **Regie-Leiste `I`:**
 - Drehbuch-Stichworte
-- SMARTy-Clips mit Soundboard-Taste. W, K, B, M und F1 sind laut Drehbuch noch neu zu produzieren.
+- SMARTy-Clips mit Soundboard-Taste (alle Clips des Drehbuchs sind im Soundboard; F2 ist Clip 06, Taste 6).
 - alle Beschlüsse mit dem passenden `/clone`-Befehl
 - Mission zurücksetzen, Neu beginnen
 - Verlauf

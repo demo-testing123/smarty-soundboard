@@ -183,6 +183,196 @@
       "szene": "Mission Technik – Straßenlaternen"
     },
     {
+      "id": "SMARTy_M1_Verkehrsanalyse",
+      "stimme": "smarty",
+      "taste": "y",
+      "titel": "M1 · Verkehrsanalyse",
+      "text": "Verkehrsanalyse: Viele parkende Autos. Wenig Platz für Menschen. Meine vier Beine finden das unpraktisch.",
+      "sprechen": "Verkehrsanalyse: [Pause 0.35] Viele parkende Autos. [Pause 0.4] Wenig Platz für Menschen. [Pause 0.55] Meine vier Beine finden das unpraktisch.",
+      "einsatz": "Szene 1 · nach „Autos, Autos, Autos! Wo können hier Kinder sicher laufen?“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M2_Parkplatz_Flaeche",
+      "stimme": "smarty",
+      "taste": "x",
+      "titel": "M2 · Jeder Parkplatz braucht Fläche",
+      "text": "Jeder Parkplatz braucht Fläche. Gute Planung muss an Kinder, Fußgänger, Fahrgäste und Menschen mit schweren Einkäufen denken.",
+      "sprechen": "Jeder Parkplatz braucht Fläche. [Pause 0.5] Gute Planung muss an Kinder, Fußgänger, Fahrgäste und Menschen mit schweren Einkäufen denken.",
+      "einsatz": "Szene 2 · nach der Abstimmung A/B/C und „… mit ihren Einkäufen weiter laufen.“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M3_Vorschlag",
+      "stimme": "smarty",
+      "taste": "c",
+      "titel": "M3 · Vorschlag",
+      "text": "Vorschlag: Parkplätze bündeln, Gehwege verbreitern und sichere Übergänge schaffen.",
+      "sprechen": "Vorschlag: [Pause 0.35] Parkplätze bündeln, Gehwege verbreitern und sichere Übergänge schaffen.",
+      "einsatz": "Szene 2 · nach „Können wir vielleicht das Beste aus mehreren Ideen verbinden?“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M4_Geduld",
+      "stimme": "smarty",
+      "taste": "v",
+      "titel": "M4 · Geduld nicht erkannt",
+      "text": "Bus erkannt. Viele Fahrgäste erkannt. Wartezeit erkannt. Geduld … nicht erkannt.",
+      "sprechen": "Bus erkannt. [Pause 0.35] Viele Fahrgäste erkannt. [Pause 0.35] Wartezeit erkannt. [Pause 0.5] Geduld [Pause 0.8] nicht erkannt.",
+      "einsatz": "Szene 3 · nach „Passen in einen Bus mehr Menschen als in ein Auto?“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M5_Funkverbindung",
+      "stimme": "smarty",
+      "taste": "b",
+      "titel": "M5 · Funkverbindung",
+      "text": "Funkverbindung hergestellt. Der Bus meldet sich an der Ampel.",
+      "sprechen": "Funkverbindung hergestellt. [Pause 0.45] Der Bus meldet sich an der Ampel.",
+      "einsatz": "Szene 4 · nach „Jetzt verändern wir genau eine Sache …“, vor Versuch B in der Verkehrssimulation",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M6_Niemand_gefaehrden",
+      "stimme": "smarty",
+      "taste": "n",
+      "titel": "M6 · Niemand gefährden",
+      "text": "Eine intelligente Ampel darf niemanden gefährden. Der Bus kann früher Grün bekommen – andere warten dann vielleicht etwas länger.",
+      "sprechen": "Eine intelligente Ampel darf niemanden gefährden. [Pause 0.5] Der Bus kann früher Grün bekommen. [Pause 0.3] Andere warten dann vielleicht etwas länger.",
+      "einsatz": "Szene 4 · nach „Aber was passiert mit den Autos auf der anderen Straße?“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M7_Test_erfolgreich",
+      "stimme": "smarty",
+      "taste": "m",
+      "titel": "M7 · Test erfolgreich (mBot)",
+      "text": "Test erfolgreich. Unser Roboter hält und fährt auf ein Signal hin weiter. Die Ampel steuert ihn heute noch nicht selbst.",
+      "sprechen": "Test erfolgreich. [Pause 0.45] Unser Roboter hält und fährt auf ein Signal hin weiter. [Pause 0.5] Die Ampel steuert ihn heute noch nicht selbst.",
+      "einsatz": "Szene 5 · nach dem mBot-Test bei Grün",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M8_Mission_Mobilitaet",
+      "stimme": "smarty",
+      "taste": ",",
+      "titel": "M8 · Mission Mobilität abgeschlossen",
+      "text": "Mission Mobilität abgeschlossen. Zukunftsstadt verbessert. Danke, Zukunftsteam!",
+      "sprechen": "Mission Mobilität abgeschlossen. [Pause 0.4] Zukunftsstadt verbessert. [Pause 0.4] Danke, Zukunftsteam!",
+      "einsatz": "Szene 6 · nach „Wer hat die Ideen geliefert?“ – Kinder: „Wir!“",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_W1_Bauauftrag",
+      "stimme": "smarty",
+      "taste": "g",
+      "titel": "W1 · Bauauftrag erkannt",
+      "text": "Bauauftrag erkannt. Sechs Familien. Sechs Wohnungen. Begrenzte Fläche.",
+      "sprechen": "Bauauftrag erkannt. [Pause 0.4] Sechs Familien. [Pause 0.3] Sechs Wohnungen. [Pause 0.3] Begrenzte Fläche.",
+      "einsatz": "Szene 1 · nach „Aber jetzt ziehen sechs Familien hierher. Wo sollen sie wohnen?“",
+      "szene": "Mission Wohnen und Bauen – Sechs Familien"
+    },
+    {
+      "id": "SMARTy_W2_Messung",
+      "stimme": "smarty",
+      "taste": "h",
+      "titel": "W2 · Messung abgeschlossen",
+      "text": "Messung abgeschlossen. Gleich viele Wohnungen. Unterschiedliche bebaute Bodenfläche.",
+      "sprechen": "Messung abgeschlossen. [Pause 0.4] Gleich viele Wohnungen. [Pause 0.35] Unterschiedliche bebaute Bodenfläche.",
+      "einsatz": "Szene 1 · nach dem Stapeln im Wohnsimulator und „… mehr Platz frei!“",
+      "szene": "Mission Wohnen und Bauen – Sechs Familien"
+    },
+    {
+      "id": "SMARTy_W3_Drei_Entwuerfe",
+      "stimme": "smarty",
+      "taste": "j",
+      "titel": "W3 · Alle drei Entwürfe",
+      "text": "Alle drei Entwürfe bieten sechs Wohnungen. Aber nicht jede Grünfläche ist für alle zugänglich.",
+      "sprechen": "Alle drei Entwürfe bieten sechs Wohnungen. [Pause 0.5] Aber nicht jede Grünfläche ist für alle zugänglich.",
+      "einsatz": "Szene 2 · nach den Fragen zu privatem Grün, Hof und Park, vor der Abstimmung",
+      "szene": "Mission Wohnen und Bauen – Sechs Familien"
+    },
+    {
+      "id": "SMARTy_W4_Aufstocken",
+      "stimme": "smarty",
+      "taste": "k",
+      "titel": "W4 · Alternative erkannt",
+      "text": "Alternative erkannt: Bestehendes Haus erhalten und um zwei Geschosse aufstocken.",
+      "sprechen": "Alternative erkannt: [Pause 0.35] Bestehendes Haus erhalten und um zwei Geschosse aufstocken.",
+      "einsatz": "Szene 3 · nach „Oder können wir ein vorhandenes weiterverwenden?“",
+      "szene": "Mission Wohnen und Bauen – Sechs Familien"
+    },
+    {
+      "id": "SMARTy_W5_Klimacheck",
+      "stimme": "smarty",
+      "taste": "l",
+      "titel": "W5 · Klimacheck",
+      "text": "Klimacheck: Nicht nur das Material zählt. Auch Herkunft, Lebensdauer und Weiterverwenden sind wichtig.",
+      "sprechen": "Klimacheck: [Pause 0.35] Nicht nur das Material zählt. [Pause 0.45] Auch Herkunft, Lebensdauer und Weiterverwenden sind wichtig.",
+      "einsatz": "Szene 3 · nach „… brauchen wir nicht alles neu herzustellen.“",
+      "szene": "Mission Wohnen und Bauen – Sechs Familien"
+    },
+    {
+      "id": "SMARTy_K1_Wegvergleich",
+      "stimme": "smarty",
+      "taste": "ö",
+      "titel": "K1 · Wegvergleich gestartet",
+      "text": "Wegvergleich gestartet. Ein Ladenstandort entscheidet mit darüber, wie weit Menschen zu Fuß gehen müssen.",
+      "sprechen": "Wegvergleich gestartet. [Pause 0.45] Ein Ladenstandort entscheidet mit darüber, wie weit Menschen zu Fuß gehen müssen.",
+      "einsatz": "nach „Welche Strecke sieht am kürzesten aus?“ – beim Zeigen der drei Wege",
+      "szene": "Mission Kurze Wege – Wo liegt der Laden?"
+    },
+    {
+      "id": "SMARTy_K2_Kurze_Wege",
+      "stimme": "smarty",
+      "taste": "ä",
+      "titel": "K2 · Stadt der kurzen Wege",
+      "text": "Stadt der kurzen Wege: Wohnen, Einkaufen und Freizeit möglichst gut erreichbar planen.",
+      "sprechen": "Stadt der kurzen Wege: [Pause 0.35] Wohnen, Einkaufen und Freizeit möglichst gut erreichbar planen.",
+      "einsatz": "nach der Abstimmung A, B oder C",
+      "szene": "Mission Kurze Wege – Wo liegt der Laden?"
+    },
+    {
+      "id": "SMARTy_B1_Raumanalyse",
+      "stimme": "smarty",
+      "taste": "p",
+      "titel": "B1 · Raumanalyse",
+      "text": "Raumanalyse: Vormittags Unterricht. Nachmittags Werkstatt. Ein Gebäude, zwei Nutzungen.",
+      "sprechen": "Raumanalyse: [Pause 0.35] Vormittags Unterricht. [Pause 0.35] Nachmittags Werkstatt. [Pause 0.45] Ein Gebäude, zwei Nutzungen.",
+      "einsatz": "Szene 1 · nach „Könnte sie dann eine Werkstatt sein?“",
+      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+    },
+    {
+      "id": "SMARTy_B2_Zugang",
+      "stimme": "smarty",
+      "taste": "ü",
+      "titel": "B2 · Zugang prüfen",
+      "text": "Zugang prüfen: Ist der Ort erreichbar, bezahlbar und auch ohne eigenes Smartphone nutzbar?",
+      "sprechen": "Zugang prüfen: [Pause 0.35] Ist der Ort erreichbar, bezahlbar und auch ohne eigenes Smartphone nutzbar?",
+      "einsatz": "Szene 2 · nach der Frage, ob Eintritt oder Smartphone-Anmeldung für alle fair ist",
+      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+    },
+    {
+      "id": "SMARTy_B3_Mitmachen",
+      "stimme": "smarty",
+      "taste": "+",
+      "titel": "B3 · Mitmachen möglich",
+      "text": "Eine lebenswerte Stadt bietet nicht nur Räume. Sie macht das Mitmachen möglich.",
+      "sprechen": "Eine lebenswerte Stadt bietet nicht nur Räume. [Pause 0.45] Sie macht das Mitmachen möglich.",
+      "einsatz": "Szene 2 · nach der Abstimmung A, B oder C",
+      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+    },
+    {
+      "id": "SMARTy_F1_Zukunftsanalyse",
+      "stimme": "smarty",
+      "taste": "#",
+      "titel": "F1 · Zukunftsanalyse",
+      "text": "Zukunftsanalyse abgeschlossen. Diese Stadt ist nicht nur intelligent. Sie ist auch lebenswert.",
+      "sprechen": "Zukunftsanalyse abgeschlossen. [Pause 0.45] Diese Stadt ist nicht nur intelligent. [Pause 0.35] Sie ist auch lebenswert.",
+      "einsatz": "nach „Der Bus kann sich an der Ampel anmelden … einen Ort, an dem Kinder nachmittags mitmachen können.“ · F2 (Schlusssatz) ist der vorhandene Clip 06 „Das Finale“ (Taste 6)",
+      "szene": "Finale – SMARTys Zukunftscheck"
+    },
+    {
       "id": "SMARTy_01_Landung",
       "stimme": "smarty",
       "taste": "1",
