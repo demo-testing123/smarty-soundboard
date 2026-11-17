@@ -404,17 +404,17 @@ export class Ansicht {
   /* --- Wege (Wegsteine wie im Kollegen-Konfigurator) --- */
   setzeWege(liste) {
     for (const c of [...this.wege.children]) { this.wege.remove(c); c.geometry.dispose(); }
-    for (const { punkte, farbe: hex } of liste || []) {
+    for (const { punkte, farbe: hex, start: startHex } of liste || []) {
       if (!punkte || !punkte.length) continue;
-      const g = new THREE.BoxGeometry(0.62, 0.14, 0.62);
+      const g = new THREE.BoxGeometry(0.74, 0.14, 0.74);
       const m = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ color: hex }), punkte.length);
       const mat = new THREE.Matrix4();
       punkte.forEach(([x, z], k) => { mat.makeTranslation(x + 0.5, S + 0.07, z + 0.5); m.setMatrixAt(k, mat); });
       m.frustumCulled = false;
       this.wege.add(m);
       const ende = punkte[punkte.length - 1], start = punkte[0];
-      for (const [x, z, h] of [[start[0], start[1], 3.2], [ende[0], ende[1], 3.2]]) {
-        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, h, 10).translate(x + 0.5, S + h / 2, z + 0.5), new THREE.MeshBasicMaterial({ color: hex }));
+      for (const [x, z, h, c] of [[start[0], start[1], 3.2, startHex || hex], [ende[0], ende[1], 3.2, hex]]) {
+        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, h, 10).translate(x + 0.5, S + h / 2, z + 0.5), new THREE.MeshBasicMaterial({ color: c }));
         this.wege.add(s);
       }
     }
@@ -442,6 +442,31 @@ export class Ansicht {
     let da = ((z.azimut - this.kam.azimut + 540) % 360) - 180;
     this.flug = { von: { ...this.kam, ziel: [...this.kam.ziel] }, nach: { ...z, azimut: this.kam.azimut + da }, t0: performance.now(), dauer: 1100 };
     this.anfordern();
+  }
+  // Kamera wie „vorlage“ (Blickrichtung bleibt), aber Ziel und Zoom so, dass der Quader box in das
+  // Bildschirmrechteck rect = [links, oben, rechts, unten] (CSS-Pixel) passt. Reine Rechnung, ändert die Kamera nicht.
+  passend(vorlage, box, rect) {
+    const alt = this.kam, punkte = [];
+    for (const x of [box[0], box[3] + 1]) for (const y of [box[1], box[4] + 1]) for (const z of [box[2], box[5] + 1]) punkte.push(new THREE.Vector3(x, y, z));
+    const huelle = () => {
+      this._kameraSetzen();
+      let l = Infinity, o = Infinity, r = -Infinity, u = -Infinity;
+      for (const p of punkte) { const q = this.projiziere(p.x, p.y, p.z); l = Math.min(l, q.x); r = Math.max(r, q.x); o = Math.min(o, q.y); u = Math.max(u, q.y); }
+      return { l, o, r, u };
+    };
+    const k = { ziel: [...vorlage.ziel], zoom: vorlage.zoom, azimut: vorlage.azimut, hoehe: vorlage.hoehe };
+    try {
+      for (let i = 0; i < 6; i++) {
+        this.kam = k;
+        let h = huelle();
+        k.zoom /= Math.min((rect[2] - rect[0]) / (h.r - h.l), (rect[3] - rect[1]) / (h.u - h.o));
+        h = huelle();
+        const proPx = (2 * k.zoom) / this.hoehePx, e = this.camera.matrixWorld.elements;
+        const dx = ((h.l + h.r) / 2 - (rect[0] + rect[2]) / 2) * proPx, dy = ((h.o + h.u) / 2 - (rect[1] + rect[3]) / 2) * proPx;
+        k.ziel = k.ziel.map((v, j) => v + e[j] * dx - e[4 + j] * dy);
+      }
+    } finally { this.kam = alt; this._kameraSetzen(); }
+    return k;
   }
   _kameraSetzen() {
     const k = this.kam, a = THREE.MathUtils.degToRad(k.azimut), e = THREE.MathUtils.degToRad(k.hoehe);
@@ -505,6 +530,7 @@ export class Ansicht {
     this.renderer.setSize(w, h, false);
     this._kameraSetzen();
     this.anfordern();
+    if (this.nachResize) this.nachResize();
   }
   anfordern() {
     this.dirty = true;

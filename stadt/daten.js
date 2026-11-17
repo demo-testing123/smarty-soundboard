@@ -5,7 +5,9 @@
  * Keine erfundenen Zahlen: Messwerte (Wege, bebaute Fläche) rechnet das Stadtmodell aus und kennzeichnet sie als Modellwerte.
  */
 
-// Kamerapresets: Ziel (x, y, z), Zoom = halbe Bildhöhe in Blöcken, Blickrichtung (Azimut 0 = von Süden), Höhe in Grad
+// Kamerapresets: Ziel (x, y, z), Zoom = halbe Bildhöhe in Blöcken, Blickrichtung (Azimut 0 = von Süden), Höhe in Grad.
+// rahmen = Quader [x1, y1, z1, x2, y2, z2], der ganz in die freie Bildfläche passen soll (neben Titel, Karten und Seitenleiste);
+// Ziel und Zoom werden dann beim Anzeigen für das tatsächliche Bildschirmformat berechnet.
 export const KAMERAS = {
   gesamt: { titel: 'Gesamtansicht', ziel: [16, 64, 16], zoom: 92, azimut: 45, hoehe: 36 },
   finale: { titel: 'Zukunftsstadt', ziel: [36, 64, -4], zoom: 80, azimut: 45, hoehe: 38 },
@@ -18,7 +20,7 @@ export const KAMERAS = {
   kreuzung: { titel: 'Kreuzung', ziel: [40, 64, -22], zoom: 22, azimut: 30, hoehe: 46 },
   wohnen: { titel: 'Wohngrundstück', ziel: [71, 66, -40], zoom: 27, azimut: 38, hoehe: 38 },
   aufstocken: { titel: 'Bestandshaus', ziel: [64, 75, 14], zoom: 22, azimut: 292, hoehe: 26 },
-  einkaufen: { titel: 'Westviertel', ziel: [-38, 64, -13], zoom: 38, azimut: 10, hoehe: 72 },
+  einkaufen: { titel: 'Westviertel', ziel: [-40, 64, 4], zoom: 38, azimut: 270, hoehe: 55, rahmen: [-63, 63, -23, -18, 79, 31] },
   wohnhaus: { titel: 'Unser Wohnhaus', ziel: [-42, 67, -17], zoom: 13, azimut: 18, hoehe: 28 },
   schule: { titel: 'Schule', ziel: [-46, 66, 64], zoom: 22, azimut: 36, hoehe: 38 },
   bildung: { titel: 'Südviertel', ziel: [-16, 66, 66], zoom: 40, azimut: 30, hoehe: 42 },
@@ -35,9 +37,7 @@ export const TAFELN = {
   kreuzung: { text: 'Kreuzung', pos: [45, 70, -6] },
   grundstueck: { text: 'Grundstück für sechs Familien', pos: [71, 72, -40] },
   bestand: { text: 'Bestandshaus aus Beton', pos: [62, 84, 16] },
-  ladenA: { text: 'A · Rand', pos: [-57, 72, 12], buchstabe: 'A' },
-  ladenB: { text: 'B · Mitte', pos: [-24, 74, 14], buchstabe: 'B' },
-  ladenC: { text: 'C · Wohngasse', pos: [-40, 76, 6], buchstabe: 'C' },
+  // Ladentafeln (ladenA/B/C = mögliche Standorte, ladenA0 … = Läden einer Variante) kommen aus LADEN/LAEDEN im Stadtmodell
   schule: { text: 'Schule', pos: [-48, 80, 56] },
   bahnhof: { text: 'Alter Bahnhof', pos: [15, 80, 72] },
   brache: { text: 'freie Fläche', pos: [-10, 68, 64] },
@@ -56,7 +56,7 @@ export const BUCHSTABEN_FARBE = { A: '#e2846b', B: '#1f8a8a', C: '#e3a630' };
  *  regen    – Natur: Starkregen-Ansicht grau / grün
  *  schalter – Vorher/Nachher einer Baufläche (+ optional Tag/Nacht)
  *  extern   – Übergang zu einem echten Showelement (Calliope, Verkehrssimulation, mBot, Wohnsimulator)
- *  wege     – Kurze Wege: drei Wege vom Wohnhaus, gemessen im Modell
+ *  wege     – Kurze Wege: drei Wege von „Unser Wohnhaus“ zu den möglichen Standorten, gemessen im Modell (Felder, keine Meter)
  *  finale   – Zukunftscheck, Rundgang, Vorher/Nachher der ganzen Stadt
  * zeige: welcher Stand der Bauflächen dieses Schritts gezeigt wird – 'vorher' (grau), 'beschluss' (übernommen) */
 export const MISSIONEN = [
@@ -254,21 +254,22 @@ export const MISSIONEN = [
     kamera: 'einkaufen',
     schritte: [
       {
-        art: 'wege', kicker: 'Mission Kurze Wege', titel: 'Wir brauchen Brot. Wie weit ist der Weg?', kamera: 'einkaufen', zeige: 'vorher', bereich: 'einkaufen',
-        text: 'Von unserem Wohnhaus zu drei möglichen Läden. Welche Strecke sieht am kürzesten aus? Wo gibt es die größte Auswahl?',
+        art: 'wege', kicker: 'Mission Kurze Wege · Wo liegt der Laden?', titel: 'Wie weit ist es bis zum nächsten Laden?', kamera: 'einkaufen', zeige: 'vorher', bereich: 'einkaufen',
+        text: 'Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen.',
         tafeln: ['wohnhaus', 'ladenA', 'ladenB', 'ladenC'],
-        regie: ['Erst schätzen lassen, dann „Wege messen“: Die Längen werden im Modell gezählt (Blöcke).'],
+        regie: ['Z1 spricht die Kinder direkt an: „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen. Wie weit müsstet ihr bis zum nächsten Laden laufen?“', 'Z2: „Welche Strecke sieht am kürzesten aus? Und wo gibt es vielleicht die größte Auswahl?“', 'Erst schätzen lassen, dann „Wege messen“: Gezählt werden Felder im Modell – keine Meter, keine Minuten.'],
         smarty: [['K1 · Wegvergleich', 'Ö']],
       },
       {
         art: 'wahl', kicker: 'Mission Kurze Wege · Abstimmung', titel: 'Welchen Standort wählt ihr für unser Viertel?', kamera: 'einkaufen', bereich: 'einkaufen', wege: true,
         text: 'Kurze Wege helfen Kindern und Menschen ohne Auto. Ein großer Markt hat dafür vieles an einem Ort.',
         optionen: [
-          { v: 'A', b: 'A', titel: 'Großer Supermarkt am Rand', pro: 'Viel Auswahl an einem Ort', contra: 'Langer Weg zu Fuß' },
-          { v: 'B', b: 'B', titel: 'Markthalle in der Mitte', pro: 'Viele Stände unter einem Dach', contra: 'Die Halle braucht Platz in der Mitte' },
-          { v: 'C', b: 'C', titel: 'Kleine Läden in den Wohnstraßen', pro: 'Gleich um die Ecke', contra: 'Weniger Auswahl in jedem Laden' },
+          { v: 'A', b: 'A', titel: 'Großer Supermarkt am Stadtrand', pro: 'Viel Auswahl an einem Ort', contra: 'Für viele Bewohner längere Wege' },
+          { v: 'B', b: 'B', titel: 'Markthalle in der Mitte', pro: 'Von vielen Wohnhäusern zu Fuß erreichbar', contra: 'Braucht einen freien Platz in der Mitte' },
+          { v: 'C', b: 'C', titel: 'Kleine Läden im Wohnviertel', pro: 'Bäckerei, Lebensmittel, Gemüse – um die Ecke', contra: 'Weniger Auswahl in jedem Laden' },
         ],
-        hinweis: 'Handzeichen: A, B oder C?',
+        hinweis: 'Handzeichen: A, B oder C? Die Linien zeigen die Fußwege von den Wohnhäusern zum nächsten Laden.',
+        regie: ['A, B oder C anklicken (Tasten A B C): Die Variante erscheint in derselben Stadt – Wohnhäuser, Straßen und frühere Beschlüsse bleiben.', 'Nach der Handabstimmung SMARTy K2, dann „Übernehmen“: Die Wahl bleibt bis zum Finale in der Stadt (Minecraft: EINKAUFEN A/B/C).'],
         smarty: [['K2 · Stadt der kurzen Wege', 'Ä']],
       },
     ],
@@ -317,7 +318,7 @@ export const MISSIONEN = [
 // Rundgang im Finale (Drehbuch: Wohnung → Laden → grüner Platz/Regenwasser → sichere Kreuzung/Bus → Freizeitort)
 export const RUNDGANG = [
   { kamera: 'wohnhaus', text: 'Unser Wohnhaus', tafel: 'wohnhaus' },
-  { kamera: 'einkaufen', text: 'Unser Laden', mission: 'einkaufen' },
+  { kamera: 'einkaufen', text: 'Einkaufen in unserem Viertel', mission: 'einkaufen' },
   { kamera: 'platz', text: 'Grüner Platz – Schatten, Spielen, Regenwasser', mission: 'natur' },
   { kamera: 'laternen', text: 'Laternen, die nur bei Dunkelheit leuchten', mission: 'technik', nacht: true },
   { kamera: 'kreuzung', text: 'Sichere Kreuzung – der Bus meldet sich an', mission: 'mobilitaet' },
@@ -336,7 +337,7 @@ export function beschlussText(bereich, v) {
     kreuzung: { bus: 'Bus meldet sich an der Ampel an' },
     wohnen: { A: 'Sechs Häuser mit eigenem Garten', B: 'Kompakte Häuser mit gemeinsamem Hof', C: 'Höheres Haus mit großem Park' },
     aufstocken: { holz: 'Bestandshaus erhalten, zwei Holzgeschosse' },
-    einkaufen: { A: 'Großer Supermarkt am Rand', B: 'Markthalle in der Mitte', C: 'Kleine Läden in den Wohnstraßen' },
+    einkaufen: { A: 'Großer Supermarkt am Stadtrand', B: 'Markthalle in der Mitte', C: 'Kleine Läden im Wohnviertel: Bäckerei, Lebensmittel, Gemüse' },
     bildung: { A: 'Offene Schule am Nachmittag', B: 'Werkstatt im alten Bahnhof', C: 'Kleine Treffpunkte im Viertel' },
   };
   return (T[bereich] && T[bereich][v]) || null;

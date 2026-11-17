@@ -21,7 +21,7 @@ const KURZ = {
   spielplatz: { grau: 'GRAU', gruen: 'GRUEN' }, laternen: { immer: 'IMMER AN', sensor: 'SENSOR' },
   parken: { grau: 'GRAU', A: 'A vor Haus', B: 'B Strassen', C: 'C Parkhaus' }, kreuzung: { normal: 'NORMAL', bus: 'BUS FUNK' },
   wohnen: { grau: 'GRAU', A: 'A Gaerten', B: 'B Hof', C: 'C Park' }, aufstocken: { bestand: 'BESTAND', holz: '+2 HOLZ' },
-  einkaufen: { grau: 'GRAU', A: 'A Rand', B: 'B Mitte', C: 'C Gasse' }, bildung: { grau: 'GRAU', A: 'A Schule', B: 'B Bahnhof', C: 'C verteilt' },
+  einkaufen: { grau: 'GRAU', A: 'A Stadtrand', B: 'B Mitte', C: 'C Laeden' }, bildung: { grau: 'GRAU', A: 'A Schule', B: 'B Bahnhof', C: 'C verteilt' },
 };
 const SCHILD_TITEL = { spielplatz: 'SPIELPLATZ', laternen: 'LATERNEN', parken: 'PARKEN', kreuzung: 'KREUZUNG', wohnen: 'WOHNEN', aufstocken: 'AUFSTOCKEN', einkaufen: 'EINKAUFEN', bildung: 'BILDUNG' };
 

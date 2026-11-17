@@ -148,6 +148,7 @@ export const STRASSEN = [
 // feste Querungen (Zebrastreifen) – auch für die Wegmessung „zu Fuß“
 export const QUERUNGEN = [
   { name: 'Wohnhaus', achse: 'x', a: -43, b: -41, c1: -11, c2: -4 },     // Ringstraße Nord vor „Unser Wohnhaus“
+  { name: 'Westviertel Ost', achse: 'x', a: -28, b: -26, c1: -11, c2: -4 }, // Ringstraße Nord vor dem Haus Ost (Weg zur Mitte)
   { name: 'Platz Süd', achse: 'x', a: 14, b: 17, c1: 35, c2: 42 },        // Ringstraße Süd vor dem Spielplatz
   { name: 'Platz West', achse: 'z', a: 10, b: 13, c1: -11, c2: -4 },      // Ringstraße West
   { name: 'Platz Nord', achse: 'x', a: 14, b: 17, c1: -11, c2: -4 },      // Ringstraße Nord
@@ -223,12 +224,31 @@ export const ORTE = {
   schule: { x: -48, z: 56, titel: 'Schule' },
   bahnhof: { x: 14, z: 72, titel: 'Alter Bahnhof' },
 };
-// Ziele der Einkaufswege (Eingänge) je Variante
-export const LADEN = {
-  A: { tuer: [-57, 20], titel: 'Großer Supermarkt am Rand' },
-  B: { tuer: [-25, 2], titel: 'Markthalle in der Mitte' },
-  C: { tuer: [-40, 5], titel: 'Bäckerei in der Wohngasse' },
+// Läden je Variante – EINE Quelle für Bau, Tafeln und Wegmessung. tueren = Eingänge (Ziele der Fußwege)
+export const LAEDEN = {
+  A: [{ name: 'Supermarkt', tueren: [[-58, 20], [-57, 20]], tafel: [-57, 71, 22] }],
+  B: [{ name: 'Markthalle', tueren: [[-25, 2], [-24, 2], [-25, 29], [-24, 29]], tafel: [-24, 75, 15] }],
+  C: [
+    { name: 'Bäckerei', tueren: [[-32, -16]], tafel: [-32, 69, -14] },
+    { name: 'Lebensmittel', tueren: [[-36, 10]], tafel: [-37, 69, 12] },
+    { name: 'Gemüse', tueren: [[-58, -16]], tafel: [-59, 69, -14] },
+  ],
 };
+export const LADEN = {
+  A: { titel: 'Großer Supermarkt am Stadtrand', ort: 'am Stadtrand', tafel: [-57, 68, 12] },
+  B: { titel: 'Markthalle in der Mitte', ort: 'in der Mitte', tafel: [-24, 68, 15] },
+  C: { titel: 'Kleine Läden im Wohnviertel', ort: 'im Wohnviertel', tafel: [-32, 69, -14] },
+};
+// Wohnhäuser im Westviertel: Haustüren = Startpunkte der Fußwege (alle Häuser bleiben in jeder Variante stehen)
+export const VIERTEL_HAEUSER = [
+  { name: 'Unser Wohnhaus', tuer: [-42, -16] },
+  { name: 'Haus West', tuer: [-55, -16] },
+  { name: 'Haus Ost', tuer: [-27, -16] },
+  { name: 'Gasse Nordwest', tuer: [-46, 10] },
+  { name: 'Gasse Nordost', tuer: [-38, 10] },
+  { name: 'Gasse Südwest', tuer: [-46, 21] },
+  { name: 'Gasse Südost', tuer: [-38, 21] },
+];
 
 /* ---------- graue Grundstadt (alles, was sich nie ändert) ---------- */
 const HAEUSER = [
@@ -512,12 +532,13 @@ const BAUE = {
 
   einkaufen(p, v) {
     if (v === 'A') {
-      // großer Supermarkt am Rand mit Parkplatz; Eingang zum Parkplatz (Süden)
+      // Großer Supermarkt am Stadtrand: große Halle mit orangem Flachdach, Glasfront und Parkplatz (Eingang im Süden)
       p.quader(-64, S, 0, -50, S + 2, 31, 'luft');
       p.quader(-64, BODEN, 0, -50, BODEN, 31, 'beton');
-      haus(p, { x1: -63, z1: 2, x2: -52, z2: 20, g: 1, gh: 6, wand: 'betonWeiss', fenster: 'glas', dach: 'beton', muster: 4, tueren: [[-58, 20], [-57, 20]] });
-      p.quader(-63, S + 4, 20, -52, S + 4, 20, 'blau');
-      p.quader(-61, S + 6, 7, -54, S + 6, 14, 'betonHell');
+      haus(p, { x1: -63, z1: 2, x2: -52, z2: 20, g: 1, gh: 6, wand: 'betonWeiss', fenster: 'glas', dach: 'orange', muster: 4, tueren: [[-58, 20], [-57, 20]] });
+      p.quader(-62, S, 20, -53, S + 1, 20, 'glas'); p.setze(-58, S, 20, 'luft'); p.setze(-58, S + 1, 20, 'luft'); p.setze(-57, S, 20, 'luft'); p.setze(-57, S + 1, 20, 'luft');
+      p.quader(-63, S + 4, 20, -52, S + 4, 20, 'rot');                                   // Werbeband über der Glasfront
+      p.quader(-61, S + 7, 5, -58, S + 7, 8, 'betonHell'); p.quader(-56, S + 7, 12, -54, S + 7, 15, 'betonHell');   // Lüftung auf dem Dach
       for (let x = -63; x <= -51; x += 3) p.quader(x, BODEN, 23, x, BODEN, 26, 'betonWeiss');
       const rnd = zufall(9);
       autoreihe(p, 'x', 23, -62, -52, rnd, 0.8, 3, 'z'); autoreihe(p, 'x', 28, -62, -52, rnd, 0.6, 3, 'z');
@@ -526,35 +547,41 @@ const BAUE = {
       return;
     }
     if (v === 'B') {
-      // Markthalle in der Mitte (am Spielplatz): Stände unter einem Dach; Eingang zur Ringstraße (Norden)
+      // Markthalle in der Mitte (am Spielplatz): Stände unter einem Dach aus grünem Kupfer; Eingänge Nord und Süd
       p.quader(-32, S, 0, -17, S + 2, 31, 'luft');
       p.quader(-32, BODEN, 0, -17, BODEN, 31, 'glattstein');
-      haus(p, { x1: -31, z1: 2, x2: -18, z2: 29, g: 1, gh: 7, wand: 'ziegel', fenster: 'glas', dach: 'kupfer', muster: 2, tueren: [[-25, 2], [-24, 2], [-25, 29], [-24, 29]] });
-      for (let k = 1; k <= 3; k++) p.quader(-31 + k, S + 7 + k, 2 + k, -18 - k, S + 7 + k, 29 - k, k === 3 ? 'glas' : 'kupfer');
+      haus(p, { x1: -31, z1: 2, x2: -18, z2: 29, g: 1, gh: 7, wand: 'ziegel', fenster: 'glas', dach: 'rohr', muster: 2, tueren: [[-25, 2], [-24, 2], [-25, 29], [-24, 29]] });
+      for (let k = 1; k <= 3; k++) p.quader(-31 + k, S + 7 + k, 2 + k, -18 - k, S + 7 + k, 29 - k, k === 3 ? 'glas' : 'rohr');
       for (let z = 5; z <= 26; z += 4) for (const x of [-29, -21]) {
         p.quader(x, S, z, x + 1, S, z + 1, 'fichteBretter');
         p.setze(x, S + 1, z, ['wolleRot', 'wolleGelb', 'wolleGruen', 'wolleWeiss'][(z + x) & 3]);
       }
-      for (const x of [-30, -28, -22, -20]) p.setze(x, S, 1, x % 4 === 0 ? 'bankNord' : 'luft');
-      p.schild(-23, S + 2, 1, 'Nord', ['Markthalle', 'viele Staende', 'unter einem Dach']);
+      // Marktstände vor der Halle (bunte Dächer – von oben gut zu sehen), Eingänge bleiben frei
+      for (const [xa, za] of [[-31, 0], [-21, 0], [-31, 30], [-21, 30]]) {
+        p.quader(xa, S, za, xa + 2, S, za + 1, 'fichteBretter');
+        p.quader(xa, S + 2, za, xa + 2, S + 2, za + 1, ['wolleRot', 'wolleGelb', 'wolleGruen', 'wolleWeiss'][((xa + za) >>> 0) & 3]);
+        p.setze(xa, S + 1, za, 'zaun'); p.setze(xa + 2, S + 1, za, 'zaun');
+      }
+      p.schild(-23, S + 3, 1, 'Nord', ['Markthalle', 'viele Staende', 'unter einem Dach']);
       return;
     }
     if (v === 'C') {
-      // kleine Läden im Erdgeschoss der Häuser an der Wohngasse
-      // Bäckerei (Haus Nordreihe Ost, Tür zum Durchgang im Westen)
-      p.setze(-40, S, 5, 'luft'); p.setze(-40, S + 1, 5, 'luft');
-      p.quader(-40, S, 3, -40, S + 1, 4, 'glas'); p.quader(-40, S, 6, -40, S + 1, 7, 'glas');
-      for (let z = 2; z <= 8; z++) p.setze(-41, S + 2, z, z % 2 ? 'wolleGelb' : 'wolleWeiss');
-      p.schild(-41, S + 3, 5, 'West', ['Baeckerei', 'Brot und', 'Broetchen']);
-      p.quader(-39, BODEN, 2, -36, BODEN, 9, 'eicheBretter');
-      // Gemüseladen (Haus Südreihe West, Tür zum Durchgang im Osten)
-      p.setze(-44, S, 25, 'luft'); p.setze(-44, S + 1, 25, 'luft');
-      p.quader(-44, S, 23, -44, S + 1, 24, 'glas'); p.quader(-44, S, 26, -44, S + 1, 27, 'glas');
-      for (let z = 22; z <= 28; z++) p.setze(-43, S + 2, z, z % 2 ? 'wolleGruen' : 'wolleWeiss');
-      p.schild(-43, S + 3, 25, 'Ost', ['Gemueseladen', 'um die Ecke']);
-      p.setze(-43, S, 23, 'fass'); p.setze(-43, S, 27, 'heu');
-      // Kiosk an der Gasse
-      p.quader(-36, S, 13, -34, S + 2, 13, 'fichteBretter'); p.setze(-35, S + 1, 13, 'glas'); p.quader(-36, S + 3, 13, -34, S + 3, 14, 'wolleRot');
+      // Kleine Läden im Erdgeschoss bestehender Wohnhäuser: Die Häuser bleiben stehen, nur das Erdgeschoss wird Laden.
+      // Erkennbar an gelb gestreiften Markisen, Schaufenstern, Auslagen und Schildern.
+      const laden = (xa, xb, z, tuer, streifen, zeilen, auslage) => {
+        for (let x = xa; x <= xb; x++) for (const y of [S, S + 1]) p.setze(x, y, z, x === tuer ? 'luft' : 'glas');
+        for (let x = xa - 1; x <= xb + 1; x++) for (const dz of [1, 2]) p.setze(x, S + 2, z + dz, (x & 1) ? streifen : 'wolleGelb');
+        p.schild(tuer, S + 3, z + 1, 'Sued', zeilen);
+        for (const [x, n] of auslage) p.setze(x, S, z + 1, n);
+      };
+      laden(-34, -30, -16, -32, 'wolleWeiss', ['Baeckerei', 'Brot und', 'Broetchen'], [[-34, 'fass'], [-30, 'eicheBretter']]);
+      laden(-61, -56, -16, -58, 'wolleGruen', ['Gemueseladen', 'Obst und', 'Gemuese'], [[-61, 'heu'], [-60, 'fass'], [-56, 'heu']]);
+      // Lebensmittelladen im Haus an der Gasse (neben der Haustür der Bewohner)
+      p.setze(-39, S, 10, 'glas'); p.setze(-39, S + 1, 10, 'glas'); p.setze(-37, S, 10, 'glas'); p.setze(-37, S + 1, 10, 'glas');
+      p.setze(-36, S, 10, 'luft'); p.setze(-36, S + 1, 10, 'luft');
+      for (let x = -40; x <= -35; x++) for (const dz of [1, 2]) p.setze(x, S + 2, 10 + dz, (x & 1) ? 'wolleRot' : 'wolleGelb');
+      p.schild(-36, S + 3, 11, 'Sued', ['Lebensmittel', 'fuer jeden Tag']);
+      p.setze(-35, S, 11, 'fass'); p.setze(-40, S, 11, 'heu');
       // Gasse wird belebter: Bänke und Pflanzkübel
       for (const x of [-48, -45]) { p.setze(x, S, 16, 'bankNord'); }
       for (const x of [-47, -37]) { p.setze(x, S, 15, 'fass'); p.setze(x, S + 1, 15, 'farn'); }
@@ -747,6 +774,8 @@ export const wohnungen = (v) => WOHNHAEUSER[v].umrisse.length * WOHNHAEUSER[v].w
 const GEHBAR = new Set(['glattstein', 'andesit', 'betonHell', 'beton', 'kies', 'gras', 'pfad', 'eicheBretter', 'steinziegel', 'gruenBeton', 'sandstein', 'betonWeiss', 'limette', 'erde'].map((n) => ID[n]));
 const FREI = (id) => id === ID.luft || istPflanze(id);
 export function fussweg(hole, start, ziel) {
+  // ziel: [x, z] oder Liste von [x, z] – der Weg endet am ersten (nächsten) erreichten Ziel
+  const ziele = new Set((typeof ziel[0] === 'number' ? [ziel] : ziel).map(([x, z]) => `${x},${z}`));
   const [x0, z0, x1, z1] = [STADT.x1, STADT.z1, STADT.x2, STADT.z2], nx = x1 - x0 + 1, nz = z1 - z0 + 1;
   const querung = (x, z) => QUERUNGEN.some((q) => (q.achse === 'x' ? x >= q.a && x <= q.b && z >= q.c1 && z <= q.c2 : z >= q.a && z <= q.b && x >= q.c1 && x <= q.c2));
   const geht = (x, z) => {
@@ -759,7 +788,7 @@ export function fussweg(hole, start, ziel) {
   vor[q[0]] = q[0];
   for (let h = 0; h < q.length; h++) {
     const k = q[h], x = (k % nx) + x0, z = Math.floor(k / nx) + z0;
-    if (x === ziel[0] && z === ziel[1]) {
+    if (ziele.has(`${x},${z}`)) {
       const weg = [];
       for (let c = k; ; c = vor[c]) { weg.push([(c % nx) + x0, Math.floor(c / nx) + z0]); if (vor[c] === c) break; }
       return weg.reverse();
@@ -774,14 +803,27 @@ export function fussweg(hole, start, ziel) {
   }
   return null;
 }
-export function einkaufsweg(variante) {
-  // Weg auf der Stadt mit genau dieser Einkaufs-Variante (alle anderen Flächen grau – sie berühren den Weg nicht)
+function einkaufsWelt(variante) {
+  // Stadt mit genau dieser Einkaufs-Variante (alle anderen Flächen im Ausgangszustand – die Wege berühren sie nicht, siehe Test)
   const g = grundstadt3D(), t = vorlage('einkaufen', variante), [ax, ay, az] = ursprungVon('einkaufen');
   const [nx, ny, nz] = groesseVon('einkaufen');
-  const hole = (x, y, z) => {
+  return (x, y, z) => {
     const a = x - ax, b = y - ay, c = z - az;
     if (a >= 0 && b >= 0 && c >= 0 && a < nx && b < ny && c < nz) return t.hole(a, b, c);
     return g.hole(x, y, z);
   };
-  return fussweg(hole, ORTE.wohnhaus.tuer, LADEN[variante].tuer);
+}
+const ladenTueren = (v) => LAEDEN[v].flatMap((l) => l.tueren);
+export function ladenAn(v, [x, z]) { return LAEDEN[v].find((l) => l.tueren.some(([a, c]) => a === x && c === z)) || null; }
+// Weg von „Unser Wohnhaus“ zum nächsten Laden der Variante (für „Wege messen“ und den Rundgang)
+export function einkaufsweg(variante) {
+  return fussweg(einkaufsWelt(variante), ORTE.wohnhaus.tuer, ladenTueren(variante));
+}
+// Wege von allen Wohnhäusern des Viertels zum jeweils nächsten Laden der Variante
+export function einkaufswege(variante) {
+  const hole = einkaufsWelt(variante), ziele = ladenTueren(variante);
+  return VIERTEL_HAEUSER.map((h) => {
+    const punkte = fussweg(hole, h.tuer, ziele);
+    return { haus: h.name, punkte, laden: punkte ? ladenAn(variante, punkte.at(-1))?.name : null };
+  });
 }

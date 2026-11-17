@@ -3,7 +3,7 @@
 import { webglMoeglich, Ansicht } from './ansicht3d.js';
 import { MISSIONEN, KAMERAS, TAFELN, BUCHSTABEN_FARBE, RUNDGANG, beschlussText } from './daten.js';
 import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
-import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, bebauteFlaeche, wohnungen, LADEN } from './stadtmodell.js';
+import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN } from './stadtmodell.js';
 import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, WELTNAME } from './minecraft-ausgabe.js';
 
 const $ = (s) => document.querySelector(s);
@@ -33,7 +33,14 @@ let vorschau = {};                       // Bereich → Variante (nur Ansicht, k
 let vorherAn = false, nacht = false, regenAn = false, regenModus = 'gruen', wegeGemessen = false;
 let rundgang = { station: -1, timer: null };
 let resetBereit = null;
-const bilder = new Map(), wegeCache = new Map();
+const bilder = new Map(), wegeCache = new Map(), alleWegeCache = new Map();
+// Tafeln: feste aus daten.js + Ladentafeln aus dem Stadtmodell (eine Quelle für Bau, Tafel und Weg)
+const TAFELN_ALLE = { ...TAFELN };
+for (const v of ['A', 'B', 'C']) {
+  TAFELN_ALLE['laden' + v] = { text: `${v} · ${LADEN[v].ort}`, pos: LADEN[v].tafel, buchstabe: v };
+  LAEDEN[v].forEach((l, i) => { TAFELN_ALLE[`laden${v}${i}`] = { text: `${v} · ${l.name}`, pos: l.tafel, buchstabe: v }; });
+}
+const ladenTafeln = (v) => LAEDEN[v].map((_, i) => `laden${v}${i}`);
 
 const mission = () => MISSIONEN[pos.mission];
 const schritt = () => mission().schritte[pos.schritt];
@@ -59,6 +66,29 @@ function stadtAktualisieren() {
   }
 }
 
+/* ---------- Kamera ---------- */
+// Freie Bildfläche: ohne Kopfleiste, Titel, Seitenleiste und Bedienfeld unten. Bei Presets mit „rahmen“ wird
+// die Kamera so berechnet, dass der Rahmen-Quader ganz sichtbar ist – rechts neben ODER unter dem Titel (was größer zeigt).
+let kameraKey = null;
+function freieFlaechen() {
+  const r = (s) => { const e = $(s); if (!e || e.hidden || getComputedStyle(e).display === 'none') return null; const b = e.getBoundingClientRect(); return b.width && b.height ? b : null; };
+  const W = innerWidth, H = innerHeight, kopf = r('#leiste'), hero = r('#hero'), seite = r('#seite'), panel = r('#panel');
+  const o = (kopf ? kopf.bottom : 0) + 14, u = (panel ? panel.top : H) - 14, re = (seite ? seite.left : W) - 18, l = 18;
+  if (!hero) return [[l, o, re, u]];
+  return [[hero.right + 22, o, re, u], [l, hero.bottom + 14, re, u]].filter(([a, b, c, d]) => c - a > 120 && d - b > 120);
+}
+function kameraFuer(key) {
+  const k = KAMERAS[key] || KAMERAS.gesamt;
+  if (!k.rahmen || document.body.classList.contains('ohne-bedienung')) return k;
+  let best = null;
+  for (const rect of freieFlaechen()) { const p = ansicht.passend(k, k.rahmen, rect); if (!best || p.zoom < best.zoom) best = p; }
+  return best ? { ...k, ...best } : k;
+}
+function kameraZeigen(key, sofort = false) {
+  kameraKey = key;
+  ansicht.kamera(kameraFuer(key), sofort);
+}
+
 /* ---------- Navigation ---------- */
 function verlassen() {
   vorschau = {}; vorherAn = false;
@@ -78,8 +108,8 @@ function gehe(m, s = 0, { kamera = true } = {}) {
   if (st.art === 'loesung') vorschau = { [st.bereich]: st.variante };
   if (st.art === 'regen') regenVorschau();
   if (!st.tagNacht && nacht) nachtSetzen(false);
-  if (kamera) ansicht.kamera(KAMERAS[st.kamera] || KAMERAS.gesamt);
   anzeigen();
+  if (kamera) kameraZeigen(st.kamera);       // nach anzeigen(): Bedienfelder stehen, Versatz ist gesetzt
 }
 function weiter() {
   if (mission().id === 'finale' && rundgang.station >= 0) return station(rundgang.station + 1);
@@ -179,6 +209,8 @@ function kartenBild(b, v) {
 /* ---------- Wege (Kurze Wege) ---------- */
 function weg(v) { if (!wegeCache.has(v)) wegeCache.set(v, einkaufsweg(v)); return wegeCache.get(v); }
 const wegLaenge = (v) => { const w = weg(v); return w ? w.length - 1 : null; };
+function alleWege(v) { if (!alleWegeCache.has(v)) alleWegeCache.set(v, einkaufswege(v)); return alleWegeCache.get(v); }
+const WEISS = '#ffffff';
 
 /* ---------- Anzeige ---------- */
 function leisteZeichnen() {
@@ -241,7 +273,7 @@ function anzeigen() {
         h('div', { class: 'handel' }, h('span', { class: 'z' }, '+'), h('span', {}, o.pro)),
         h('div', { class: 'handel contra' }, h('span', { class: 'z' }, '−'), h('span', {}, o.contra)),
         s.wohnwerte ? h('div', { class: 'wert' }, h('b', {}, `${wohnungen(o.v)} Wohnungen`), ` · bebaute Fläche im Modell: `, h('b', {}, `${bebauteFlaeche(o.v)} Felder`)) : null,
-        s.wege ? h('div', { class: 'wert' }, 'Weg vom Wohnhaus: ', h('b', {}, wegeGemessen ? `${wegLaenge(o.v)} Blöcke` : '? (messen)')) : null,
+        s.wege ? h('div', { class: 'wert' }, 'Weg von unserem Wohnhaus: ', h('b', {}, wegeGemessen ? `${wegLaenge(o.v)} Felder` : '? (messen)')) : null,
       ));
       karten.append(k);
     }
@@ -259,7 +291,7 @@ function anzeigen() {
     panel.append(reihe);
     panel.hidden = false;
     versatz = 0.24;
-    if (s.wege) { const v = vorschau[b] || Z.beschluesse[b]; if (v) wege.push({ punkte: weg(v), farbe: BUCHSTABEN_FARBE[v] }); }
+    if (s.wege) { const v = vorschau[b] || Z.beschluesse[b]; if (v) for (const w of alleWege(v)) wege.push({ punkte: w.punkte, farbe: BUCHSTABEN_FARBE[v], start: WEISS }); }
   }
 
   if (s.art === 'loesung') {
@@ -288,7 +320,7 @@ function anzeigen() {
     const knopf = (v, text) => h('button', { type: 'button', 'aria-pressed': String(gezeigt === v), onclick: () => vorschauSetzen(b, v) }, text);
     reihe.append(h('span', { class: 'gruppe' }, knopf(s.vorher, s.vorherText || 'Vorher'), knopf(s.nachher, s.nachherText || 'Nachher')));
     if (s.tagNacht) reihe.append(tagNachtGruppe());
-    if (s.weitereKamera) reihe.append(h('button', { type: 'button', onclick: () => ansicht.kamera(KAMERAS[s.weitereKamera]) }, KAMERAS[s.weitereKamera].titel + ' zeigen'), h('button', { type: 'button', onclick: () => ansicht.kamera(KAMERAS[s.kamera]) }, KAMERAS[s.kamera].titel + ' zeigen'));
+    if (s.weitereKamera) reihe.append(h('button', { type: 'button', onclick: () => kameraZeigen(s.weitereKamera) }, KAMERAS[s.weitereKamera].titel + ' zeigen'), h('button', { type: 'button', onclick: () => kameraZeigen(s.kamera) }, KAMERAS[s.kamera].titel + ' zeigen'));
     const v = vorschau[b];
     if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(b, v) }, 'Übernehmen ⏎'));
     else reihe.append(h('span', { class: `status-marke ${Z.beschluesse[b] ? 'ok' : ''}` }, Z.beschluesse[b] ? `✓ ${beschlussText(b, Z.beschluesse[b])}` : 'Stadt: Ausgangszustand'));
@@ -307,10 +339,10 @@ function anzeigen() {
     for (const v of ['A', 'B', 'C']) {
       const w = weg(v);
       if (w) wege.push({ punkte: w, farbe: BUCHSTABEN_FARBE[v] });
-      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), h('b', {}, wegeGemessen ? `${wegLaenge(v)}` : '?')));
+      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), h('b', {}, wegeGemessen ? `${wegLaenge(v)} Felder` : '?')));
     }
     panel.append(liste);
-    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Blöcke Fußweg von der Haustür bis zum Eingang (über Gehwege und Zebrastreifen).' : 'Erst schätzen – dann messen.'),
+    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Felder von unserer Haustür bis zur Tür des nächsten Ladens (über Gehwege und Zebrastreifen) – keine Meter.' : 'Erst schätzen – dann messen.'),
       h('button', { type: 'button', class: wegeGemessen ? '' : 'haupt', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); } }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
     panel.append(reihe); panel.hidden = false; versatz = 0.04;
   }
@@ -336,7 +368,11 @@ function anzeigen() {
 
   // Tafeln, Wege, Hervorhebung
   const tafelKeys = [...(s.tafeln || [])];
-  if (s.art === 'wahl' && s.wege) tafelKeys.push('wohnhaus');
+  if (s.art === 'wahl' && s.wege) {
+    const v = vorschau[s.bereich] || Z.beschluesse[s.bereich];
+    tafelKeys.push('wohnhaus', ...(v ? ladenTafeln(v) : ['ladenA', 'ladenB', 'ladenC']));
+  }
+  if (s.art === 'finale' && rundgang.station >= 0 && RUNDGANG[rundgang.station].mission === 'einkaufen' && Z.beschluesse.einkaufen) tafelKeys.push(...ladenTafeln(Z.beschluesse.einkaufen));
   if (s.art === 'finale' && rundgang.station >= 0 && RUNDGANG[rundgang.station].tafel) tafelKeys.push(RUNDGANG[rundgang.station].tafel);
   if (mission().id === 'finale' && Z.beschluesse.einkaufen) wege.push({ punkte: weg(Z.beschluesse.einkaufen), farbe: BUCHSTABEN_FARBE[Z.beschluesse.einkaufen] });
   tafelnSetzen(tafelKeys);
@@ -363,8 +399,8 @@ function tagNachtGruppe() {
 let tafelEls = [];
 function tafelnSetzen(keys) {
   const box = $('#tafeln');
-  tafelEls = keys.filter((k) => TAFELN[k]).map((k) => {
-    const t = TAFELN[k];
+  tafelEls = keys.filter((k) => TAFELN_ALLE[k]).map((k) => {
+    const t = TAFELN_ALLE[k];
     const el = h('div', { class: 'tafel' }, t.buchstabe ? h('span', { class: 'b', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}` }, t.buchstabe) : null, t.buchstabe ? t.text.replace(/^[ABC] · /, '') : t.text);
     return { el, pos: t.pos };
   });
@@ -385,9 +421,9 @@ function station(i) {
   if (i >= RUNDGANG.length) { rundgangStopp(); i = RUNDGANG.length - 1; }
   rundgang.station = i;
   const st = RUNDGANG[i];
-  ansicht.kamera(KAMERAS[st.kamera]);
   nachtSetzen(!!st.nacht && Z.beschluesse.laternen === 'sensor');
   anzeigen();
+  kameraZeigen(st.kamera);
 }
 function rundgangStart() {
   rundgangStopp();
@@ -474,8 +510,8 @@ function herunterladen(daten, name, typ) {
 
 /* ---------- Tasten und Knöpfe ---------- */
 function aktion(a) {
-  if (a === 'gesamt') ansicht.kamera(KAMERAS.gesamt);
-  else if (a === 'szene') ansicht.kamera(KAMERAS[schritt().kamera] || KAMERAS.gesamt);
+  if (a === 'gesamt') kameraZeigen('gesamt');
+  else if (a === 'szene') kameraZeigen(schritt().kamera);
   else if (a === 'nacht') { nachtSetzen(!nacht); anzeigen(); }
   else if (a === 'minecraft') bauauftragOeffnen();
   else if (a === 'regie') { const r = $('#regie'); r.hidden = !r.hidden; $('[data-aktion="regie"]').setAttribute('aria-pressed', String(!r.hidden)); if (!r.hidden) regieZeichnen(); }
@@ -500,7 +536,7 @@ function tasten(e) {
     e.preventDefault(); return;
   }
   if (lk === 'r' && s.art === 'regen') { regenSetzen(!regenAn); e.preventDefault(); return; }
-  if (lk === 'h') { document.body.classList.toggle('ohne-bedienung'); e.preventDefault(); return; }
+  if (lk === 'h') { document.body.classList.toggle('ohne-bedienung'); if (KAMERAS[kameraKey]?.rahmen) kameraZeigen(kameraKey); e.preventDefault(); return; }
   if (k === 'Escape') { if (Object.keys(vorschau).length && s.art !== 'loesung' && s.art !== 'regen') { vorschau = {}; anzeigen(); } }
 }
 
@@ -512,7 +548,8 @@ async function start() {
     f.replaceChildren(h('div', {}, h('b', {}, 'Dieser Browser kann keine 3D-Grafik (WebGL) anzeigen.'), h('span', {}, 'Bitte einen aktuellen Chrome, Edge oder Firefox verwenden.')));
     return;
   }
-  await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));   // Ladehinweis zuerst zeichnen
+  // Ladehinweis zuerst zeichnen (Rückfall nach 300 ms: Hintergrund-Tabs liefern kein requestAnimationFrame)
+  await new Promise((r) => { requestAnimationFrame(() => setTimeout(r, 30)); setTimeout(r, 300); });
   ansicht = new Ansicht($('#welt'));
   ansicht.nachBild = positionieren;
   const zustand = Z.alle();
@@ -522,8 +559,10 @@ async function start() {
   pos = { ...Z.position };
   if (!MISSIONEN[pos.mission] || !MISSIONEN[pos.mission].schritte[pos.schritt]) pos = { mission: 0, schritt: 0 };
   const st = MISSIONEN[pos.mission].schritte[pos.schritt];
-  ansicht.kamera(KAMERAS[st.kamera] || KAMERAS.gesamt, true);
   gehe(pos.mission, pos.schritt, { kamera: false });
+  kameraZeigen(st.kamera, true);
+  // Fenstergröße oder Bedienung (Taste H) geändert: Rahmen-Kamera neu einpassen
+  ansicht.nachResize = () => { if (kameraKey && KAMERAS[kameraKey]?.rahmen && !ansicht.flug) ansicht.kamera(kameraFuer(kameraKey), true); };
   document.querySelectorAll('[data-aktion]').forEach((b) => b.addEventListener('click', () => aktion(b.dataset.aktion)));
   document.addEventListener('keydown', tasten);
   document.querySelectorAll('dialog .schliessen').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
@@ -546,7 +585,7 @@ async function start() {
   for (const m of MISSIONEN) for (const s of m.schritte) if (s.art === 'wahl' && s.bereich !== 'laternen') for (const o of s.optionen) vorbereiten.push([s.bereich, o.v]);
   const naechstes = () => { const x = vorbereiten.shift(); if (!x) return; bildFuer(...x); setTimeout(naechstes, 60); };
   setTimeout(naechstes, 800);
-  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, station };
+  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent) };
   window.__stadtOk = true;
 }
 start().catch((e) => {

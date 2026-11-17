@@ -1,6 +1,6 @@
 # Stadt-Konfigurator – START IT SMART „Mission Zukunft: Rettet unsere Stadt!“
 
-Regie- und Stadtplanungsanwendung für **alle Missionen** des Drehbuchs (Arbeitsfassung vom 16.11.2026, Auftrag vom 17.11.2026).
+Regie- und Stadtplanungsanwendung für **alle Missionen** des Drehbuchs (Arbeitsfassung vom 16.11.2026, Auftrag vom 17.11.2026, Ergänzungsauftrag „Kurze Wege“ vom 17.11.2026).
 Der Browser ist **Regieoberfläche und 3D-Vorschau**. Minecraft Education ist die **spielbare Stadt**. Beide zeigen dieselbe graue Stadt.
 
 **Start:**
@@ -38,7 +38,8 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 
 | Konflikt | Lösung |
 |---|---|
-| Figur **Mika** (Original, ältere Drehbuchstellen K1, B2, Finale) | Entfernt aus Oberfläche, Wegen, Kameras und neuen Texten. Startpunkt: „Unser Wohnhaus“. Der Test prüft, dass „Mika“ nirgends vorkommt. |
+| Figur **Mika** (Original, ältere Drehbuchstellen K1, B2, Finale) | Entfernt aus Oberfläche, Wegen, Kameras und neuen Texten. Startpunkt: „Unser Wohnhaus“. Kurze Wege spricht die Kinder direkt an (Ergänzungsauftrag): „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen …“. Der Test prüft, dass „Mika“ nirgends vorkommt. |
+| Ergänzungsauftrag nennt die letzte Mission „Bildung, Freizeit und Teilhabe“ | Titel bleibt wie im Drehbuch: „Mission Bildung und Teilhabe – Eine Stadt für alle“. Inhalt und Reihenfolge sind gleich. |
 | **Zwölf** Familien im Original | **Sechs** Wohnungen in jeder Variante, alle gleich groß (vereinfachtes Modell) |
 | Natur im Original: „Sportplatz mit Tank / Garten mit Mulde / tiefer Platz“ (A/B/C) | Drehbuch: **A/B als Denkimpuls**, danach die **gemeinsame Lösung „Beides gemeinsam“**. A und B sind nur Diskussionsbilder, gebaut wird nur Grün. |
 | Reihenfolge im Original (Wohnen zuerst) | Reihenfolge des Drehbuchs: Szene 0, Natur, Technik, Mobilität, Wohnen, Kurze Wege, Bildung, Finale |
@@ -55,7 +56,7 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 | `2` | Technik | Abstimmung „immer an / nur bei Dunkelheit“ · Calliope live · Ergebnis Tag → Nacht | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
 | `3` | Mobilität | volle Straße · Parken A/B/C · Bus wartet · Verkehrssimulation (eigene Seite) · mBot live · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS |
 | `4` | Wohnen | sechs Familien (Wohnsimulator, eigene Seite) · Wohnformen A/B/C · Aufstocken + 2 Holzgeschosse | Wohngrundstück; Bestandshaus | WOHNEN GRAU/A/B/C, AUFSTOCKEN BESTAND/+2 HOLZ |
-| `5` | Kurze Wege | drei Wege messen · Standort A/B/C | Westviertel | EINKAUFEN GRAU/A/B/C |
+| `5` | Kurze Wege | Brötchen holen: drei Wege von „Unser Wohnhaus“ messen · Standort A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |
 | `6` | Bildung | ein Raum, zwei Nutzungen · Orte A/B/C mit Teilhabe-Fragen | Südviertel | BILDUNG GRAU/A/B/C |
 | `7` | Finale | Zukunftscheck (nur echte Beschlüsse) · Vorher/Nachher · Rundgang | alle | ANSICHT … |
 
@@ -65,6 +66,37 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 - Calliope-Experiment
 - Verkehrssimulation, Wohnsimulator, Natur-Simulation
 - mBot und Modellampel, die **nicht** verbunden sind
+
+### 2a. Ergänzungsauftrag „Kurze Wege – Wo liegt der Laden?“ (17.11.2026)
+
+Die Mission war schon an der verlangten Stelle (nach Wohnen, vor Bildung) als eigene A/B/C-Abstimmung mit eigener Baufläche. Geändert:
+
+| Auftrag | umgesetzt |
+|---|---|
+| A – großer Supermarkt am Stadtrand | große Halle mit **orangem Flachdach**, Glasfront, rotes Werbeband, Parkplatz; am Westrand der Stadt |
+| B – gut erkennbare Markthalle in der Mitte | Halle mit **grünem Kupferdach** (Farbe von B) und Glasfirst, bunte Marktstände vor beiden Eingängen; zwischen Westviertel und Stadtmitte |
+| C – Bäckerei, Lebensmittel- und Gemüseladen, verteilt, in bestehenden Erdgeschossen | drei Läden im **Erdgeschoss vorhandener Wohnhäuser** (Bäckerei Haus Ost, Lebensmittel Gasse, Gemüse Haus West) mit **gelb gestreiften Markisen**, Schaufenstern, Auslagen, Schildern. Die Häuser bleiben stehen. Der Kiosk der alten Fassung ist entfallen. |
+| auf dem Beamer deutlich erkennbar | Kamera schaut von Westen über das Viertel und wird beim Anzeigen **für das tatsächliche Bildformat** so berechnet, dass das ganze Viertel neben dem Titel und über den Karten liegt (auch 4:3 oder 16:10). Tafeln nennen jeden Laden: „A · Supermarkt“, „B · Markthalle“, „C · Bäckerei“ … |
+| Wechsel A/B/C: Wohnhäuser, Straßen, frühere Ergebnisse bleiben | Test: 0 geänderte Hausblöcke (ab 1. Obergeschoss) und 0 Straßenfelder je Variante; andere Bauflächen bleiben unberührt |
+| Fußwege von Wohnhäusern zu den Geschäften, ohne erfundene Entfernungen | Abstimmung: Linien von **allen 7 Wohnhäusern** des Viertels zum jeweils nächsten Laden der gezeigten Variante (weiße Stifte = Haustüren). Keine Zahlen auf der Leinwand. „Wege messen“ zählt nur **Felder im Modell** (keine Meter, keine Minuten) für den Weg von „Unser Wohnhaus“. Gemessen: A 53, B 35, C 14 Felder; Summe aller 7 Wege A 275, B 235, C 78. |
+| nach der Handabstimmung fest übernehmen, bis zum Finale sichtbar | wie bei allen Abstimmungen: „Übernehmen“ (`Enter`). Im Finale-Rundgang zeigt die Station „Einkaufen in unserem Viertel“ die gewählten Läden und den Weg von unserem Wohnhaus. |
+| Mika nicht verwenden | Schritt 1: „Wie weit ist es bis zum nächsten Laden?“ / „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen.“ In C ist der nächste Laden von unserem Wohnhaus die Bäckerei. |
+| Optik, Bedienung, andere Missionen beibehalten | unverändert; neu ist nur eine zweite Querung der Ringstraße Nord vor dem Haus Ost (Weg zur Mitte) |
+
+**Abschließende Prüfung gegen das Drehbuch (Arbeitsfassung 16.11.2026):**
+
+| Kapitel im Drehbuch | Abstimmung | in der Anwendung |
+|---|---|---|
+| 2 · Szene 0–4 (Intro, Ankunft, SMARTy, Zukunftsteam) | – | Mission 0 (Introfilm u. a. extern) ✓ |
+| 3 · Mission Natur | Park oder Spielplatz? A/B, danach „Beides gemeinsam“ | Mission 1 ✓ |
+| 4–8 · Mission Technik | Laternen: immer an / nur bei Dunkelheit (A/B) | Mission 2 ✓ |
+| 9 · Mission Mobilität | Parken A/B/C | Mission 3 ✓ (Ampel, mBot extern) |
+| 10 · Mission Wohnen und Bauen | Wohnformen A/B/C | Mission 4 ✓ (Aufstocken als Vorher/Nachher) |
+| 11 · Mission Kurze Wege | Standort A/B/C | Mission 5 ✓ |
+| 12 · Mission Bildung und Teilhabe | Orte A/B/C | Mission 6 ✓ |
+| 12a · Finale | – | Mission 7 ✓ (Zukunftscheck, Rundgang Wohnung → Laden → Platz → Kreuzung → Freizeitort) |
+
+Der Test „Drehbuch: Reihenfolge …“ prüft genau diese Folge und die Buchstaben jeder Abstimmung.
 
 ## 3. Architektur und Datenmodell (Phase B)
 
@@ -137,7 +169,7 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 - **[Bild 5]** Technik bei Nacht
 - **[Bild 6]** Parken C übernommen
 - **[Bild 7]** Wohnen, drei Karten mit „6 Wohnungen · bebaute Fläche“
-- **[Bild 8]** Kurze Wege gemessen
+- **[Bild 8]** Kurze Wege, Abstimmung mit Vorschau C (Läden und Wege)
 - **[Bild 9]** Finale mit Zukunftscheck
 
 **Ablauf je Abstimmung:**
@@ -229,7 +261,7 @@ Alle Befehle stehen im Dialog **⛏ Bauauftrag** (`M`), mit Kopierknöpfen und d
 | **Bauartefakt** | die `.mcworld` mit allen Kammern und Knöpfen; die Bauaufträge (Befehle) | keine laufende Verbindung; wird einmal importiert |
 | **Realer Minecraft-Umbau** | ein Knopf oder Befehl der Regie in der geöffneten Welt | passiert nicht automatisch beim Klicken im Browser |
 
-## 7. Testbericht (`test.html`, 45 Prüfungen, alle bestanden)
+## 7. Testbericht (`test.html`, 56 Prüfungen, alle bestanden)
 
 **A · Modell:**
 - Bauflächen überlappen nicht.
@@ -248,7 +280,8 @@ Alle Befehle stehen im Dialog **⛏ Bauauftrag** (`M`), mit Kopierknöpfen und d
 | Technik | Laternen „nur bei Dunkelheit“ übernommen, Spielplatz bleibt grün, nachts leuchten 16 Laternen | ✓ |
 | Mobilität | Parken A, B, C nacheinander: nur die Parkfläche ändert sich (0 Blöcke außerhalb), andere Beschlüsse bleiben | ✓ |
 | Wohnen | A/B/C je 6 Wohnungen; 294 / 196 / 98 Felder bebaut; Karten zeigen die Werte | ✓ |
-| Kurze Wege | Wege gemessen 53 / 35 / 23 Blöcke, enden an der Ladentür; Einkauf C bleibt beim Wechsel der Bildung erhalten | ✓ |
+| Kurze Wege | von unserem Wohnhaus 53 / 35 / 14 Felder (C: Bäckerei), Wege aller 7 Wohnhäuser, Summe C < B < A, A für 6 von 7 Häusern weiter als C; Wege nur über das Westviertel; Wechsel A/B/C ändert 0 Hausblöcke und 0 Straßenfelder; C-Läden im Erdgeschoss bestehender Häuser; in der Oberfläche je Variante 7 Wege und die Ladentafeln, übernommene Wahl bleibt bis zum Finale; Einkauf C bleibt beim Wechsel der Bildung | ✓ |
+| Drehbuch | Reihenfolge Start → Natur → Technik → Mobilität → Wohnen → Kurze Wege → Bildung → Finale, Abstimmungen A/B, A/B, A/B/C ×4; Kurze Wege eigene Abstimmung und Fläche; „frische Brötchen“, keine Entfernungsangaben | ✓ |
 | Bildung | B, dann A: nur die Bildung ändert sich | ✓ |
 | Finale | alle Beschlüsse sichtbar, Zukunftscheck vollständig, Vorher/Nachher, kein Mika | ✓ |
 

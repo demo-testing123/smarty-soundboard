@@ -155,10 +155,52 @@ try {
   // jede Zelle eines Umrisses ist überbaut (Wand, Decke oder Dach über der Standhöhe)
   const geb = (v) => { const t = M.vorlage('wohnen', v), [a] = box3('wohnen'); let n = 0; for (const [x1, z1, x2, z2] of M.WOHNHAEUSER[v].umrisse) for (let z = z1; z <= z2; z++) for (let x = x1; x <= x2; x++) { for (let y = M.S; y < M.S + 21; y++) if (t.hole(x - a[0], y - a[1], z - a[2])) { n++; break; } } return n; };
   pruefe('Wohnen: gemessene Umrisse sind wirklich bebaut (Umriss = Gebäude im Modell)', ['A', 'B', 'C'].every((v) => geb(v) === M.bebauteFlaeche(v)), ['A', 'B', 'C'].map((v) => `${v}: ${geb(v)}/${M.bebauteFlaeche(v)}`).join(' · '));
-  // Wege
-  const wl = ['A', 'B', 'C'].map((v) => M.einkaufsweg(v));
-  pruefe('Kurze Wege: drei Fußwege gefunden, enden an der Ladentür', wl.every((w, k) => w && w.at(-1).join() === M.LADEN['ABC'[k]].tuer.join() && w[0].join() === M.ORTE.wohnhaus.tuer.join()), wl.map((w, k) => `${'ABC'[k]}: ${w ? w.length - 1 : '–'} Blöcke`).join(' · '));
-  pruefe('Kurze Wege: C kürzer als B kürzer als A (gemessen, nicht angenommen)', wl[2].length < wl[1].length && wl[1].length < wl[0].length);
+  // Kurze Wege (Ergänzungsauftrag): Läden, Wohnhäuser, Fußwege
+  const ABC = ['A', 'B', 'C'];
+  const istTuer = (v, [x, z]) => M.LAEDEN[v].some((l) => l.tueren.some(([a, c]) => a === x && c === z));
+  const wl = ABC.map((v) => M.einkaufsweg(v));
+  pruefe('Kurze Wege: Fußweg von „Unser Wohnhaus“ endet an einer Ladentür der Variante', wl.every((w, k) => w && istTuer(ABC[k], w.at(-1)) && w[0].join() === M.ORTE.wohnhaus.tuer.join()), wl.map((w, k) => `${ABC[k]}: ${w ? w.length - 1 : '–'} Felder`).join(' · '));
+  pruefe('Kurze Wege: von unserem Wohnhaus ist C kürzer als B kürzer als A (gemessen, nicht angenommen)', wl[2].length < wl[1].length && wl[1].length < wl[0].length);
+  pruefe('Kurze Wege: in C ist der nächste Laden von unserem Wohnhaus die Bäckerei (Brötchen holen)', M.ladenAn('C', wl[2].at(-1))?.name === 'Bäckerei');
+  const alleW = Object.fromEntries(ABC.map((v) => [v, M.einkaufswege(v)]));
+  pruefe(`Kurze Wege: jede Variante hat Fußwege von allen ${M.VIERTEL_HAEUSER.length} Wohnhäusern zu einem Laden`, ABC.every((v) => alleW[v].length === M.VIERTEL_HAEUSER.length && alleW[v].every((w) => w.punkte && w.laden && istTuer(v, w.punkte.at(-1)))));
+  const summe = (v) => alleW[v].reduce((n, w) => n + w.punkte.length - 1, 0);
+  pruefe('Kurze Wege: Summe aller Wege C < B < A (gemessen im Modell)', summe('C') < summe('B') && summe('B') < summe('A'), ABC.map((v) => `${v}: ${summe(v)} Felder`).join(' · '));
+  const laenger = alleW.A.filter((w, i) => w.punkte.length > alleW.C[i].punkte.length).length;
+  pruefe('Kurze Wege: A ist für die meisten Wohnhäuser weiter als C („für viele Bewohner längere Wege“)', laenger > M.VIERTEL_HAEUSER.length / 2, `${laenger} von ${M.VIERTEL_HAEUSER.length} Häusern`);
+  const ausserhalb = [];
+  for (const v of ABC) for (const w of alleW[v]) for (const [x, z] of w.punkte) { const id = M.bereichAn(x, z); if (id && id !== 'einkaufen') ausserhalb.push(`${v}:${x},${z}:${id}`); }
+  pruefe('Kurze Wege: Wege laufen nur über das Westviertel und unveränderliche Straßen (andere Beschlüsse ändern sie nicht)', ausserhalb.length === 0, ausserhalb.slice(0, 3).join(' · '));
+  // Wechsel A/B/C: Wohnhäuser und Straßen bleiben
+  {
+    const [a0, e0] = box3('einkaufen'), grau = M.vorlage('einkaufen', 'grau');
+    const neubau = { A: [-63, 2, -52, 20], B: [-31, 2, -18, 29], C: null };
+    const diffs = {};
+    for (const v of ABC) {
+      const t = M.vorlage('einkaufen', v); let n = 0, strasse = 0;
+      for (let y = a0[1]; y <= e0[1]; y++) for (let z = a0[2]; z <= e0[2]; z++) for (let x = a0[0]; x <= e0[0]; x++) {
+        const q = t.hole(x - a0[0], y - a0[1], z - a0[2]), g0 = grau.hole(x - a0[0], y - a0[1], z - a0[2]);
+        if (q === g0) continue;
+        const nb = neubau[v];
+        if (y >= M.S + 4 && !(nb && x >= nb[0] && x <= nb[2] && z >= nb[1] && z <= nb[3])) n++;
+        if (y === M.BODEN && M.STRASSEN.some((st) => x >= st.x1 && x <= st.x2 && z >= st.z1 && z <= st.z2)) strasse++;
+      }
+      diffs[v] = [n, strasse];
+    }
+    pruefe('Kurze Wege: Wechsel A/B/C lässt Wohnhäuser (ab 1. Obergeschoss) und Straßen unverändert', ABC.every((v) => diffs[v][0] === 0 && diffs[v][1] === 0), ABC.map((v) => `${v}: ${diffs[v][0]} Hausblöcke, ${diffs[v][1]} Straßenfelder geändert`).join(' · '));
+    const imHaus = M.LAEDEN.C.every((l) => l.tueren.every(([x, z]) => grau.hole(x - a0[0], M.S - a0[1], z - a0[2]) !== W.ID.luft && grau.hole(x - a0[0], M.S + 4 - a0[1], z - a0[2]) !== W.ID.luft));
+    pruefe('Kurze Wege: C = Bäckerei, Lebensmittel- und Gemüseladen im Erdgeschoss bestehender Häuser', imHaus && M.LAEDEN.C.map((l) => l.name).join() === 'Bäckerei,Lebensmittel,Gemüse');
+  }
+  // Drehbuch: Reihenfolge der Missionen und alle Abstimmungen (Arbeitsfassung 16.11.2026 + Ergänzungsauftrag Kurze Wege)
+  {
+    const soll = [['start', null], ['natur', 'A,B'], ['technik', 'A,B'], ['mobilitaet', 'A,B,C'], ['wohnen', 'A,B,C'], ['einkaufen', 'A,B,C'], ['bildung', 'A,B,C'], ['finale', null]];
+    const ist = MISSIONEN.map((m) => [m.id, m.schritte.filter((st) => st.art === 'wahl').map((st) => st.optionen.map((o) => o.b).join()).join('|') || null]);
+    pruefe('Drehbuch: Reihenfolge Start → Natur → Technik → Mobilität → Wohnen → Kurze Wege → Bildung → Finale, je eine Abstimmung', JSON.stringify(ist) === JSON.stringify(soll), ist.map(([id, w]) => `${id}${w ? ' ' + w : ''}`).join(' → '));
+    const kw = MISSIONEN.find((m) => m.id === 'einkaufen');
+    const eigen = kw.bereiche.join() === 'einkaufen' && MISSIONEN.filter((m) => m.bereiche.includes('einkaufen')).length === 1;
+    pruefe('Kurze Wege ist eine eigene A/B/C-Abstimmung mit eigener Baufläche (nicht mit anderen Missionen zusammengelegt)', eigen && kw.schritte.filter((st) => st.art === 'wahl').length === 1);
+    pruefe('Kurze Wege: Kinder werden direkt angesprochen („frische Brötchen“), ohne Entfernungsangaben', /frische Brötchen/.test(kw.schritte[0].text) && !/\d\s*(m|km|Meter|Minuten|min)\b/.test(JSON.stringify(kw)));
+  }
   // Regeln für alle Vorlagen
   const regelFehler = [];
   for (const id of IDS) for (const v of B[id].mc) {
@@ -308,6 +350,25 @@ try {
   const nach5 = { ...A.Z.beschluesse };
   const ok5 = nach5.einkaufen === 'C' && nach5.bildung === 'A' && Object.keys(vor5).every((k) => k === 'bildung' || vor5[k] === nach5[k]) && imBild('einkaufen', 'C') && imBild('bildung', 'A');
   pruefe('5 · Einkauf C und Bildung B wählen, dann Bildung auf A: Einkauf C und alle anderen Beschlüsse bleiben', ok5, JSON.stringify(nach5));
+  // Kurze Wege in der Oberfläche: A/B/C in derselben Stadt, Wege und Tafeln je Variante, Beschluss bleibt bis zum Finale
+  {
+    A.gehe(5, 1); await warte(50);
+    const vorKW = { ...A.Z.beschluesse }, info = [];
+    let ok = true;
+    for (const v of ['A', 'B', 'C']) {
+      A.vorschauSetzen('einkaufen', v); await warte(30);
+      const w = A.ansicht().wege.children.filter((c) => c.isInstancedMesh).length, t = A.tafeln();
+      const tOk = M.LAEDEN[v].every((l) => t.some((x) => x.includes(l.name)));
+      const andere = IDS.every((id) => id === 'einkaufen' || A.angezeigt[id] === A.Z.variante(id));
+      ok = ok && imBild('einkaufen', v) && w === M.VIERTEL_HAEUSER.length && tOk && andere;
+      info.push(`${v}: ${w} Wege, Tafeln ${tOk ? 'ok' : 'fehlen'}`);
+    }
+    A.uebernehmen('einkaufen', 'B');
+    A.gehe(6, 0); A.gehe(7, 0); A.station(1); await warte(50);
+    const bleibt = A.angezeigt.einkaufen === 'B' && imBild('einkaufen', 'B') && IDS.every((id) => id === 'einkaufen' || A.Z.variante(id) === (vorKW[id] || B[id].grund));
+    pruefe('Kurze Wege: A/B/C in derselben Stadt mit Wegen von allen Wohnhäusern; übernommene Wahl bleibt bis zum Finale', ok && bleibt, info.join(' · '));
+    A.gehe(5, 1); A.vorschauSetzen('einkaufen', 'C'); A.uebernehmen('einkaufen', 'C'); await warte(30);
+  }
   // 6
   A.gehe(7, 0); await warte(100);
   const doc = fr.contentWindow.document;
