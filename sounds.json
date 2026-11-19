@@ -373,6 +373,16 @@
       "szene": "Mission Bildung, Freizeit und Teilhabe"
     },
     {
+      "id": "SMARTy_B4_Stadtmodell",
+      "stimme": "smarty",
+      "taste": "*",
+      "titel": "B4 · Stadtmodell aktualisiert",
+      "text": "Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das spart Fläche und Baumaterial.",
+      "sprechen": "Stadtmodell aktualisiert. [Pause 0.45] Bestehende Gebäude können neue Aufgaben bekommen. [Pause 0.4] Das spart Fläche und Baumaterial.",
+      "einsatz": "Szene 1 · Ein Raum, zwei Nutzungen – nach B1 (Taste Umschalt + +) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
+      "szene": "Mission Bildung, Freizeit und Teilhabe"
+    },
+    {
       "id": "SMARTy_B2_Zugang",
       "stimme": "smarty",
       "taste": "ü",
@@ -400,6 +410,26 @@
       "text": "Zukunftsanalyse abgeschlossen. Diese Stadt ist nicht nur intelligent. Sie ist auch lebenswert.",
       "sprechen": "Zukunftsanalyse abgeschlossen. [Pause 0.45] Diese Stadt ist nicht nur intelligent. [Pause 0.35] Sie ist auch lebenswert.",
       "einsatz": "nach „Der Bus kann sich an der Ampel anmelden … einen Ort, an dem Kinder nachmittags mitmachen können.“ · F2 (Schlusssatz) ist der vorhandene Clip 06 „Das Finale“ (Taste 6) · nicht in der Sprachtexte-Liste vom 19.11.2026 – nur bei Bedarf",
+      "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
+    },
+    {
+      "id": "SMARTy_F3_Stadtplanung_abgeschlossen",
+      "stimme": "smarty",
+      "taste": "?",
+      "titel": "F3 · Stadtplanung abgeschlossen",
+      "text": "Stadtplanung abgeschlossen. Digitales Zukunftsmodell erfolgreich erstellt. Bereit für den Rundgang.",
+      "sprechen": "Stadtplanung abgeschlossen. [Pause 0.45] Digitales Zukunftsmodell erfolgreich erstellt. [Pause 0.4] Bereit für den Rundgang.",
+      "einsatz": "Szene 1 · Wir haben es geschafft! (Taste Umschalt + ß) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
+      "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
+    },
+    {
+      "id": "SMARTy_F4_Sensoren_Computer",
+      "stimme": "smarty",
+      "taste": "_",
+      "titel": "F4 · Sensoren, Computer, Simulationen",
+      "text": "Sensoren können messen, Computer können rechnen und Simulationen können beim Planen helfen. Die Ideen aber kommen von euch!",
+      "sprechen": "Sensoren können messen, Computer können rechnen und Simulationen können beim Planen helfen. [Pause 0.5] Die Ideen aber kommen von euch!",
+      "einsatz": "Szene 2 · Spaziergang durch die Zukunftsstadt (Taste Umschalt + -) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
       "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
     },
     {

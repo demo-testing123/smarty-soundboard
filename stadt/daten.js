@@ -299,7 +299,7 @@ export const MISSIONEN = [
         punkte: ['Vormittags: Unterricht', 'Nachmittags: Werkstatt oder Treffpunkt?', 'Was brauchen wir dafür? Betreuung, Material, Aufräumen, Öffnungszeiten'],
         tafeln: ['schule', 'bahnhof', 'brache'],
         regie: ['Z1: „Unsere Schule steht nachmittags teilweise leer. Könnte sie dann eine Werkstatt sein?“', 'Was brauchen wir dafür? Betreuung, Materialien, Aufräumen, Öffnungszeiten.'],
-        smarty: [['B1 · Raumanalyse', 'P']],
+        smarty: [['B1 · Raumanalyse', 'P'], ['B4 · Stadtmodell aktualisiert (Umschalt + +)', '*']],
       },
       {
         art: 'wahl', kicker: 'Mission Bildung · Szene 2 · Abstimmung', titel: 'Welche Orte passen zu allen?', kamera: 'bildung', bereich: 'bildung',
@@ -323,7 +323,7 @@ export const MISSIONEN = [
         art: 'finale', kicker: 'Finale · Vorschau im Konfigurator', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
         text: 'Erst hier als Vorschau – gleich gehen wir in Minecraft durch die Stadt.',
         regie: ['Nur tatsächlich übernommene Beschlüsse sind zu sehen.', '„Vorher / Nachher“ vergleicht mit der grauen Stadt.', '„Vorschau-Rundgang“: Station für Station mit → oder automatisch. Nach der letzten Station führt „Weiter“ zur Minecraft-Welt.'],
-        smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Stadtplanung abgeschlossen', '–'], ['F4 · Sensoren, Computer, Simulationen', '–']],
+        smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Stadtplanung abgeschlossen (Umschalt + ß)', '?'], ['F4 · Sensoren, Computer, Simulationen (Umschalt + -)', '_']],
       },
       {
         art: 'export', kicker: 'Finale · Minecraft Education', titel: 'Unsere Stadt wird eine Minecraft-Welt', kamera: 'finale',

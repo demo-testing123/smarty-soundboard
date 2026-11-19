@@ -60,7 +60,7 @@ Stand 19.11.2026, nach „START IT SMART – SMARTy-Sprachtexte nach Missionen�
 | Szene | Clip | Taste | Datei | Text | Stand |
 |---|---|---|---|---|---|
 | Ladenstandorte und Wegvergleich | K1 | `Ö` | `audio/SMARTy_K1_Wegvergleich.mp3` (6.0 s) | Wegvergleich gestartet. Ein Ladenstandort entscheidet mit darüber, wie weit Menschen zu Fuß gehen müssen. | vorhanden |
-| Ladenstandorte und Wegvergleich | K3 | `SS` | `audio/SMARTy_K3_Digitale_Stadtplanung.mp3` (6.6 s) | Digitale Stadtplanung: Standorte und Fußwege vergleichen. So werden kurze und längere Wege sichtbar. | **neu** |
+| Ladenstandorte und Wegvergleich | K3 | `ß` | `audio/SMARTy_K3_Digitale_Stadtplanung.mp3` (6.6 s) | Digitale Stadtplanung: Standorte und Fußwege vergleichen. So werden kurze und längere Wege sichtbar. | **neu** |
 | nach der Abstimmung | K2 | `Ä` | `audio/SMARTy_K2_Kurze_Wege.mp3` (5.4 s) | Stadt der kurzen Wege: Wohnen, Einkaufen und Freizeit möglichst gut erreichbar planen. | vorhanden |
 
 ## 12 · Mission Bildung, Freizeit und Teilhabe
@@ -68,7 +68,7 @@ Stand 19.11.2026, nach „START IT SMART – SMARTy-Sprachtexte nach Missionen�
 | Szene | Clip | Taste | Datei | Text | Stand |
 |---|---|---|---|---|---|
 | Szene 1 · Ein Raum, zwei Nutzungen | B1 | `P` | `audio/SMARTy_B1_Raumanalyse.mp3` (6.5 s) | Raumanalyse: Vormittags Unterricht. Nachmittags Werkstatt. Ein Gebäude, zwei Nutzungen. | vorhanden |
-| Szene 1 · Ein Raum, zwei Nutzungen | B4 | – | – | – | **offen** – Text bricht ab: „Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das …“ |
+| Szene 1 · Ein Raum, zwei Nutzungen | B4 | Umschalt + `+` (*) | `audio/SMARTy_B4_Stadtmodell.mp3` (7.0 s) | Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das spart Fläche und Baumaterial. | **neu – Satzende ergänzt (Liste bricht ab), freigegeben 19.11.** |
 | Szene 2 · Welche Orte passen zu allen? | B2 | `Ü` | `audio/SMARTy_B2_Zugang.mp3` (5.9 s) | Zugang prüfen: Ist der Ort erreichbar, bezahlbar und auch ohne eigenes Smartphone nutzbar? | vorhanden |
 | Szene 2 · Welche Orte passen zu allen? | B3 | `+` | `audio/SMARTy_B3_Mitmachen.mp3` (4.6 s) | Eine lebenswerte Stadt bietet nicht nur Räume. Sie macht das Mitmachen möglich. | vorhanden |
 
@@ -76,8 +76,8 @@ Stand 19.11.2026, nach „START IT SMART – SMARTy-Sprachtexte nach Missionen�
 
 | Szene | Clip | Taste | Datei | Text | Stand |
 |---|---|---|---|---|---|
-| Szene 1 · Wir haben es geschafft! | F3 | – | – | – | **offen** – Text bricht ab: „Stadtplanung abgeschlossen. Digitales Zukunftsmodell erfolgreich erstellt. Bereit für den …“ |
-| Szene 2 · Spaziergang durch die Zukunftsstadt | F4 | – | – | – | **offen** – Text bricht ab: „Sensoren können messen, Computer können rechnen und Simulationen können beim …“ |
+| Szene 1 · Wir haben es geschafft! | F3 | Umschalt + `ß` (?) | `audio/SMARTy_F3_Stadtplanung_abgeschlossen.mp3` (6.3 s) | Stadtplanung abgeschlossen. Digitales Zukunftsmodell erfolgreich erstellt. Bereit für den Rundgang. | **neu – Satzende ergänzt (Liste bricht ab), freigegeben 19.11.** |
+| Szene 2 · Spaziergang durch die Zukunftsstadt | F4 | Umschalt + `-` (_) | `audio/SMARTy_F4_Sensoren_Computer.mp3` (7.2 s) | Sensoren können messen, Computer können rechnen und Simulationen können beim Planen helfen. Die Ideen aber kommen von euch! | **neu – Satzende ergänzt (Liste bricht ab), freigegeben 19.11.** |
 | Szene 3 · Nachricht aus dem Jahr 2050 | F5a | Umschalt + `#` (') | `audio/SMARTy_F5a_Zukunftscheck.mp3` (5.2 s) | Zukunftscheck gestartet. Verbindung zum Jahr 2050 wird hergestellt. | **neu** |
 | Szene 3 · Nachricht aus dem Jahr 2050 | F5b | Umschalt + `6` (&) | `audio/SMARTy_F5b_Nachricht_2050.mp3` (3.0 s) | Nachricht aus dem Jahr 2050 empfangen. | **neu** |
 

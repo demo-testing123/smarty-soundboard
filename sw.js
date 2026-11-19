@@ -1,6 +1,6 @@
 /* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
  * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v19';
+const CACHE = 'smarty-v20';
 const CORE = ['./', 'index.html', 'style.css', 'app.js', 'sounds.json', 'layout.json', 'audio/manifest.json'];
 // Simulationen für die Bühne (eigene Seiten im selben Projekt) – ebenfalls offline verfügbar
 const SPIELE = [

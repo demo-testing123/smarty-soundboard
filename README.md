@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `<`–`.`, `ß`, Umschalt + `#` und Umschalt + `6`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä ß < + #` gelten für die deutsche Tastatur. |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `<`–`.`, `ß`, Umschalt + `#` `6` `+` `ß` `-`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä ß < + #` gelten für die deutsche Tastatur. |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -92,8 +92,9 @@ Die SMARTy-Pads sind nach der Live-Dramaturgie geordnet (Sprachtexte-Liste vom 1
 | | `M`, dann `B` `N`, dann `,` | M7 · Test erfolgreich (mBot) … · M5 · Funkverbindung hergestellt … · M6 · … darf niemanden gefährden … · M8 · Mission Mobilität abgeschlossen … |
 | Mission Wohnen | `G` `H` `J` `K` `L` | W1 · Bauauftrag erkannt … · W2 · Messung abgeschlossen … · W3 · Sechs Familien, drei Bauweisen … (neuer Wortlaut 19.11.) · W4 · Alternative erkannt: … aufstocken · W5 · Klimacheck … |
 | Mission Kurze Wege | `Ö` `ß` `Ä` | K1 · Wegvergleich gestartet … · K3 · Digitale Stadtplanung … (neu 19.11.) · K2 · Stadt der kurzen Wege … |
-| Mission Bildung | `P` `Ü` `+` | B1 · Raumanalyse … · B2 · Zugang prüfen … · B3 · … macht das Mitmachen möglich. |
-| Finale | Umschalt + `#`, dann Umschalt + `6` | F5a · Zukunftscheck gestartet … · F5b · Nachricht aus dem Jahr 2050 empfangen. (neu 19.11.) – danach Erzähler `-` |
+| Mission Bildung | `P`, Umschalt + `+`, `Ü` `+` | B1 · Raumanalyse … · B4 · Stadtmodell aktualisiert … (neu 19.11.) · B2 · Zugang prüfen … · B3 · … macht das Mitmachen möglich. |
+| Finale | Umschalt + `ß` · Umschalt + `-` | F3 · Stadtplanung abgeschlossen … Bereit für den Rundgang. · F4 · Sensoren können messen … Die Ideen aber kommen von euch! (neu 19.11.) |
+| | Umschalt + `#`, dann Umschalt + `6` | F5a · Zukunftscheck gestartet … · F5b · Nachricht aus dem Jahr 2050 empfangen. (neu 19.11.) – danach Erzähler `-` |
 | | `#` · `6` | F1 · Zukunftsanalyse … · Clip 06 „Mission erfolgreich! …“ (frühere Fassung, nicht in der Liste vom 19.11.) |
 | Weitere Sätze | `1` `2` `5` `6` `7` | Landung · Entdeckung · Zukunftsalarm · Finale · Soundcheck (stehen nicht im aktuellen Drehbuch) |
 

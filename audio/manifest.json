@@ -607,6 +607,27 @@
    ]
   ]
  },
+ "SMARTy_B4_Stadtmodell": {
+  "datei": "audio/SMARTy_B4_Stadtmodell.mp3",
+  "hash": "9970cd891b",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 7.04,
+  "teile": [
+   [
+    0.04,
+    1.498
+   ],
+   [
+    1.948,
+    4.402
+   ],
+   [
+    4.802,
+    6.789
+   ]
+  ]
+ },
  "SMARTy_B2_Zugang": {
   "datei": "audio/SMARTy_B2_Zugang.mp3",
   "hash": "2242191807",
@@ -659,6 +680,44 @@
    [
     4.335,
     5.592
+   ]
+  ]
+ },
+ "SMARTy_F3_Stadtplanung_abgeschlossen": {
+  "datei": "audio/SMARTy_F3_Stadtplanung_abgeschlossen.mp3",
+  "hash": "24a747dcaf",
+  "lufs": -16.7,
+  "tp": -2.2,
+  "dauer": 6.35,
+  "teile": [
+   [
+    0.04,
+    1.466
+   ],
+   [
+    1.916,
+    4.517
+   ],
+   [
+    4.917,
+    6.096
+   ]
+  ]
+ },
+ "SMARTy_F4_Sensoren_Computer": {
+  "datei": "audio/SMARTy_F4_Sensoren_Computer.mp3",
+  "hash": "8178a7e19b",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 7.15,
+  "teile": [
+   [
+    0.04,
+    4.759
+   ],
+   [
+    5.259,
+    6.901
    ]
   ]
  },
