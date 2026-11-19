@@ -1,6 +1,22 @@
 {
   "titel": "SMARTy Soundboard",
   "untertitel": "START IT SMART · Mission Zukunft: Rettet unsere Stadt!",
+  "abschlussfolie": {
+    "titel": "Danke, Zukunftsteam!",
+    "unter": "Unsere Stadt zum Mitnehmen – und eure Meinung",
+    "qr": [
+      {
+        "id": "stadt",
+        "text": "Stadt herunterladen",
+        "url": "https://demo-testing123.github.io/smarty-soundboard/stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld"
+      },
+      {
+        "id": "feedback",
+        "text": "Feedback geben",
+        "url": ""
+      }
+    ]
+  },
   "github": "demo-testing123/smarty-soundboard",
   "stimmen": [
     {
@@ -449,7 +465,7 @@
       "titel": "F5b · Nachricht empfangen",
       "text": "Nachricht aus dem Jahr 2050 empfangen.",
       "sprechen": "Nachricht aus dem Jahr zweitausendfünfzig empfangen.",
-      "einsatz": "Szene 3 · direkt danach F5b (Taste Umschalt + 6), dann Erzähler „Grüße aus dem Jahr 2050“ (Taste -)",
+      "einsatz": "Szene 3 · direkt danach F5b (Taste Umschalt + 6), dann der Knopf „Abschlussfilm – Nachricht aus 2050“ (Erzähler-Bereich, nur per Klick)",
       "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
     },
     {
@@ -566,6 +582,17 @@
       "film": "film/Eroeffnung_Film.mp4"
     },
     {
+      "id": "Film_Abschluss_2050",
+      "stimme": "erzaehler",
+      "titel": "Abschlussfilm – Nachricht aus 2050 (1:25)",
+      "text": "Animationsfilm (85,8 s) mit der vollständigen Sprecheraufnahme „Grüße aus dem Jahr 2050“: die Zukunftsstadt mit Robotern, Shuttles, Natur-Abenteuerspielplatz und dem Schild „DANKE, ZUKUNFTSTEAM!“. Der Ton ist im Film.",
+      "film": "film/Abschlussfilm_2050.mp4",
+      "nur_film": true,
+      "nur_klick": true,
+      "dauer": 85.8,
+      "einsatz": "Nach dem Minecraft-Rundgang: zuerst SMARTy F5b „Nachricht empfangen“ (Umschalt + 6), dann diesen Knopf anklicken (keine Taste). Läuft im Beamerfenster; solange er läuft, sind alle anderen Sounds gesperrt. Danach Bühnenverabschiedung, dann „🔳 Abschlussfolie (QR)“."
+    },
+    {
       "id": "Erzaehler_01_Gruesse_2050",
       "stimme": "erzaehler",
       "taste": "-",
@@ -573,7 +600,7 @@
       "text": "Hallo, liebe Zukunftsgestalter!\n\nWir senden euch herzliche Grüße aus dem Jahr 2050.\n\nUnd wir haben eine wunderbare Nachricht für euch:\n\nEure Mission war erfolgreich!\n\nErinnert ihr euch noch an unsere graue, heiße Stadt? An die vielen Autos, die wenigen Bäume und die Plätze, auf denen man kaum spielen konnte?\n\nSchaut euch unsere Stadt heute an!\n\nHier wachsen wieder Bäume. Es gibt grüne Spielplätze, schattige Wege und Orte, an denen Regenwasser gesammelt wird.\n\nUnsere Straßen sind sicherer geworden. Busse, Fahrräder und Fußgänger haben mehr Platz.\n\nWir haben neue Ideen fürs Wohnen gefunden. Es gibt grüne Innenhöfe, gemeinsame Gärten und Platz für viele Menschen.\n\nGeschäfte, Schulen und Treffpunkte sind gut erreichbar. Unsere Stadt ist ein Ort geworden, an dem wir gerne leben.\n\nUnd wisst ihr, was das Wichtigste ist?\n\nDiese Veränderungen haben mit Ideen angefangen. Mit Fragen, mit Experimenten und mit Menschen, die gemeinsam nach Lösungen gesucht haben.\n\nGenau wie ihr!\n\nDeshalb möchten wir euch heute etwas sagen:\n\nVielen Dank, liebe Zukunftsgestalter!\n\nAber denkt daran: Die Zukunft ist niemals ganz fertig. Es gibt immer neue Ideen, neue Fragen und neue Dinge zu entdecken.\n\nBleibt neugierig. Probiert Dinge aus. Und gestaltet die Welt um euch herum mit.\n\nDenn die Zukunft beginnt mit euch!\n\nViele Grüße aus dem Jahr 2050!",
       "datei": "audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3",
       "aufnahme_name": "Sprecheraufnahme (ElevenLabs), dieselbe Stimme wie die Eröffnung",
-      "einsatz": "Showende · Botschaft aus der Zukunft, nach dem Finale (SMARTy F1, F2 = 06)"
+      "einsatz": "Nur Ton – Ersatz, falls der Abschlussfilm nicht gezeigt werden kann (gleiche Aufnahme, nie zusätzlich zum Film abspielen; während des Films gesperrt)."
     },
     {
       "id": "KI_01_Zeitreise_abgeschlossen",

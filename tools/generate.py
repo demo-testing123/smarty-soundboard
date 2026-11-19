@@ -342,6 +342,14 @@ def main() -> None:
             fehler.append(f"{lid}: Stimme '{line['stimme']}' fehlt unter 'stimmen'")
             continue
 
+        if line.get("nur_film"):                    # nur Film (der Ton steckt im Film), keine Sprachdatei
+            f = ROOT / line["film"]
+            if f.exists():
+                new[f"{lid}__film"] = {"datei": line["film"], "hash": file_hash(f)[:10], "film": True}
+            else:
+                fehler.append(f"{lid}: Film {line['film']} nicht gefunden")
+            continue
+
         if line.get("teile") or line.get("aufnahme"):   # Sequenz mit Musik -> tools/intro.py
             for vid, _ in variants(voice):
                 if vkey(lid, vid) in old:

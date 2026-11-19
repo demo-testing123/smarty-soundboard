@@ -48,6 +48,13 @@
     <button type="button" id="fade" class="btn" title="Alles in 1,5 s ausblenden (Taste F)">Ausblenden <kbd>F</kbd></button>
     <button type="button" id="stop" class="btn stop" title="Alles sofort stoppen">■ Stopp <kbd>Leer</kbd></button>
   </div>
+  <div class="beamer-bar" id="beamerBar">
+    <button type="button" id="beamerAuf" class="btn" title="Eigenes Fenster für den Publikumsbeamer öffnen (erweiterter Desktop): dorthin ziehen, einmal klicken – Vollbild und Ton">🖥 Beamerfenster</button>
+    <span id="beamerStatus" class="beamer-status aus">Beamer: nicht verbunden</span>
+    <button type="button" id="folieZeigen" class="btn" title="Abschlussfolie mit zwei QR-Codes (Stadt herunterladen, Feedback geben) auf dem Beamer zeigen – erst nach Film und Bühnenverabschiedung">🔳 Abschlussfolie (QR)</button>
+    <button type="button" id="folieLinks" class="btn small" title="Links der beiden QR-Codes ansehen und ändern">Links …</button>
+    <button type="button" id="beamerSchwarz" class="btn small" title="Beamer schwarz schalten (Film stoppen, Folie ausblenden)">■ Beamer schwarz</button>
+  </div>
   <div id="arrangeBar" class="arrange-bar" hidden>
     <p>
       <b>Anordnen:</b> Pad oder Kopf eines Bereichs ziehen = verschieben ·
@@ -148,6 +155,21 @@
   </form>
 </dialog>
 
+<dialog id="qrDlg">
+  <form method="dialog" id="qrForm">
+    <h2>Abschlussfolie: QR-Codes</h2>
+    <p class="small muted">Die Links gelten auf diesem Gerät. Ohne Eintrag zeigt die Folie „Link fehlt“. Vorgabe aus <code>sounds.json</code> (<code>abschlussfolie</code>).</p>
+    <label class="small">Stadt herunterladen<input type="url" name="stadt" id="qrStadt" placeholder="https://…" spellcheck="false"></label>
+    <label class="small">Feedback geben<input type="url" name="feedback" id="qrFeedback" placeholder="https://…" spellcheck="false"></label>
+    <menu>
+      <button type="button" class="btn" id="qrStandard">Vorgabe</button>
+      <button value="cancel" class="btn" formnovalidate>Abbrechen</button>
+      <button value="ok" class="btn primary">Speichern</button>
+    </menu>
+  </form>
+</dialog>
+
+<script src="qr.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

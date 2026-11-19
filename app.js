@@ -126,6 +126,8 @@
   }
 
   function filmPlay(p) {
+    if (beamerBereit()) { filmBeamer(p); return; }
+    if (p.nurKlick && !confirm('Kein Beamerfenster verbunden.\n\nDen Abschlussfilm hier im Vollbild DIESES Fensters zeigen?\n(Nur sinnvoll, wenn der Bildschirm gespiegelt auf dem Beamer erscheint. Sonst zuerst „🖥 Beamerfenster“ öffnen.)')) return;
     filmSetup();
     ensureCtx(); resume();
     if (!film.node) {
@@ -136,7 +138,7 @@
     }
     if (!overlap) stopAll(0.04);
     const v = film.video;
-    const src = film.blobUrl || p.film;
+    const src = p.blobUrl || p.film;
     if (film.srcSet !== src) { v.src = src; film.srcSet = src; }
     v.style.transition = '';
     v.style.opacity = '1';
@@ -162,6 +164,7 @@
     const p = pads.get(film.padId);
     playing.delete(film.padId);
     paint(p);
+    if (p && p.nurKlick) abschlussEnde();
   }
 
   function filmStop(fade = 0.08) {
@@ -189,24 +192,219 @@
   }
 
   async function filmPreload() {
-    const p = [...pads.values()].find((x) => x.film);
-    if (!p) return;
-    try {
-      const res = await fetch(p.film);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      film.blobUrl = URL.createObjectURL(await res.blob());   // aus dem Speicher: startet sofort, auch offline
-      if (p.filmTag) p.filmTag.textContent = film.on ? '🎬 Film bereit' : 'nur Ton';
-    } catch {
-      if (p.filmTag) p.filmTag.textContent = '🎬 Film nicht geladen';
+    for (const p of [...pads.values()].filter((x) => x.film)) {
+      try {
+        const res = await fetch(p.film);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        p.blobUrl = URL.createObjectURL(await res.blob());   // aus dem Speicher: startet sofort, auch offline
+        if (p.filmTag) p.filmTag.textContent = film.on || p.nurFilm ? '🎬 Film bereit' : 'nur Ton';
+      } catch {
+        if (p.filmTag) p.filmTag.textContent = '🎬 Film nicht geladen';
+      }
     }
+    filmeVorladen();
   }
+
+  // ---------- Beamerfenster (Publikumsleinwand bei erweitertem Desktop) ----------
+  /* beamer.html spielt die Filme und zeigt die Abschlussfolie; gesteuert wird nur von hier (BroadcastChannel).
+     Der Filmton kommt aus dem Beamerfenster – im Soundboard läuft dabei nichts parallel. Mehrere Beamerfenster:
+     nur eines ist aktiv (die anderen bleiben schwarz), jeder Befehl ist an genau dieses adressiert. */
+  const beamer = { kanal: null, id: null, status: null, zuletzt: 0, fenster: null };
+  let abschlussGelaufen = false;
+  const beamerDa = () => !!(beamer.id && Date.now() - beamer.zuletzt < 5000);
+  const beamerBereit = () => beamerDa() && !!(beamer.status && beamer.status.freigegeben);
+  const sende = (m) => { if (beamer.kanal && beamer.id) beamer.kanal.postMessage({ an: beamer.id, ...m }); };
+  const minSek = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const remoteWeg = () => { for (const [id, e] of [...playing]) if (e.remote) { playing.delete(id); paint(pads.get(id)); } };
+
+  function beamerInit() {
+    if (!('BroadcastChannel' in window)) { beamerAnzeige(); return; }
+    beamer.kanal = new BroadcastChannel('smarty-beamer');
+    beamer.kanal.onmessage = (ev) => {
+      const m = ev.data || {};
+      if (m.typ === 'status') {
+        const wechsel = !beamer.id || (m.id !== beamer.id && (!beamerDa() || (m.freigegeben && !(beamer.status && beamer.status.freigegeben))));
+        if (wechsel) { beamer.id = m.id; beamer.status = null; remoteWeg(); }
+        beamer.kanal.postMessage({ typ: 'waehle', id: beamer.id });
+        if (m.id !== beamer.id) return;
+        const neu = !beamer.status;
+        beamer.status = m; beamer.zuletzt = Date.now();
+        if (neu) filmeVorladen();
+        beamerEreignis(m);
+        beamerAnzeige();
+      } else if (m.typ === 'taste' && m.id === beamer.id) {
+        tasteVerarbeiten({ key: m.key, shiftKey: m.shift, repeat: m.repeat, ctrlKey: false, metaKey: false, altKey: false, target: document.body, preventDefault() {} });
+      } else if (m.typ === 'tschuess' && m.id === beamer.id) {
+        beamer.id = null; beamer.status = null; remoteWeg(); beamerAnzeige();
+      }
+    };
+    beamer.kanal.postMessage({ typ: 'hallo' });
+    setInterval(() => { if (beamer.id && !beamerDa()) remoteWeg(); beamerAnzeige(); }, 1000);
+  }
+
+  function filmeVorladen() {
+    if (!beamerDa()) return;
+    const filme = {};
+    for (const p of pads.values()) if (p.film) filme[p.id] = new URL(p.film, location.href).href;
+    sende({ typ: 'vorladen', filme });
+  }
+
+  function beamerEreignis(m) {
+    if (m.ereignis !== 'ende' && m.ereignis !== 'stopp' && m.ereignis !== 'fehler') return;
+    for (const [id, e] of [...playing]) {
+      if (!e.remote) continue;
+      playing.delete(id); paint(pads.get(id));
+      if (m.ereignis === 'ende' && pads.get(id).nurKlick) abschlussEnde();
+    }
+    if (m.ereignis === 'fehler') status(`<span class="warn">⚠</span> Beamer: ${m.fehler || 'Film konnte nicht starten'}`);
+  }
+
+  function beamerAnzeige() {
+    const el = $('#beamerStatus');
+    if (!el) return;
+    let text, art;
+    const s = beamer.status;
+    if (!beamer.kanal) { text = 'Beamerfenster: Browser zu alt'; art = 'warn'; }
+    else if (!beamerDa() || !s) { text = 'Beamer: nicht verbunden'; art = 'aus'; }
+    else if (!s.freigegeben) { text = 'Beamer verbunden – dort einmal klicken (Vollbild + Ton)'; art = 'warn'; }
+    else if (s.laeuft) { text = `Beamer: Film läuft ${minSek(s.zeit || 0)} / ${minSek(s.dauer || 0)}`; art = 'laeuft'; }
+    else if (!s.vollbild) { text = 'Beamer bereit, aber nicht im Vollbild (dort doppelklicken)'; art = 'warn'; }
+    else {
+      const g = Object.values(s.geladen || {}), n = g.filter(Boolean).length;
+      text = `Beamer bereit · Vollbild · Ton frei · Filme ${n}/${g.length || 2}${s.folie ? ' · Abschlussfolie' : ''}`;
+      art = g.length && n < g.length ? 'warn' : 'ok';
+    }
+    el.textContent = text;
+    el.className = 'beamer-status ' + art;
+  }
+
+  function filmBeamer(p) {
+    stopAll(0.04);
+    sende({ typ: 'film', film: p.id, src: new URL(p.film, location.href).href, lautstaerke: Math.min(1, parseFloat($('#master').value)) });
+    const eintrag = { film: true, remote: true, dur: p.filmDauer || 0 };
+    playing.set(p.id, eintrag);
+    // Sicherheitsnetz: bestätigt das Beamerfenster den Start nicht (z. B. gerade geschlossen), nichts als „läuft“ anzeigen
+    setTimeout(() => {
+      const s = beamer.status;
+      if (playing.get(p.id) === eintrag && !(s && s.laeuft && s.film === p.id)) {
+        playing.delete(p.id); paint(p);
+        status('<span class="warn">⚠</span> Das Beamerfenster antwortet nicht – Film nicht gestartet. Beamerfenster prüfen (offen? einmal geklickt?) und erneut starten.');
+      }
+    }, 3000);
+    // Beamerfenster nach vorn holen (z. B. vor Minecraft auf dem Beamer), danach zurück zur Steuerung
+    try { if (beamer.fenster && !beamer.fenster.closed) { beamer.fenster.focus(); setTimeout(() => window.focus(), 500); } } catch { /* nicht erlaubt */ }
+    paint(p);
+    tick();
+  }
+
+  function beamerStopp(id, fade) {
+    sende({ typ: 'stopp', sanft: fade > 0.5 });
+    playing.delete(id);
+    paint(pads.get(id));
+  }
+
+  /* Ein laufender „nur per Klick“-Film (Abschlussfilm) sperrt alle anderen Sounds: kein zweiter Ton parallel */
+  function sperrPad() { for (const [id] of playing) { const p = pads.get(id); if (p && p.nurKlick) return id; } return null; }
+
+  function abschlussEnde() {
+    abschlussGelaufen = true;
+    status('<span class="ok">✓</span> Abschlussfilm zu Ende – Beamer ist schwarz. Nach der Bühnenverabschiedung: „🔳 Abschlussfolie (QR)“.');
+    $('#folieZeigen').classList.add('bereit');
+  }
+
+  async function beamerOeffnen() {
+    if (beamerDa()) {
+      if (beamer.fenster && !beamer.fenster.closed) beamer.fenster.focus();
+      else alert('Ein Beamerfenster ist schon geöffnet (vermutlich auf dem anderen Bildschirm).');
+      return;
+    }
+    let merkmale = 'popup=yes,width=1280,height=720,left=60,top=60', recht = 'unbekannt';
+    try { recht = (await navigator.permissions.query({ name: 'window-management' })).state; } catch { /* nicht unterstützt */ }
+    if (recht === 'granted' && window.getScreenDetails) {
+      try {
+        const sd = await window.getScreenDetails();
+        const anderer = sd.screens.find((x) => x !== sd.currentScreen);
+        if (anderer) merkmale = `popup=yes,left=${anderer.availLeft},top=${anderer.availTop},width=${anderer.availWidth},height=${anderer.availHeight}`;
+      } catch { /* dann normal öffnen und von Hand verschieben */ }
+    }
+    beamer.fenster = window.open('beamer.html', 'smartyBeamer', merkmale);
+    if (!beamer.fenster) { alert('Der Browser hat das Fenster blockiert. Bitte Pop-ups für diese Seite erlauben und erneut klicken.'); return; }
+    // fürs nächste Mal: Erlaubnis „Fenster auf allen Bildschirmen verwalten“ → Fenster öffnet direkt auf dem Beamer
+    if (recht === 'prompt' && window.getScreenDetails) window.getScreenDetails().catch(() => {});
+  }
+
+  // ---------- Abschlussfolie mit zwei QR-Codes ----------
+  function folieDaten() {
+    const v = (cfg && cfg.abschlussfolie) || {};
+    const qr = (v.qr || []).map((q) => ({ ...q }));
+    for (const q of qr) q.url = store.get('folie.' + q.id, q.url || '');
+    return { titel: v.titel || 'Danke, Zukunftsteam!', unter: v.unter || '', qr };
+  }
+
+  function folieZeigen() {
+    if (!abschlussGelaufen && !confirm('Der Abschlussfilm ist in dieser Sitzung noch nicht zu Ende gelaufen.\nAbschlussfolie trotzdem jetzt zeigen?')) return;
+    const f = folieDaten();
+    const fehlt = f.qr.filter((q) => !q.url).map((q) => q.text);
+    if (fehlt.length && !confirm(`Für „${fehlt.join('“ und „')}“ ist kein Link eingetragen – dort steht „Link fehlt“.\nTrotzdem zeigen? (Links eintragen: „Links …“)`)) return;
+    stopAll(0.05);
+    $('#folieZeigen').classList.remove('bereit');
+    if (beamerBereit()) { sende({ typ: 'folie', folie: f }); return; }
+    // ohne Beamerfenster: hier im Vollbild (Klick schließt)
+    let el = $('#folieLayer');
+    if (!el) {
+      el = h('div', { id: 'folieLayer', hidden: true });
+      el.addEventListener('click', () => { el.hidden = true; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); });
+      document.body.append(el);
+    }
+    el.innerHTML = '';
+    const reihe = h('div', { class: 'qr-reihe' });
+    for (const q of f.qr) {
+      const code = h('div', { class: 'code' });
+      if (q.url && window.QR) code.innerHTML = window.QR.svg(q.url); else code.textContent = 'Link fehlt';
+      reihe.append(h('div', { class: 'qr' }, code, h('div', { class: 'titel' }, q.text), h('div', { class: 'url' }, (q.url || '').replace(/^https?:\/\//, ''))));
+    }
+    el.append(h('div', {}, h('h1', {}, f.titel), f.unter ? h('p', { class: 'unter' }, f.unter) : null, reihe));
+    el.hidden = false;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+
+  const qrDlg = $('#qrDlg');
+  function linksBearbeiten() {
+    const f = folieDaten();
+    $('#qrStadt').value = (f.qr.find((q) => q.id === 'stadt') || {}).url || '';
+    $('#qrFeedback').value = (f.qr.find((q) => q.id === 'feedback') || {}).url || '';
+    qrDlg.showModal();
+  }
+  qrDlg.addEventListener('close', () => {
+    if (qrDlg.returnValue !== 'ok') return;
+    store.set('folie.stadt', $('#qrStadt').value.trim());
+    store.set('folie.feedback', $('#qrFeedback').value.trim());
+  });
+  $('#qrStandard').addEventListener('click', () => {
+    const v = (cfg && cfg.abschlussfolie && cfg.abschlussfolie.qr) || [];
+    $('#qrStadt').value = (v.find((q) => q.id === 'stadt') || {}).url || '';
+    $('#qrFeedback').value = (v.find((q) => q.id === 'feedback') || {}).url || '';
+    store.del('folie.stadt'); store.del('folie.feedback');
+  });
+  $('#beamerAuf').addEventListener('click', beamerOeffnen);
+  $('#folieZeigen').addEventListener('click', folieZeigen);
+  $('#folieLinks').addEventListener('click', linksBearbeiten);
+  $('#beamerSchwarz').addEventListener('click', () => {
+    stopAll(0.05);
+    sende({ typ: 'schwarz' });
+    const el = $('#folieLayer'); if (el) el.hidden = true;
+    filmClose();
+  });
+
 
   function play(id) {
     const p = pads.get(id);
-    if (!p || !p.buffer) return;
+    if (!p || (!p.buffer && !p.nurFilm)) return;
     ensureCtx(); resume();
     if (playing.has(id)) { stop(id); return; }
-    if (p.film && film.on) { filmPlay(p); return; }
+    const sp = sperrPad();
+    if (sp && sp !== id) { status(`<span class="warn">⚠</span> „${pads.get(sp).title}“ läuft – andere Sounds sind gesperrt (kein zweiter Ton). Stoppen: Leertaste oder Esc.`); return; }
+    if (p.film && (film.on || p.nurFilm)) { filmPlay(p); return; }
     if (!overlap) stopAll(0.04, true);              // ein laufender Film wird dabei nicht abgebrochen
 
     const src = ctx.createBufferSource();
@@ -228,7 +426,7 @@
   function stop(id, fade = 0.08) {
     const e = playing.get(id);
     if (!e) return;
-    if (e.film) { filmStop(fade); return; }
+    if (e.film) { if (e.remote) beamerStopp(id, fade); else filmStop(fade); return; }
     const now = ctx.currentTime;
     e.g.gain.cancelScheduledValues(now);
     e.g.gain.setValueAtTime(e.g.gain.value, now);
@@ -250,7 +448,9 @@
     if (!on) {
       p.barEl.style.transform = 'scaleX(0)';
       if (p.buffer) p.durEl.textContent = fmt(p.buffer.duration);
+      else if (p.nurFilm) p.durEl.textContent = p.filmDauer ? fmt(p.filmDauer) : 'Film';
     }
+    document.body.classList.toggle('gesperrt', !!sperrPad());
   }
 
   let raf = 0;
@@ -262,8 +462,9 @@
       const now = ctx.currentTime;
       for (const [id, e] of playing) {
         const p = pads.get(id);
-        const dur = e.film ? (film.video.duration || e.dur) : e.dur;
-        const pos = e.film ? film.video.currentTime : now - e.t0;
+        const bs = beamer.status;
+        const dur = e.remote ? ((bs && bs.dauer) || e.dur || 1) : e.film ? (film.video.duration || e.dur) : e.dur;
+        const pos = e.remote ? (bs && bs.laeuft ? bs.zeit : 0) : e.film ? film.video.currentTime : now - e.t0;
         const f = Math.min(1, Math.max(0, pos / dur));
         p.barEl.style.transform = `scaleX(${f})`;
         p.durEl.textContent = '−' + fmt(Math.max(0, dur - pos));
@@ -396,13 +597,15 @@
         (p.durEl = h('span', { class: 'dur' }, 'lädt …')),
         p.local ? h('span', { class: 'tag' }, 'lokal') : null,
         p.direct ? h('span', { class: 'tag' }, 'Stimme + Musik + Effekte') : null,
-        p.film ? (p.filmTag = h('span', { class: 'tag film' }, film.on ? '🎬 Film lädt …' : 'nur Ton')) : null,
+        p.film ? (p.filmTag = h('span', { class: 'tag film' }, film.on || p.nurFilm ? '🎬 Film lädt …' : 'nur Ton')) : null,
+        p.nurKlick ? h('span', { class: 'tag' }, 'nur per Klick · Beamer') : null,
         p.vary ? (p.varTag = h('span', { class: 'tag' }, 'Stimme ' + v.variante)) : null),
       h('span', { class: 'bar' }, (p.barEl = h('i'))),
     );
     btn.addEventListener('click', () => { if (!arranging) play(p.id); });
+    if (p.nurKlick) btn.classList.add('sperrt');
     const tools = h('div', { class: 'tools' },
-      h('button', {
+      p.nurFilm ? null : h('button', {
         type: 'button', class: 'icon',
         title: p.direct ? 'Fertige Mischung als MP3 speichern' : 'Als WAV speichern (mit Robo-Effekt)',
         'aria-label': `${p.title} speichern`,
@@ -429,7 +632,7 @@
     cb.addEventListener('change', () => {
       film.on = cb.checked;
       store.set('film.on', film.on);
-      for (const p of pads.values()) if (p.filmTag) p.filmTag.textContent = film.on ? (film.blobUrl ? '🎬 Film bereit' : '🎬 Film lädt …') : 'nur Ton';
+      for (const p of pads.values()) if (p.filmTag && !p.nurFilm) p.filmTag.textContent = film.on ? (p.blobUrl ? '🎬 Film bereit' : '🎬 Film lädt …') : 'nur Ton';
     });
     return h('label', { class: 'toggle film-toggle', title: 'Eröffnung als Film im Vollbild (Beamer) mit Ton – aus: nur Ton' }, cb, ' 🎬 Film zeigen');
   }
@@ -612,7 +815,7 @@
     // feste Tasten zuerst reservieren, dann Rest verteilen
     const lines = (cfg.saetze || []).filter((l) => voices.has(l.stimme));
     for (const l of lines) if (l.gruppe !== 'proben') l._key = claimKey(l.taste);
-    for (const l of lines) if (l.gruppe !== 'proben' && !l._key) l._key = nextKey();
+    for (const l of lines) if (l.gruppe !== 'proben' && !l._key && !l.nur_klick) l._key = nextKey();   // „nur per Klick“: bewusst ohne Taste
 
     board.innerHTML = '';
     for (const v of voices.values()) v.hasFilm = lines.some((l) => l.stimme === v.id && l.film);
@@ -625,7 +828,8 @@
       const p = {
         id: l.id, voice: l.stimme, title: l.titel || l.id, text: l.text || '', cue: l.einsatz || '',
         key: l._key || null, datei: l.datei || null, vary, film: l.film ? audioUrl(`${l.id}__film`, l.film, null) : null,
-        url: audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!(l.teile || l.aufnahme),
+        url: l.nur_film ? null : audioUrl(l.id, l.datei, vary ? v.variante : null), buffer: null, local: false, direct: !!(l.teile || l.aufnahme || l.nur_film),
+        nurFilm: !!l.nur_film, nurKlick: !!l.nur_klick, filmDauer: l.dauer || 0,
       };
       pads.set(p.id, p);
       if (p.key) keyMap.set(p.key, p.id);
@@ -649,9 +853,11 @@
     layout = readLayout();
     syncLayoutState();
 
-    await loadAll([...pads.values()]);
+    for (const p of pads.values()) if (p.nurFilm) { p.el.classList.remove('loading'); p.durEl.textContent = p.filmDauer ? fmt(p.filmDauer) : 'Film'; }
+    await loadAll([...pads.values()].filter((p) => !p.nurFilm));
     await loadLocal();
     await offlineCheck();
+    beamerInit();
     filmPreload().then(warmCache).then(offlineCheck);
   }
 
@@ -1207,6 +1413,7 @@
     $('#masterOut').textContent = Math.round(v * 100) + ' %';
     if (master) master.gain.setTargetAtTime(v, ctx.currentTime, 0.02);
     store.set('master', v);
+    if (beamer.kanal && beamer.id) beamer.kanal.postMessage({ typ: 'lautstaerke', an: beamer.id, wert: Math.min(1, v) });
   }
   $('#master').addEventListener('input', (e) => setMaster(parseFloat(e.target.value)));
   setMaster(store.get('master', 1));
@@ -1224,8 +1431,8 @@
 
   const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
-  document.addEventListener('keydown', (e) => {
-    if (dlg.open || syncDlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+  function tasteVerarbeiten(e) {
+    if (dlg.open || syncDlg.open || qrDlg.open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'Escape' && film.state !== 'idle') { e.preventDefault(); stopAll(); filmClose(); return; }
     if (e.key === 'Escape' && arranging) setArranging(false);
     if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); stopAll(); return; }
@@ -1248,10 +1455,11 @@
     const p = pads.get(id);
     play(id);
     if (p && p.el) { p.el.classList.add('hit'); setTimeout(() => p.el.classList.remove('hit'), 120); }
-  });
+  }
+  document.addEventListener('keydown', tasteVerarbeiten);
   // Leertaste löst sonst beim Loslassen den fokussierten Button aus
   document.addEventListener('keyup', (e) => {
-    if (e.key === ' ' && !dlg.open && !syncDlg.open && !typing(e.target)) e.preventDefault();
+    if (e.key === ' ' && !dlg.open && !syncDlg.open && !qrDlg.open && !typing(e.target)) e.preventDefault();
   });
   document.addEventListener('pointerdown', () => { ensureCtx(); resume(); }, { once: true });
 

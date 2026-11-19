@@ -24,7 +24,10 @@ Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 Der Erzähler hat zwei Sounds:
 
 - **Eröffnung** (Taste `Q`): die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
-- **Grüße aus dem Jahr 2050** (Taste `-`): Botschaft zum Showende, etwa 1:26, nur Stimme. Sprecheraufnahme von ElevenLabs in derselben Stimme wie die Eröffnung (`audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3`, auf −16 LUFS angeglichen wie alle Sounds). Wird nicht vom Generator erzeugt; eine neue Aufnahme einfach unter demselben Namen ablegen und `python tools/generate.py` laufen lassen.
+- **Abschlussfilm – Nachricht aus 2050 (1:25)** (Knopf im Erzähler-Bereich, **keine Taste**, nur per bewusstem Klick): Animationsfilm mit der vollständigen Aufnahme „Grüße aus dem Jahr 2050“ (`film/Abschlussfilm_2050.mp4`, 85,8 s). Läuft im **Beamerfenster**; solange er läuft, sind alle anderen Sounds gesperrt, damit nichts parallel tönt. Renderprojekt: `Downloads/StartItSmart_Abschlussfilm` (siehe LIESMICH dort).
+- **Beamerfenster** (`🖥 Beamerfenster`, Seite `beamer.html`): für den erweiterten Desktop. Fenster auf den Beamer ziehen, dort einmal „Vollbild + Ton freigeben“ klicken, dann zurück ins Soundboard. Eröffnungsfilm (`Q`) und Abschlussfilm laufen dann auf dem Beamer, die Steuerung bleibt hier. Ohne Beamerfenster spielt `Q` wie bisher im Vollbild dieses Fensters; der Abschlussfilm fragt vorher nach. Tasten, die im Beamerfenster gedrückt werden, kommen im Soundboard an.
+- **Abschlussfolie (QR)** (`🔳 Abschlussfolie (QR)`): zwei QR-Codes „Stadt herunterladen“ und „Feedback geben“ auf dem Beamer – erst nach Film und Bühnenverabschiedung (vorher fragt das Soundboard nach). Links unter „Links …“ (gelten auf diesem Gerät; Vorgabe in `sounds.json` unter `abschlussfolie`). Vorgabe für „Stadt herunterladen“ ist die Ersatzwelt `stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld`; der Feedback-Link fehlt noch. `■ Beamer schwarz` stoppt alles und macht die Leinwand schwarz.
+- **Grüße aus dem Jahr 2050** (Taste `-`): nur Ton, **Ersatz**, falls der Abschlussfilm nicht gezeigt werden kann (gleiche Aufnahme – nie zusätzlich zum Film). Botschaft zum Showende, etwa 1:26, nur Stimme. Sprecheraufnahme von ElevenLabs in derselben Stimme wie die Eröffnung (`audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3`, auf −16 LUFS angeglichen wie alle Sounds). Wird nicht vom Generator erzeugt; eine neue Aufnahme einfach unter demselben Namen ablegen und `python tools/generate.py` laufen lassen.
 
 - **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“, der Countdown kommt etwa im Sekundentakt.
 - **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
@@ -32,11 +35,26 @@ Der Erzähler hat zwei Sounds:
 - **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
 - **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
 
+### Test mit erweitertem Desktop (vor der Show auf dem Veranstaltungslaptop)
+
+Nicht von mir ausführbar: Ich habe keinen zweiten Bildschirm und keinen Beamer. Im Browser-Bereich geprüft: Verbindung, Start und Stopp über das Beamerfenster, Tasten aus dem Beamerfenster, Sperre und QR-Folie.
+
+1. Windows-Taste + P → **Erweitern**. Soundboard in Chrome oder Edge öffnen und einmal online laden (Offline-Speicher).
+2. `🖥 Beamerfenster` → Fenster auf den Beamer ziehen → dort „▶ Vollbild + Ton freigeben“. Im Soundboard muss stehen: „Beamer bereit · Vollbild · Ton frei · Filme 2/2“.
+   - Fragt der Browser „Fenster auf allen Bildschirmen verwalten“, **Zulassen**: Beim nächsten Öffnen erscheint das Fenster gleich auf dem Beamer.
+   - Pop-ups für die Seite erlauben, falls blockiert.
+3. Einmal ins Soundboard klicken. `Q` → Eröffnung läuft auf dem Beamer, das Soundboard zeigt die Restzeit, auf dem Laptop läuft kein Bild. `Leertaste` stoppt.
+4. Ton: Windows-Tonausgabe auf die Hallenanlage oder den HDMI-Beamer stellen. Der Filmton kommt aus dem Beamerfenster, die SMARTy-Sounds kommen aus dem Soundboard, beide über dieselbe Ausgabe.
+5. Abschlussfilm-Knopf anklicken. Er läuft auf dem Beamer. Eine SMARTy-Taste drücken: **Nichts darf erklingen**, das Soundboard meldet „… gesperrt“. Taste `-` (Grüße) ebenfalls gesperrt.
+6. Nach dem Filmende ist der Beamer schwarz, und das Soundboard meldet „Abschlussfilm zu Ende“. `🔳 Abschlussfolie (QR)` zeigen und beide Codes mit dem Handy aus der letzten Reihe scannen.
+7. Mit Minecraft: Minecraft Education auf dem Beamer im Vollbild, dann den Abschlussfilm starten. Das Beamerfenster sollte nach vorn kommen. Falls nicht: Minecraft vorher schließen oder minimieren (Windows-Taste + ↓).
+
 ### Eröffnungsfilm (Beamer)
 
-Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnung_Film.mp4`, 1920×1080). Bildwechsel, Countdown-Zahlen und der weiße Blitz sind auf die Tonspur gerendert und bleiben dadurch bildgenau synchron.
+Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnung_Film.mp4`, 1920×1080). Bildwechsel, Countdown-Zahlen und der weiße Blitz sind auf die Tonspur gerendert und bleiben dadurch bildgenau synchron. Seit 19.11.2026 steht in den ersten Sekunden (0,25–4,95 s, davon 4,2 s voll sichtbar) „Diese Zukunftsvision wurde mit KI erstellt.“ im Bild – sonst unverändert (Handlung, Sprecheraufnahme, Länge 1:32,8, „ZEITSPRUNG!“; die Tonspur ist bitgenau die alte).
 
-- Laptop und Beamer **gespiegelt** betreiben. Die Seite schaltet beim Start selbst in den Vollbildmodus.
+- **Erweiterter Desktop** (empfohlen): zuerst `🖥 Beamerfenster` öffnen und einrichten (siehe oben). Dann läuft der Film im Beamerfenster, die Steuerung bleibt im Soundboard.
+- **Gespiegelt** (ohne Beamerfenster): Die Seite schaltet beim Start selbst in den Vollbildmodus.
 - Nach dem Blitz bleibt das Bild **schwarz stehen**. Die SMARTy-Tasten `1`–`7` funktionieren weiter, man sieht sie dabei nur nicht. Während der Film läuft, brechen andere Sounds ihn nicht ab.
 - `Leertaste` stoppt den Film sofort, `F` blendet Bild und Ton weich nach Schwarz aus. In beiden Fällen bleibt das Bild schwarz.
 - `Esc` (oder ein Klick nach dem Filmende) beendet das Vollbild und führt zurück zum Soundboard. Während der Film läuft, ignoriert die Seite Klicks.

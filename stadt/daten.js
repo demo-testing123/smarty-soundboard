@@ -328,8 +328,8 @@ export const MISSIONEN = [
       {
         art: 'export', kicker: 'Finale · Minecraft Education', titel: 'Unsere Stadt wird eine Minecraft-Welt', kamera: 'finale',
         text: 'Aus euren Beschlüssen entsteht eine Welt, durch die wir gleich gehen.',
-        regie: ['Showablauf: fertige Stadt → „Minecraft-Welt erstellen“ → Datei in Minecraft Education öffnen → etwa drei Minuten Rundgang in Minecraft → vorproduzierter Abschlussfilm aus der Vogelperspektive (Erzählerstimme wie im Intro) → Abschlussfolie mit Download- und Feedback-QR-Code.', 'Sicherheitsnetz: eine bei der Probe erstellte und in Minecraft Education geprüfte Welt auf dem Laptop bereithalten (oder die Ersatzwelt unten).', 'Bauaufträge (/clone) sind nur für Änderungen von Hand in einer schon geöffneten Welt.'],
-        smarty: [['F5a · Zukunftscheck gestartet (Umschalt + #)', "'"], ['F5b · Nachricht aus 2050 empfangen (Umschalt + 6)', '&'], ['Erzähler · Grüße aus dem Jahr 2050', '-'], ['06 · Mission erfolgreich (frühere Fassung)', '6']],
+        regie: ['Showablauf: fertige Stadt → „Minecraft-Welt erstellen“ → Datei in Minecraft Education öffnen → etwa drei Minuten Rundgang in Minecraft → SMARTy F5b → Soundboard-Knopf „Abschlussfilm – Nachricht aus 2050 (1:25)“ (Beamerfenster, Ton im Film) → kurze Bühnenverabschiedung → „🔳 Abschlussfolie (QR)“ mit Download- und Feedback-QR-Code.', 'Vor dem Film Minecraft schließen oder minimieren, damit das Beamerfenster vorn ist. Der Film zeigt eine vorab abgestimmte Stadtfassung (nicht automatisch die heutigen Beschlüsse).', 'Sicherheitsnetz: eine bei der Probe erstellte und in Minecraft Education geprüfte Welt auf dem Laptop bereithalten (oder die Ersatzwelt unten).', 'Bauaufträge (/clone) sind nur für Änderungen von Hand in einer schon geöffneten Welt.'],
+        smarty: [['F5a · Zukunftscheck gestartet (Umschalt + #)', "'"], ['F5b · Nachricht aus 2050 empfangen (Umschalt + 6)', '&'], ['Abschlussfilm · Nachricht aus 2050 (Knopf, nur per Klick)', '🎬'], ['Erzähler · Grüße aus 2050 (nur Ton, Ersatz ohne Film)', '-'], ['06 · Mission erfolgreich (frühere Fassung)', '6']],
       },
     ],
   },

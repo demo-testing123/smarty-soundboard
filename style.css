@@ -336,3 +336,24 @@ body.sizing, body.sizing * { cursor: col-resize !important; user-select: none; -
 #filmLayer video { width: 100%; height: 100%; object-fit: contain; background: #000; }
 .film-toggle input { accent-color: var(--c); }
 .pad-foot .tag.film { border-color: color-mix(in srgb, var(--c) 50%, var(--line)); }
+
+/* Beamer-Steuerung (Publikumsfenster) */
+.beamer-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.beamer-status { font-size: .85rem; padding: .35em .8em; border-radius: 999px; border: 1px solid #3a4a70; background: #141c2e; }
+.beamer-status.ok { border-color: #2ee6d6; color: #2ee6d6; }
+.beamer-status.warn { border-color: #ffb84d; color: #ffb84d; }
+.beamer-status.aus { color: var(--muted); }
+.beamer-status.laeuft { border-color: #ff6b8a; color: #ffd0da; background: #2a1622; }
+.btn.bereit { border-color: #2ee6d6; box-shadow: 0 0 0 2px #2ee6d655 inset; }
+body.gesperrt .pad:not(.sperrt) { opacity: .45; }
+#qrDlg label { display: block; margin: 10px 0; }
+#qrDlg input { display: block; width: 100%; margin-top: 4px; font: inherit; padding: .5em; border-radius: 8px; border: 1px solid #3a4a70; background: #0f1524; color: inherit; }
+#folieLayer { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: linear-gradient(160deg, #0f2a3f, #0a1626 55%, #0b1f1c); color: #fff; text-align: center; }
+#folieLayer[hidden] { display: none; }
+#folieLayer h1 { font-size: clamp(34px, 4.4vw, 76px); margin: 0 0 .5vh; }
+#folieLayer .unter { font-size: clamp(18px, 2.4vw, 40px); color: #bfe9ff; margin: 0 0 4vh; }
+#folieLayer .qr-reihe { display: flex; gap: 6vw; justify-content: center; }
+#folieLayer .qr { background: #fff; color: #0b1220; border-radius: 28px; padding: 1.6vw 1.6vw 1.2vw; width: min(36vw, 56vh); }
+#folieLayer .qr svg { width: 100%; display: block; }
+#folieLayer .qr .titel { font-size: clamp(20px, 2.6vw, 46px); font-weight: 800; margin-top: 1vw; }
+#folieLayer .qr .url { font-size: clamp(11px, 1vw, 20px); color: #4a5568; word-break: break-all; }
