@@ -24,7 +24,7 @@ Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
 Der Erzähler hat zwei Sounds:
 
 - **Eröffnung** (Taste `Q`): die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
-- **Grüße aus dem Jahr 2050** (Taste `-`): Botschaft zum Showende, etwa 1:43, nur Stimme. Erzeugt mit der Erzählerstimme des Soundboards (Sprachausgabe Christoph mit Erzähler-Klang), **nicht** mit der ElevenLabs-Stimme der Eröffnung.
+- **Grüße aus dem Jahr 2050** (Taste `-`): Botschaft zum Showende, etwa 1:26, nur Stimme. Sprecheraufnahme von ElevenLabs in derselben Stimme wie die Eröffnung (`audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3`, auf −16 LUFS angeglichen wie alle Sounds). Wird nicht vom Generator erzeugt; eine neue Aufnahme einfach unter demselben Namen ablegen und `python tools/generate.py` laufen lassen.
 
 - **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“, der Countdown kommt etwa im Sekundentakt.
 - **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
