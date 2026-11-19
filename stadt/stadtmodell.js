@@ -226,18 +226,18 @@ export const ORTE = {
 };
 // Läden je Variante – EINE Quelle für Bau, Tafeln und Wegmessung. tueren = Eingänge (Ziele der Fußwege)
 export const LAEDEN = {
-  A: [{ name: 'Supermarkt', tueren: [[-58, 20], [-57, 20]], tafel: [-57, 71, 22] }],
-  B: [{ name: 'Markthalle', tueren: [[-25, 2], [-24, 2], [-25, 29], [-24, 29]], tafel: [-24, 75, 15] }],
+  A: [{ name: 'Supermarkt', tueren: [[-58, 20], [-57, 20]], tafel: [-57, 66, 24] }],
+  B: [{ name: 'Markthalle', tueren: [[-25, 2], [-24, 2], [-25, 29], [-24, 29]], tafel: [-24, 72, 15] }],
   C: [
-    { name: 'Bäckerei', tueren: [[-32, -16]], tafel: [-32, 69, -14] },
-    { name: 'Lebensmittel', tueren: [[-36, 10]], tafel: [-37, 69, 12] },
-    { name: 'Gemüse', tueren: [[-58, -16]], tafel: [-59, 69, -14] },
+    { name: 'Bäckerei', tueren: [[-32, -16]], tafel: [-31, 66, -13] },
+    { name: 'Lebensmittel', tueren: [[-36, 10]], tafel: [-36, 66, 13] },
+    { name: 'Gemüse', tueren: [[-58, -16]], tafel: [-58, 66, -13] },
   ],
 };
 export const LADEN = {
-  A: { titel: 'Großer Supermarkt am Stadtrand', ort: 'am Stadtrand', tafel: [-57, 68, 12] },
-  B: { titel: 'Markthalle in der Mitte', ort: 'in der Mitte', tafel: [-24, 68, 15] },
-  C: { titel: 'Kleine Läden im Wohnviertel', ort: 'im Wohnviertel', tafel: [-32, 69, -14] },
+  A: { titel: 'Großer Supermarkt am Stadtrand', ort: 'am Stadtrand', tafel: [-57, 66, 14] },
+  B: { titel: 'Markthalle in der Mitte', ort: 'in der Mitte', tafel: [-24, 66, 15] },
+  C: { titel: 'Kleine Läden im Wohnviertel', ort: 'im Wohnviertel', tafel: [-31, 66, -13] },
 };
 // Wohnhäuser im Westviertel: Haustüren = Startpunkte der Fußwege (alle Häuser bleiben in jeder Variante stehen)
 export const VIERTEL_HAEUSER = [

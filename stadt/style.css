@@ -1,5 +1,7 @@
 /* Stadt-Konfigurator – Bühne 16:9, Größen relativ zur Bühnenhöhe (cqh).
- * Gestaltung nah am Stadt-Konfigurator des Kollegen: Petrol, warmes Gold, Raster, große Abstimmungskarten, DM Sans / IBM Plex Mono. */
+ * Gestaltung nah am Stadt-Konfigurator des Kollegen: Petrol, warmes Gold, Raster, große Abstimmungskarten, DM Sans / IBM Plex Mono.
+ * Aufbau (Korrekturauftrag 19.11.2026): Leiste · Kopfzone (Titel) · 3D-Bühne + Seitenleiste · Karten · Fußleiste.
+ * Nichts davon liegt über der Stadt; nur kleine Gebäudetafeln und kurze Meldungen stehen auf der Bühne. */
 @font-face { font-family: DM; src: url(schrift/dm-sans.woff2) format('woff2'); font-weight: 100 1000; font-display: swap; }
 @font-face { font-family: Plex; src: url(schrift/ibm-plex-mono-500.woff2) format('woff2'); font-weight: 500; font-display: swap; }
 
@@ -15,15 +17,20 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #10292c; col
 body { font: 16px/1.35 DM, "Segoe UI", system-ui, sans-serif; font-synthesis: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: .4cqh solid #a84e0a; outline-offset: .3cqh; }
-body.ohne-bedienung .werkzeuge, body.ohne-bedienung .navi, body.ohne-bedienung .knopfreihe, body.ohne-bedienung .regie { visibility: hidden; }
+body.ohne-bedienung .werkzeuge, body.ohne-bedienung .regie { visibility: hidden; }
+body.ohne-bedienung .fuss, body.ohne-bedienung .knopfreihe { display: none; }
+body.ohne-seite .seite { display: none; }
 
 #app { position: fixed; inset: 0; display: grid; place-items: center; }
 #buehne {
   position: relative; overflow: hidden; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; container-type: size;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; grid-template-columns: minmax(0, 1fr);
   background-color: var(--paper);
   background-image: linear-gradient(#205c6408 1px, transparent 1px), linear-gradient(90deg, #205c6408 1px, transparent 1px);
   background-size: 2.4cqh 2.4cqh;
 }
+.mitte { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.2cqh; padding: 1cqh 1.8cqh 0; min-height: 0; }
+.szene { position: relative; min-height: 0; overflow: hidden; border-radius: 1.2cqh; border: 1px solid var(--line); }
 .welt { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, #f8faf2 0%, #dbeae2 70%, #cfe2da 100%); transition: background .6s; }
 .welt.nacht { background: radial-gradient(ellipse at 50% 55%, #2a3a5c 0%, #142037 70%, #0d1626 100%); }
 .welt.regen { background: radial-gradient(ellipse at 50% 55%, #b7c3cf 0%, #8f9caa 75%, #7a8796 100%); }
@@ -34,7 +41,7 @@ kbd { font: 500 .78em/1 Plex, ui-monospace, monospace; padding: .15em .35em; bor
 
 /* ---------- Leiste oben: Missionen und Werkzeuge ---------- */
 .leiste {
-  position: absolute; left: 0; right: 0; top: 0; height: 6.6cqh; display: flex; align-items: center; gap: 1.5cqh;
+  position: relative; height: 6.6cqh; display: flex; align-items: center; gap: 1.5cqh;
   padding: 0 1.6cqh; background: rgba(255, 255, 255, .9); border-bottom: 1px solid var(--line); backdrop-filter: blur(4px); z-index: 5;
 }
 .missionen { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; flex: 1; min-width: 0; }
@@ -59,31 +66,34 @@ button.haupt { background: var(--gold) !important; border-color: var(--gold-dunk
 button.haupt:hover { background: #ffd58c !important; }
 button:disabled { opacity: .45; cursor: default; }
 
-/* ---------- Titelkasten (wie „hero“ beim Kollegen) ---------- */
+/* ---------- Kopfzone: Titel als eigene Zeile über der Bühne ---------- */
 .hero {
-  position: absolute; left: 1.8cqh; top: 8.2cqh; max-width: 92cqh; z-index: 3; pointer-events: none;
-  background-color: var(--petrol); color: #fff; border-radius: 1.4cqh; padding: 1.4cqh 2.2cqh 1.6cqh;
+  margin: 1cqh 1.8cqh 0; display: flex; align-items: center; justify-content: space-between; gap: 2cqh;
+  background-color: var(--petrol); color: #fff; border-radius: 1.2cqh; padding: 1cqh 2.2cqh 1.1cqh;
   background-image: linear-gradient(#f4fffc09 1px, transparent 1px), linear-gradient(90deg, #f4fffc09 1px, transparent 1px); background-size: 2.2cqh 2.2cqh;
-  box-shadow: 0 .8cqh 2.4cqh #0f3a3140;
 }
-.hero .kicker { color: #ffd17d; font-size: 1.45cqh; display: flex; align-items: center; gap: 1.1cqh; }
+.kopftext { min-width: 0; }
+.hero .kicker { color: #ffd17d; font-size: 1.35cqh; display: flex; align-items: center; gap: 1.1cqh; }
 .hero .kicker::before { content: ''; width: 2.4cqh; height: .4cqh; background: #ffbe56; }
-.hero h1 { margin: .5cqh 0 .4cqh; font-size: 4.6cqh; line-height: 1.07; letter-spacing: -.04em; font-weight: 780; }
-.hero .intro { margin: 0; font-size: 2.35cqh; line-height: 1.24; color: #e1f1ed; }
-.hero.loesung h1 { font-size: 5.6cqh; color: #ffe08e; text-transform: uppercase; letter-spacing: -.02em; }
-.marken { display: flex; flex-wrap: wrap; gap: .7cqh; margin-top: .9cqh; }
+.hero h1 { margin: .35cqh 0 .25cqh; font-size: 4.1cqh; line-height: 1.07; letter-spacing: -.04em; font-weight: 780; }
+.hero .intro { margin: 0; font-size: 2.25cqh; line-height: 1.24; color: #e1f1ed; }
+.hero.loesung h1 { font-size: 4.6cqh; color: #ffe08e; text-transform: uppercase; letter-spacing: -.02em; }
+.marken { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6cqh; max-width: 48%; }
 .marken:empty { display: none; }
-.marke { font-size: 1.9cqh; font-weight: 700; padding: .45cqh 1.1cqh; border-radius: 99px; background: #ffffff1c; border: 1px solid #ffffff40; color: #fff; }
+.marke { font-size: 1.7cqh; font-weight: 700; padding: .4cqh 1cqh; border-radius: 99px; background: #ffffff1c; border: 1px solid #ffffff40; color: #fff; }
 .marke.gold { background: var(--gold); color: #193e47; border-color: var(--gold-dunkel); }
 .marke.offen { background: #ffffff10; border-style: dashed; color: #d8eee9; }
 
 /* ---------- rechte Spalte (Punkte, Material, Zukunftscheck) ---------- */
 .seite {
-  position: absolute; right: 1.8cqh; top: 8.2cqh; width: 52cqh; max-height: calc(100cqh - 26cqh); overflow: auto; z-index: 3;
-  background: rgba(255, 255, 255, .95); border: 1px solid var(--line); border-radius: 1.4cqh; padding: 1.6cqh 1.8cqh;
-  box-shadow: 0 .6cqh 2cqh #0f3a3122;
+  width: 44cqh; min-height: 0; overflow: auto;
+  background: #fff; border: 1px solid var(--line); border-radius: 1.2cqh; padding: 1.4cqh 1.6cqh;
 }
-.seite h2 { margin: 0 0 1cqh; font-size: 2.5cqh; letter-spacing: -.03em; }
+.seite h2 { margin: 0 0 1cqh; font-size: 2.4cqh; letter-spacing: -.03em; }
+.seite .modell { margin: -.4cqh 0 1cqh; font: 500 1.35cqh Plex, monospace; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); }
+.seite ol { margin: 0; padding-left: 2.6cqh; display: grid; gap: .9cqh; font-size: 2cqh; line-height: 1.25; }
+.seite p { font-size: 1.9cqh; line-height: 1.3; margin: .6cqh 0; }
+.seite code { font: 1.7cqh Plex, monospace; background: #eef5f3; padding: .1cqh .5cqh; border-radius: .4cqh; }
 .seite ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .9cqh; }
 .seite li { font-size: 2.1cqh; line-height: 1.25; display: grid; grid-template-columns: 3.2cqh 1fr; gap: .9cqh; align-items: start; }
 .seite li .zeichen { width: 3cqh; height: 3cqh; border-radius: 50%; display: grid; place-items: center; background: #d9e8d4; color: #295640; font-weight: 800; font-size: 1.8cqh; }
@@ -95,15 +105,14 @@ button:disabled { opacity: .45; cursor: default; }
 .material b { display: block; font-size: 1.6cqh; font-family: Plex, monospace; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); }
 
 /* ---------- Bereich unten: Karten, Schalter, Live ---------- */
-.panel { position: absolute; left: 1.8cqh; right: 1.8cqh; bottom: 8.4cqh; z-index: 3; display: flex; flex-direction: column; gap: 1cqh; pointer-events: none; }
-.panel > * { pointer-events: auto; }
+.panel { margin: 1cqh 1.8cqh 0; display: flex; flex-direction: column; gap: 1cqh; }
 .karten { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 1.4cqh; }
 .karte {
   position: relative; display: grid; grid-template-columns: 34cqh 1fr; text-align: left; padding: 0; overflow: hidden;
-  background: var(--white); border: 1px solid #aabfbc; border-radius: 1.2cqh; box-shadow: 0 .3cqh 0 #cbdcda; min-height: 17cqh;
+  background: var(--white); border: 1px solid #aabfbc; border-radius: 1.2cqh; box-shadow: 0 .3cqh 0 #cbdcda; min-height: 15cqh;
 }
 .karten.zwei .karte { grid-template-columns: 42cqh 1fr; }
-.karten.drei .karte { grid-template-columns: 25cqh 1fr; }
+.karten.drei .karte { grid-template-columns: 22cqh 1fr; }
 .karten.drei .karte h2 { font-size: 2.45cqh; }
 .karten.drei .handel { font-size: 1.95cqh; grid-template-columns: 2.4cqh 1fr; gap: .6cqh; }
 .karten.drei .handel .z { width: 2.3cqh; height: 2.3cqh; font-size: 1.8cqh; }
@@ -154,11 +163,26 @@ button:disabled { opacity: .45; cursor: default; }
 .wegliste div { display: flex; align-items: center; gap: 1.2cqh; background: #fff; border: 1px solid var(--line); border-radius: 1cqh; padding: 1cqh 1.4cqh; font-size: 2.2cqh; }
 .wegliste i { width: 3.6cqh; height: 3.6cqh; border-radius: .7cqh; display: grid; place-items: center; font: 500 2.2cqh Plex, monospace; color: #fff; font-style: normal; flex: none; }
 .wegliste b { font-size: 2.8cqh; margin-left: auto; font-variant-numeric: tabular-nums; }
+.wegliste.gross div { font-size: 2.6cqh; font-weight: 700; padding: 1.2cqh 1.6cqh; }
+.wegliste.gross i { width: 5cqh; height: 5cqh; font-size: 3.2cqh; border-radius: 50%; }
+.kette { display: flex; align-items: center; gap: 1cqh; flex-wrap: wrap; }
+.kette span { font-size: 2.3cqh; font-weight: 800; padding: .9cqh 1.6cqh; border-radius: 1cqh; background: #fff; border: 1px solid #a9c9bf; box-shadow: 0 .25cqh 0 #cbdcda; }
+.kette i { font-style: normal; font-size: 2.6cqh; color: var(--teal); }
+.ablauf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2cqh; }
+.ablauf .stufe { background: #fff; border: 1px solid var(--line); border-radius: 1.2cqh; padding: 1.2cqh 1.5cqh; display: grid; gap: .8cqh; align-content: start; }
+.ablauf .stufe h3 { margin: 0; font-size: 2.3cqh; display: flex; gap: 1cqh; align-items: center; }
+.ablauf .stufe h3 .n { width: 3.4cqh; height: 3.4cqh; border-radius: 50%; display: grid; place-items: center; background: #d9e8d4; color: #295640; font: 500 1.9cqh Plex, monospace; flex: none; }
+.ablauf .stufe.fertig h3 .n { background: #155c62; color: #fff; }
+.ablauf .stufe p { margin: 0; font-size: 1.85cqh; line-height: 1.3; color: var(--muted); }
+.ablauf .stufe button { justify-self: start; font-size: 2.1cqh; min-height: 5cqh; padding: .6cqh 1.8cqh; font-weight: 800; border-radius: .9cqh; background: #eef6f5; border: 1px solid #b8d1ce; }
+.ablauf .ergebnis { font-size: 1.85cqh; line-height: 1.3; padding: .8cqh 1.1cqh; border-radius: .8cqh; background: #e5f2ee; border: 1px solid #9cc7bb; color: #134a45; }
+.ablauf .ergebnis.falsch { background: #fbe4df; border-color: #d48b7a; color: #7a2b1c; }
+.ablauf .ergebnis ul { margin: .4cqh 0 0; padding-left: 2cqh; }
 
-.fussnote { position: absolute; left: 1.8cqh; bottom: 1.9cqh; margin: 0; max-width: 95cqh; font-size: 1.6cqh; color: var(--muted); background: rgba(255,255,255,.85); padding: .5cqh 1cqh; border-radius: .6cqh; z-index: 3; }
-.welt.nacht ~ .fussnote { background: rgba(255,255,255,.75); }
-
-.navi { position: absolute; right: 1.8cqh; bottom: 1.5cqh; display: flex; align-items: center; gap: .7cqh; z-index: 4; }
+.fuss { display: flex; align-items: center; justify-content: space-between; gap: 1.4cqh; padding: 1cqh 1.8cqh 1.2cqh; }
+.fussnote { margin: 0; flex: 1; min-width: 0; font-size: 1.65cqh; color: var(--muted); }
+.fussnote b { color: var(--ink); }
+.navi { display: flex; align-items: center; gap: .7cqh; flex: none; }
 .navi .haupt { min-width: 16cqh; font-size: 2.1cqh; }
 .schritt-info { font: 500 1.6cqh Plex, monospace; color: var(--muted); background: rgba(255,255,255,.85); padding: .5cqh .9cqh; border-radius: .6cqh; }
 .navi button[data-aktion='reset'].sicher { background: #f6d6cc; border-color: #c97a64; }
@@ -171,6 +195,12 @@ button:disabled { opacity: .45; cursor: default; }
 }
 .tafel::after { content: ''; position: absolute; left: 50%; bottom: -1cqh; width: .25cqh; height: 1cqh; background: #9fb6b3; }
 .tafel .b { display: inline-grid; place-items: center; width: 2.6cqh; height: 2.6cqh; margin-right: .6cqh; border-radius: .5cqh; color: #fff; font: 500 1.6cqh Plex, monospace; }
+/* Kurze Wege: großer Startpunkt und große Buchstaben-Ziele (Klasse 1–2) */
+.tafel.gross { font-size: 2.8cqh; padding: .7cqh 1.6cqh; background: #fff; border: .35cqh solid #1d3f47; color: #1d3f47; border-radius: 1.2cqh; }
+.tafel.ziel { padding: 0; border: .4cqh solid #fff; border-radius: 50%; width: 6.4cqh; height: 6.4cqh; display: grid; place-items: center; font: 500 3.6cqh Plex, monospace; color: #fff; box-shadow: 0 .5cqh 1.4cqh #0f3a3150; }
+.tafel.ziel::after { bottom: -1.6cqh; height: 1.4cqh; width: .4cqh; background: #fff; }
+.tafel.ziel.mitname { width: auto; height: auto; border-radius: 1.2cqh; padding: .5cqh 1.3cqh .5cqh .5cqh; font: 800 2.2cqh DM, sans-serif; display: flex; gap: .8cqh; align-items: center; }
+.tafel.ziel.mitname .b { width: 4.4cqh; height: 4.4cqh; margin: 0; border-radius: 50%; font-size: 2.6cqh; background: #ffffff33 !important; }
 
 /* ---------- Regie ---------- */
 .regie {
@@ -186,7 +216,7 @@ button:disabled { opacity: .45; cursor: default; }
 .regie .reihe { display: flex; flex-wrap: wrap; gap: .6cqh; margin-top: .8cqh; }
 .regie .tasten { columns: 2; font-size: 1.6cqh; }
 
-.meldung { position: absolute; left: 50%; top: 8.4cqh; transform: translateX(-50%); z-index: 7; pointer-events: none; font-size: 2.1cqh; font-weight: 800; padding: .8cqh 1.8cqh; border-radius: 1cqh; background: #155c62; color: #fff; opacity: 0; transition: opacity .25s; }
+.meldung { position: absolute; left: 50%; top: 1.2cqh; transform: translateX(-50%); z-index: 7; pointer-events: none; font-size: 2.1cqh; font-weight: 800; padding: .8cqh 1.8cqh; border-radius: 1cqh; background: #155c62; color: #fff; opacity: 0; transition: opacity .25s; }
 .meldung.an { opacity: 1; }
 .laden, .fehler { position: absolute; inset: 0; display: grid; place-items: center; z-index: 9; background: var(--paper); }
 .laden div, .fehler div { display: grid; gap: .8cqh; text-align: center; font-size: 2.4cqh; }

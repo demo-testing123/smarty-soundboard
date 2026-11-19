@@ -4,7 +4,8 @@ import { webglMoeglich, Ansicht } from './ansicht3d.js';
 import { MISSIONEN, KAMERAS, TAFELN, BUCHSTABEN_FARBE, RUNDGANG, beschlussText } from './daten.js';
 import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
 import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN } from './stadtmodell.js';
-import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, WELTNAME } from './minecraft-ausgabe.js';
+import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, START, REGIERAUM } from './minecraft-ausgabe.js';
+import { pruefeExport } from './weltleser.js';
 
 const $ = (s) => document.querySelector(s);
 function h(tag, attrs = {}, ...kinder) {
@@ -33,23 +34,26 @@ let vorschau = {};                       // Bereich → Variante (nur Ansicht, k
 let vorherAn = false, nacht = false, regenAn = false, regenModus = 'gruen', wegeGemessen = false;
 let rundgang = { station: -1, timer: null };
 let resetBereit = null;
+let exportStand = null;                  // letzte erzeugte Minecraft-Welt: { name, datei, groesse, pruefung, beschluesse } oder { fehler }
 const bilder = new Map(), wegeCache = new Map(), alleWegeCache = new Map();
 // Tafeln: feste aus daten.js + Ladentafeln aus dem Stadtmodell (eine Quelle für Bau, Tafel und Weg)
 const TAFELN_ALLE = { ...TAFELN };
 for (const v of ['A', 'B', 'C']) {
-  TAFELN_ALLE['laden' + v] = { text: `${v} · ${LADEN[v].ort}`, pos: LADEN[v].tafel, buchstabe: v };
-  LAEDEN[v].forEach((l, i) => { TAFELN_ALLE[`laden${v}${i}`] = { text: `${v} · ${l.name}`, pos: l.tafel, buchstabe: v }; });
+  TAFELN_ALLE['laden' + v] = { text: v, pos: LADEN[v].tafel, buchstabe: v, ziel: true };                       // großes Ziel A/B/C
+  LAEDEN[v].forEach((l, i) => { TAFELN_ALLE[`laden${v}${i}`] = { text: v, pos: l.tafel, buchstabe: v, ziel: true, titel: l.name }; });
 }
 const ladenTafeln = (v) => LAEDEN[v].map((_, i) => `laden${v}${i}`);
 
 const mission = () => MISSIONEN[pos.mission];
 const schritt = () => mission().schritte[pos.schritt];
 const grund = (b) => BEREICHE[b].grund;
+// Mission, zu der eine Baufläche gehört: Flächen späterer Missionen bleiben grau, bis ihre Mission erreicht ist
+const MISSION_VON = Object.fromEntries(BEREICH_IDS.map((b) => [b, MISSIONEN.findIndex((m) => m.bereiche.includes(b))]));
 
 /* ---------- Stand der Stadt ---------- */
 export function sollStand() {
   const m = mission(), s = schritt(), soll = {};
-  for (const b of BEREICH_IDS) soll[b] = Z.variante(b);
+  for (const b of BEREICH_IDS) soll[b] = MISSION_VON[b] > pos.mission ? grund(b) : Z.variante(b);
   if (s.zeige === 'vorher-alle') for (const b of BEREICH_IDS) soll[b] = grund(b);
   if (s.zeige === 'vorher') for (const b of (s.bereich ? [s.bereich] : m.bereiche)) soll[b] = grund(b);
   for (const [b, v] of Object.entries(vorschau)) soll[b] = v;
@@ -67,22 +71,15 @@ function stadtAktualisieren() {
 }
 
 /* ---------- Kamera ---------- */
-// Freie Bildfläche: ohne Kopfleiste, Titel, Seitenleiste und Bedienfeld unten. Bei Presets mit „rahmen“ wird
-// die Kamera so berechnet, dass der Rahmen-Quader ganz sichtbar ist – rechts neben ODER unter dem Titel (was größer zeigt).
+// Die 3D-Bühne ist frei (Titel, Karten und Seitenleiste liegen daneben). Jedes Preset hat einen „rahmen“:
+// Ziel und Zoom werden so berechnet, dass dieser Quader ganz auf die Bühne passt – bei jeder Bildschirm- und Bühnengröße.
 let kameraKey = null;
-function freieFlaechen() {
-  const r = (s) => { const e = $(s); if (!e || e.hidden || getComputedStyle(e).display === 'none') return null; const b = e.getBoundingClientRect(); return b.width && b.height ? b : null; };
-  const W = innerWidth, H = innerHeight, kopf = r('#leiste'), hero = r('#hero'), seite = r('#seite'), panel = r('#panel');
-  const o = (kopf ? kopf.bottom : 0) + 14, u = (panel ? panel.top : H) - 14, re = (seite ? seite.left : W) - 18, l = 18;
-  if (!hero) return [[l, o, re, u]];
-  return [[hero.right + 22, o, re, u], [l, hero.bottom + 14, re, u]].filter(([a, b, c, d]) => c - a > 120 && d - b > 120);
-}
 function kameraFuer(key) {
   const k = KAMERAS[key] || KAMERAS.gesamt;
-  if (!k.rahmen || document.body.classList.contains('ohne-bedienung')) return k;
-  let best = null;
-  for (const rect of freieFlaechen()) { const p = ansicht.passend(k, k.rahmen, rect); if (!best || p.zoom < best.zoom) best = p; }
-  return best ? { ...k, ...best } : k;
+  if (!k.rahmen) return k;
+  ansicht.groesseAktualisieren();                      // Bühnengröße nach dem Umbau der Bedienfelder sofort übernehmen
+  const m = Math.max(8, Math.round(ansicht.hoehePx * 0.03));
+  return { ...k, ...ansicht.passend(k, k.rahmen, [m, m, ansicht.breite - m, ansicht.hoehePx - m]) };
 }
 function kameraZeigen(key, sofort = false) {
   kameraKey = key;
@@ -112,12 +109,12 @@ function gehe(m, s = 0, { kamera = true } = {}) {
   if (kamera) kameraZeigen(st.kamera);       // nach anzeigen(): Bedienfelder stehen, Versatz ist gesetzt
 }
 function weiter() {
-  if (mission().id === 'finale' && rundgang.station >= 0) return station(rundgang.station + 1);
+  if (schritt().art === 'finale' && rundgang.station >= 0 && rundgang.station < RUNDGANG.length - 1) return station(rundgang.station + 1);
   if (pos.schritt < mission().schritte.length - 1) gehe(pos.mission, pos.schritt + 1);
   else if (pos.mission < MISSIONEN.length - 1) gehe(pos.mission + 1, 0);
 }
 function zurueck() {
-  if (mission().id === 'finale' && rundgang.station > 0) return station(rundgang.station - 1);
+  if (schritt().art === 'finale' && rundgang.station > 0) return station(rundgang.station - 1);
   if (pos.schritt > 0) gehe(pos.mission, pos.schritt - 1);
   else if (pos.mission > 0) gehe(pos.mission - 1, MISSIONEN[pos.mission - 1].schritte.length - 1);
 }
@@ -139,7 +136,7 @@ function uebernehmen(b, v) {
   Z.uebernehmen(b, v);
   delete vorschau[b];
   const t = beschlussText(b, v) || BEREICHE[b].titel;
-  melden(`Übernommen: ${t}`);
+  melden(`In die Stadt übernommen: ${t}`);
   anzeigen();
 }
 function nachtSetzen(an) {
@@ -163,20 +160,24 @@ function resetMission() {
   if (!m.bereiche.length) { melden('Diese Szene hat keine Baufläche. „Neu beginnen“ im Regie-Menü.'); return; }
   const k = $('[data-aktion="reset"]');
   if (resetBereit !== m.id) {
-    resetBereit = m.id; k.textContent = 'Wirklich zurücksetzen?'; k.classList.add('sicher');
-    clearTimeout(resetMission.t); resetMission.t = setTimeout(() => { resetBereit = null; k.textContent = 'Reset'; k.classList.remove('sicher'); }, 3500);
+    resetBereit = m.id; k.textContent = `${m.kurz} wirklich zurücksetzen?`; k.classList.add('sicher');
+    clearTimeout(resetMission.t); resetMission.t = setTimeout(() => { resetBereit = null; k.textContent = 'Mission zurücksetzen'; k.classList.remove('sicher'); }, 3500);
     return;
   }
-  resetBereit = null; k.textContent = 'Reset'; k.classList.remove('sicher');
+  resetBereit = null; k.textContent = 'Mission zurücksetzen'; k.classList.remove('sicher');
   Z.zuruecksetzenMission(m.id);
   vorschau = {};
-  melden(`${m.kurz}: zurückgesetzt – Fläche wieder grau`);
+  melden(`${m.kurz}: zurückgesetzt – Fläche wieder grau, andere Missionen bleiben`);
   anzeigen();
 }
 function neuBeginnen() {
+  // alles auf Anfang: Beschlüsse, Mehrheiten, Vorschauen, Rundgang, Regen, Nacht, Export, Ansicht und Kamera
   Z.neuBeginnen();
-  wegeGemessen = false;
+  vorschau = {}; vorherAn = false; wegeGemessen = false; exportStand = null;
+  if (regenAn) { regenAn = false; ansicht.setzeRegen(null); }
+  rundgangStopp(); rundgang.station = -1;
   nachtSetzen(false);
+  document.body.classList.remove('ohne-seite', 'ohne-bedienung');
   gehe(0, 0);
   melden('Neu begonnen: graue Stadt');
 }
@@ -231,29 +232,44 @@ function markenFuer(m) {
   }
   return out;
 }
+function statusMarke(b) {
+  // klarer Status je Abstimmung: Noch offen · Vorschau · Übernommen
+  const v = vorschau[b], neu = v && v !== Z.variante(b);
+  if (neu) return h('span', { class: 'status-marke' }, 'Vorschau – noch nicht übernommen');
+  if (Z.beschluesse[b]) return h('span', { class: 'status-marke ok' }, `✓ Übernommen: ${beschlussText(b, Z.beschluesse[b]) || Z.beschluesse[b]}`);
+  return h('span', { class: 'status-marke' }, 'Noch offen');
+}
+function seiteListe(titel, punkte, modell) {
+  return [h('h2', {}, titel), modell ? h('div', { class: 'modell' }, modell) : null, h('ul', {}, ...punkte.map((p) => h('li', {}, h('span', { class: 'zeichen' }, '•'), h('span', {}, p))))].filter(Boolean);
+}
 function anzeigen() {
   const m = mission(), s = schritt();
   leisteZeichnen();
-  // Titel
+  // Kopfzone: Kicker, Titel (Leitfrage), eine Unterzeile, Beschluss-Marken
   const hero = $('#hero');
   hero.classList.toggle('loesung', s.art === 'loesung');
   $('#kicker').textContent = s.kicker || m.titel;
   $('#titel').textContent = s.titel;
   $('#intro').textContent = s.text || '';
   $('#intro').hidden = !s.text;
-  $('#marken').replaceChildren(...(s.art === 'finale' ? [] : markenFuer(m)));
-  // Fußnote
+  $('#marken').replaceChildren(...(['finale', 'export'].includes(s.art) ? [] : markenFuer(m)));
+  // Fußleiste: Hinweise
   const fn = $('#fussnote');
-  const vorschauHinweis = Object.entries(vorschau).some(([b, v]) => v !== Z.variante(b)) && !vorherAn ? 'Vorschau – noch nicht übernommen. ' : '';
-  const vorherHinweis = vorherAn ? 'Vorher: so sah die Stadt grau aus. ' : '';
-  fn.textContent = vorherHinweis + vorschauHinweis + (s.fussnote || '');
-  fn.hidden = !fn.textContent;
+  const teile = [];
+  if (vorherAn) teile.push(h('b', {}, 'Vorher: '), 'so sah die Stadt grau aus. ');
+  else if (Object.entries(vorschau).some(([b, v]) => v !== Z.variante(b))) teile.push(h('b', {}, 'Vorschau – noch nicht übernommen. '));
+  if (s.fussnote) teile.push(s.fussnote);
+  if (pos.mission === 0 && pos.schritt === 0 && Object.keys(Z.beschluesse).length) teile.push(` Gespeicherter Stand: ${Object.keys(Z.beschluesse).length} Beschlüsse (Regie › „Neu beginnen“ setzt zurück).`);
+  fn.replaceChildren(...teile);
   // Bereiche je Schrittart
   const panel = $('#panel'), seite = $('#seite');
   panel.replaceChildren(); seite.replaceChildren();
   panel.hidden = true; seite.hidden = true;
-  let wege = [], versatz = 0;
+  const wege = [];
   const reihe = h('div', { class: 'knopfreihe' });
+  const tafelKeys = [...(s.tafeln || [])];
+
+  if (s.art === 'bild' && s.punkte) { seite.append(...seiteListe(s.seiteTitel || 'Stichpunkte', s.punkte)); seite.hidden = false; }
 
   if (s.art === 'wahl') {
     const b = s.bereich;
@@ -267,43 +283,45 @@ function anzeigen() {
       },
       kartenBild(b, o.v),
       h('span', { class: 'buchstabe' }, o.b),
-      h('span', { class: 'stempel vorschau' }, 'Vorschau'), h('span', { class: 'stempel beschluss' }, '✓ Beschluss'),
+      h('span', { class: 'stempel vorschau' }, 'Vorschau'), h('span', { class: 'stempel beschluss' }, '✓ Übernommen'),
       h('div', { class: 'text' },
         h('h2', {}, o.titel),
         h('div', { class: 'handel' }, h('span', { class: 'z' }, '+'), h('span', {}, o.pro)),
         h('div', { class: 'handel contra' }, h('span', { class: 'z' }, '−'), h('span', {}, o.contra)),
         s.wohnwerte ? h('div', { class: 'wert' }, h('b', {}, `${wohnungen(o.v)} Wohnungen`), ` · bebaute Fläche im Modell: `, h('b', {}, `${bebauteFlaeche(o.v)} Felder`)) : null,
-        s.wege ? h('div', { class: 'wert' }, 'Weg von unserem Wohnhaus: ', h('b', {}, wegeGemessen ? `${wegLaenge(o.v)} Felder` : '? (messen)')) : null,
+        s.wege && wegeGemessen ? h('div', { class: 'wert' }, 'Weg von unserem Haus: ', h('b', {}, `${wegLaenge(o.v)} Felder`)) : null,
       ));
       karten.append(k);
     }
     panel.append(karten);
     if (s.fragen) panel.append(h('div', { class: 'fragen' }, ...s.fragen.map((f) => h('span', {}, f))));
-    reihe.append(h('span', { class: 'hinweis' }, s.hinweis || ''));
     if (s.tagNacht) reihe.append(tagNachtGruppe());
     if (s.wege) reihe.append(h('button', { type: 'button', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); }, 'aria-pressed': String(wegeGemessen) }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
-    if (s.denkimpuls) reihe.append(h('span', { class: 'status-marke' }, 'Diskussionsbild – gebaut wird die gemeinsame Lösung'));
+    if (s.denkimpuls) reihe.append(h('span', { class: 'status-marke' }, vorschau[b] ? 'Vorschau – Diskussionsbild, wird nicht gebaut' : 'Diskussionsbilder – gebaut wird die gemeinsame Lösung'));
     else {
-      const v = vorschau[b], neu = v && v !== Z.variante(b);
-      reihe.append(Z.beschluesse[b] && !neu ? h('span', { class: 'status-marke ok' }, `✓ ${s.optionen.find((o) => o.v === Z.beschluesse[b])?.b || ''} übernommen`) : h('span', { class: 'status-marke' }, v ? 'Vorschau' : 'noch nicht entschieden'));
-      reihe.append(h('button', { type: 'button', class: 'haupt', disabled: !v || (v === Z.variante(b) && Z.beschluesse[b] === v) || null, onclick: () => uebernehmen(b, v), title: 'Übernehmen (Enter)' }, 'Übernehmen ⏎'));
+      const v = vorschau[b];
+      reihe.append(statusMarke(b));
+      reihe.append(h('button', { type: 'button', class: 'haupt', disabled: !v || (v === Z.variante(b) && Z.beschluesse[b] === v) || null, onclick: () => uebernehmen(b, v), title: 'In die Stadt übernehmen (Enter)' }, 'In Stadt übernehmen ⏎'));
     }
     panel.append(reihe);
     panel.hidden = false;
-    versatz = 0.24;
-    if (s.wege) { const v = vorschau[b] || Z.beschluesse[b]; if (v) for (const w of alleWege(v)) wege.push({ punkte: w.punkte, farbe: BUCHSTABEN_FARBE[v], start: WEISS }); }
+    if (s.wege) {
+      const v = vorschau[b] || Z.beschluesse[b];
+      if (v) for (const w of alleWege(v)) wege.push({ punkte: w.punkte, farbe: BUCHSTABEN_FARBE[v], start: WEISS, breit: true });
+      tafelKeys.push('hierWohnen', ...(v ? ladenTafeln(v) : ['ladenA', 'ladenB', 'ladenC']));
+    }
   }
 
   if (s.art === 'loesung') {
     panel.append(h('div', { class: 'loesung-band' }, ...s.punkte.map((p) => h('span', {}, p))));
     const fertig = Z.beschluesse[s.bereich] === s.variante;
-    reihe.append(h('span', { class: 'hinweis' }, fertig ? 'Der grüne Natur-Abenteuerspielplatz ist in der Stadt.' : 'Vorschau. Mit „Übernehmen“ wird der Platz in der Stadt gebaut (Minecraft: SPIELPLATZ GRUEN).'));
-    reihe.append(fertig ? h('span', { class: 'status-marke ok' }, '✓ übernommen') : h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(s.bereich, s.variante) }, 'Übernehmen ⏎'));
-    panel.append(reihe); panel.hidden = false; versatz = 0.14;
+    reihe.append(h('span', { class: 'hinweis' }, fertig ? 'Der grüne Natur-Abenteuerspielplatz ist in unserer Stadt.' : 'Vorschau. Mit „In Stadt übernehmen“ wird der grüne Platz in unserer Stadt gebaut.'));
+    reihe.append(fertig ? h('span', { class: 'status-marke ok' }, '✓ Übernommen') : h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(s.bereich, s.variante) }, 'In Stadt übernehmen ⏎'));
+    panel.append(reihe); panel.hidden = false;
   }
 
   if (s.art === 'regen') {
-    seite.append(h('h2', {}, 'Was passiert mit dem Regen?'), h('ul', {}, ...s.punkte.map((p) => h('li', {}, h('span', { class: 'zeichen' }, '•'), h('span', {}, p)))));
+    seite.append(...seiteListe('Was passiert mit dem Regen?', s.punkte, 'Vereinfachtes Modell · Zeit gerafft · ohne Mengen'));
     seite.hidden = false;
     reihe.append(
       h('span', { class: 'gruppe' },
@@ -312,7 +330,7 @@ function anzeigen() {
       h('button', { type: 'button', class: 'haupt', onclick: () => regenSetzen(!regenAn) }, regenAn ? 'Regen stoppen (R)' : 'Starkregen starten (R)'),
       s.link ? h('button', { type: 'button', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗') : null,
     );
-    panel.append(reihe); panel.hidden = false; versatz = 0.06;
+    panel.append(reihe); panel.hidden = false;
   }
 
   if (s.art === 'schalter') {
@@ -321,30 +339,31 @@ function anzeigen() {
     reihe.append(h('span', { class: 'gruppe' }, knopf(s.vorher, s.vorherText || 'Vorher'), knopf(s.nachher, s.nachherText || 'Nachher')));
     if (s.tagNacht) reihe.append(tagNachtGruppe());
     if (s.weitereKamera) reihe.append(h('button', { type: 'button', onclick: () => kameraZeigen(s.weitereKamera) }, KAMERAS[s.weitereKamera].titel + ' zeigen'), h('button', { type: 'button', onclick: () => kameraZeigen(s.kamera) }, KAMERAS[s.kamera].titel + ' zeigen'));
+    reihe.append(statusMarke(b));
     const v = vorschau[b];
-    if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(b, v) }, 'Übernehmen ⏎'));
-    else reihe.append(h('span', { class: `status-marke ${Z.beschluesse[b] ? 'ok' : ''}` }, Z.beschluesse[b] ? `✓ ${beschlussText(b, Z.beschluesse[b])}` : 'Stadt: Ausgangszustand'));
+    if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(b, v) }, 'In Stadt übernehmen ⏎'));
     panel.append(reihe); panel.hidden = false;
     if (s.material) { seite.append(h('h2', {}, 'Material und Klima'), h('div', { class: 'material' }, ...s.material.map(([t, x]) => h('div', {}, h('b', {}, t), x)))); seite.hidden = false; }
   }
 
   if (s.art === 'extern') {
+    if (s.kette) panel.append(h('div', { class: 'kette' }, ...s.kette.flatMap((t, i) => [i ? h('i', {}, '→') : null, h('span', {}, t)])));
     panel.append(h('div', { class: 'live' }, h('span', { class: 'punkt' }), h('div', {}, h('b', {}, 'Jetzt live'), h('span', {}, s.live)),
       s.link ? h('button', { type: 'button', class: 'haupt', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗') : h('span')));
-    panel.hidden = false; versatz = 0.1;
+    panel.hidden = false;
   }
 
   if (s.art === 'wege') {
-    const liste = h('div', { class: 'wegliste' });
+    const liste = h('div', { class: 'wegliste gross' });
     for (const v of ['A', 'B', 'C']) {
       const w = weg(v);
-      if (w) wege.push({ punkte: w, farbe: BUCHSTABEN_FARBE[v] });
-      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), h('b', {}, wegeGemessen ? `${wegLaenge(v)} Felder` : '?')));
+      if (w) wege.push({ punkte: w, farbe: BUCHSTABEN_FARBE[v], start: WEISS, breit: true });
+      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), wegeGemessen ? h('b', {}, `${wegLaenge(v)} Felder`) : null));
     }
     panel.append(liste);
-    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Felder von unserer Haustür bis zur Tür des nächsten Ladens (über Gehwege und Zebrastreifen) – keine Meter.' : 'Erst schätzen – dann messen.'),
+    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Felder von unserer Haustür bis zum nächsten Laden – keine Meter.' : 'Erst schätzen: Welcher Weg ist am kürzesten?'),
       h('button', { type: 'button', class: wegeGemessen ? '' : 'haupt', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); } }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
-    panel.append(reihe); panel.hidden = false; versatz = 0.04;
+    panel.append(reihe); panel.hidden = false;
   }
 
   if (s.art === 'finale') {
@@ -359,35 +378,88 @@ function anzeigen() {
     reihe.append(
       h('button', { type: 'button', 'aria-pressed': String(vorherAn), onclick: () => { vorherAn = !vorherAn; anzeigen(); } }, vorherAn ? 'Nachher zeigen' : 'Vorher zeigen (V)'),
       h('button', { type: 'button', onclick: () => station(Math.max(0, rundgang.station - 1)) }, '◀ Station'),
-      h('button', { type: 'button', class: 'haupt', onclick: () => (rundgang.timer ? rundgangStopp() : rundgangStart()) }, rundgang.timer ? '■ Rundgang anhalten' : '▶ Rundgang'),
+      h('button', { type: 'button', class: 'haupt', onclick: () => (rundgang.timer ? rundgangStopp() : rundgangStart()) }, rundgang.timer ? '■ Vorschau anhalten' : '▶ Vorschau-Rundgang'),
       h('button', { type: 'button', onclick: () => station(rundgang.station + 1) }, 'Station ▶'),
-      h('span', { class: 'hinweis' }, st ? `Station ${rundgang.station + 1}/${RUNDGANG.length}: ${st.text}` : 'Rundgang: Wohnhaus → Laden → grüner Platz → Kreuzung → Treffpunkt'),
+      h('span', { class: 'hinweis' }, st ? `Vorschau ${rundgang.station + 1}/${RUNDGANG.length}: ${st.text}` : 'Vorschau im Konfigurator – der echte Rundgang folgt in Minecraft.'),
+      h('button', { type: 'button', onclick: () => gehe(pos.mission, pos.schritt + 1) }, 'Weiter zur Minecraft-Welt →'),
     );
     panel.append(reihe); panel.hidden = false;
+    if (st && st.mission === 'einkaufen' && Z.beschluesse.einkaufen) tafelKeys.push(...ladenTafeln(Z.beschluesse.einkaufen));
+    if (st && st.tafel) tafelKeys.push(st.tafel);
+    if (Z.beschluesse.einkaufen) wege.push({ punkte: weg(Z.beschluesse.einkaufen), farbe: BUCHSTABEN_FARBE[Z.beschluesse.einkaufen] });
   }
 
+  if (s.art === 'export') exportZeichnen(panel, seite);
+
   // Tafeln, Wege, Hervorhebung
-  const tafelKeys = [...(s.tafeln || [])];
-  if (s.art === 'wahl' && s.wege) {
-    const v = vorschau[s.bereich] || Z.beschluesse[s.bereich];
-    tafelKeys.push('wohnhaus', ...(v ? ladenTafeln(v) : ['ladenA', 'ladenB', 'ladenC']));
-  }
-  if (s.art === 'finale' && rundgang.station >= 0 && RUNDGANG[rundgang.station].mission === 'einkaufen' && Z.beschluesse.einkaufen) tafelKeys.push(...ladenTafeln(Z.beschluesse.einkaufen));
-  if (s.art === 'finale' && rundgang.station >= 0 && RUNDGANG[rundgang.station].tafel) tafelKeys.push(RUNDGANG[rundgang.station].tafel);
-  if (mission().id === 'finale' && Z.beschluesse.einkaufen) wege.push({ punkte: weg(Z.beschluesse.einkaufen), farbe: BUCHSTABEN_FARBE[Z.beschluesse.einkaufen] });
   tafelnSetzen(tafelKeys);
   ansicht.setzeWege(wege);
   const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : [];
   ansicht.setzeMarkierung(markiert);
-  ansicht.setzeVersatz(versatz);
+  ansicht.setzeVersatz(0);
+  // Seitenleiste ein/aus (nur wenn es eine gibt)
+  const sk = $('[data-aktion="seite"]');
+  sk.hidden = seite.hidden;
+  sk.setAttribute('aria-pressed', String(!document.body.classList.contains('ohne-seite')));
   // Navigation
   $('#schrittInfo').textContent = `${m.kurz} · ${pos.schritt + 1}/${m.schritte.length}`;
   $('[data-aktion="vorher"]').setAttribute('aria-pressed', String(vorherAn));
   $('[data-aktion="vorher"]').textContent = vorherAn ? 'Nachher' : 'Vorher';
   $('[data-aktion="zurueck"]').disabled = pos.mission === 0 && pos.schritt === 0;
-  $('[data-aktion="weiter"]').disabled = pos.mission === MISSIONEN.length - 1 && pos.schritt === m.schritte.length - 1 && !(m.id === 'finale' && rundgang.station >= 0 && rundgang.station < RUNDGANG.length - 1);
+  $('[data-aktion="weiter"]').disabled = pos.mission === MISSIONEN.length - 1 && pos.schritt === m.schritte.length - 1;
   stadtAktualisieren();
   if (!$('#regie').hidden) regieZeichnen();
+}
+
+/* ---------- Finale: Minecraft-Welt erstellen ---------- */
+const ERSATZWELT = 'START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld';
+function exportAktuell() { return exportStand && exportStand.beschluesse && JSON.stringify(exportStand.beschluesse) === JSON.stringify(Z.beschluesse); }
+async function weltErstellen({ laden = !TEST } = {}) {
+  exportStand = { laeuft: true };
+  anzeigen();
+  await new Promise((res) => setTimeout(res, 30));
+  const beschl = { ...Z.beschluesse };              // nur übernommene Beschlüsse – keine Vorschau
+  try {
+    const t0 = performance.now(), ex = await stadtMcworld(beschl, new Date());
+    const pruefung = await pruefeExport(ex.daten, beschl);
+    exportStand = { name: ex.name, datei: ex.datei, groesse: ex.daten.length, ms: Math.round(performance.now() - t0), pruefung, beschluesse: beschl, daten: ex.daten };
+    if (pruefung.ok && laden) herunterladen(ex.daten, ex.datei, 'application/octet-stream');
+  } catch (e) {
+    exportStand = { fehler: String((e && e.message) || e) };
+  }
+  anzeigen();
+  return exportStand;
+}
+function exportZeichnen(panel, seite) {
+  const n = Object.keys(Z.beschluesse).length, gesamt = BEREICH_IDS.length, x = exportStand, aktuell = exportAktuell();
+  const stufe = (nr, titel, fertig, ...inhalt) => h('div', { class: `stufe ${fertig ? 'fertig' : ''}` }, h('h3', {}, h('span', { class: 'n' }, fertig ? '✓' : String(nr)), titel), ...inhalt);
+  let ergebnis = null;
+  if (x && x.laeuft) ergebnis = h('div', { class: 'ergebnis' }, 'Welt wird erstellt und geprüft …');
+  else if (x && x.fehler) ergebnis = h('div', { class: 'ergebnis falsch' }, h('b', {}, 'Fehler – keine Datei erstellt: '), x.fehler, ' Für die Show die geprüfte Ersatzwelt verwenden.');
+  else if (x && x.pruefung && !x.pruefung.ok) ergebnis = h('div', { class: 'ergebnis falsch' }, h('b', {}, 'Prüfung fehlgeschlagen – Datei wird nicht angeboten:'), h('ul', {}, ...x.pruefung.punkte.filter((q) => !q[1]).map((q) => h('li', {}, `${q[0]} ${q[2] || ''}`))), 'Für die Show die geprüfte Ersatzwelt verwenden.');
+  else if (x && x.pruefung) ergebnis = h('div', { class: 'ergebnis' },
+    h('b', {}, aktuell ? '✓ Welt erstellt und geprüft' : 'Welt erstellt – die Beschlüsse haben sich seitdem geändert, bitte neu erstellen'),
+    h('ul', {}, h('li', {}, `Datei: ${x.datei} (${Math.max(1, Math.round(x.groesse / 1024))} KB) im Download-Ordner`), h('li', {}, `Name in Minecraft: „${x.name}“`),
+      h('li', {}, `Geprüft: Start draußen am Platz, Kreativmodus, ${x.pruefung.punkte.length - 4} Bauflächen Block für Block wie beschlossen`)),
+    h('button', { type: 'button', onclick: () => herunterladen(x.daten, x.datei, 'application/octet-stream') }, '⬇ Noch einmal herunterladen'));
+  panel.append(h('div', { class: 'ablauf' },
+    stufe(1, 'Stadt fertig', n > 0, h('p', {}, `${n} von ${gesamt} Bauflächen übernommen. Nur übernommene Beschlüsse kommen in die Welt – offene Flächen bleiben grau.`)),
+    stufe(2, 'Minecraft-Welt erstellen', aktuell && x.pruefung && x.pruefung.ok,
+      h('button', { type: 'button', class: 'haupt', disabled: (x && x.laeuft) || null, onclick: () => weltErstellen() }, x && x.laeuft ? 'Wird erstellt …' : aktuell ? 'Neu erstellen' : '⬇ Minecraft-Welt erstellen'), ergebnis),
+    stufe(3, 'In Minecraft Education öffnen', false, h('p', {}, 'Datei doppelklicken – die Anleitung steht rechts.'),
+      h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, 'Optional: Bauaufträge von Hand')),
+  ));
+  panel.hidden = false;
+  const name = x && x.name ? `„${x.name}“` : '„START IT SMART Stadt 2050 · Datum Uhrzeit“';
+  seite.append(h('h2', {}, 'So öffnet ihr die Welt'),
+    h('ol', {},
+      h('li', {}, 'Die Datei im Download-Ordner doppelklicken. Minecraft Education importiert die Welt. (Oder in Minecraft Education: Spielen › Importieren.)'),
+      h('li', {}, `In der Weltenliste ${name} öffnen – Datum und Uhrzeit zeigen die neueste Datei.`),
+      h('li', {}, `Ihr startet draußen am ${START.titel}, Blick über den grünen Platz. Fliegen: zweimal Leertaste.`),
+      h('li', {}, 'Regie: Regieraum mit ', h('code', {}, ALLGEMEIN.regieraum), ', zurück zum Start mit ', h('code', {}, `/tp @s ${START.stand.join(' ')}`), '.')),
+    h('p', {}, h('b', {}, 'Sicherheitsnetz: '), 'Bei der Probe eine Welt erstellen, in Minecraft Education öffnen und prüfen – diese Datei für die Show bereithalten. Vorbereitet: ',
+      h('a', { href: ERSATZWELT, download: ERSATZWELT }, 'Ersatzwelt mit typischen Beschlüssen'), ' (ebenfalls vorher prüfen).'));
+  seite.hidden = false;
 }
 function tagNachtGruppe() {
   return h('span', { class: 'gruppe' },
@@ -401,7 +473,10 @@ function tafelnSetzen(keys) {
   const box = $('#tafeln');
   tafelEls = keys.filter((k) => TAFELN_ALLE[k]).map((k) => {
     const t = TAFELN_ALLE[k];
-    const el = h('div', { class: 'tafel' }, t.buchstabe ? h('span', { class: 'b', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}` }, t.buchstabe) : null, t.buchstabe ? t.text.replace(/^[ABC] · /, '') : t.text);
+    let el;
+    if (t.ziel && !t.name) el = h('div', { class: 'tafel ziel', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}`, title: t.titel || null }, t.buchstabe);
+    else if (t.ziel) el = h('div', { class: 'tafel ziel mitname', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}` }, h('span', { class: 'b' }, t.buchstabe), t.text);
+    else el = h('div', { class: `tafel ${t.gross ? 'gross' : ''}` }, t.buchstabe ? h('span', { class: 'b', style: `background:${BUCHSTABEN_FARBE[t.buchstabe]}` }, t.buchstabe) : null, t.text);
     return { el, pos: t.pos };
   });
   box.replaceChildren(...tafelEls.map((t) => t.el));
@@ -428,7 +503,7 @@ function station(i) {
 function rundgangStart() {
   rundgangStopp();
   station(rundgang.station < 0 || rundgang.station >= RUNDGANG.length - 1 ? 0 : rundgang.station + 1);
-  rundgang.timer = setInterval(() => { if (rundgang.station >= RUNDGANG.length - 1) { rundgangStopp(); anzeigen(); } else station(rundgang.station + 1); }, 6000);
+  rundgang.timer = setInterval(() => { if (rundgang.station >= RUNDGANG.length - 1) { rundgangStopp(); anzeigen(); } else station(rundgang.station + 1); }, 6000);   // endet an der letzten Station; „Weiter“ führt dann zur Minecraft-Welt
   anzeigen();
 }
 function rundgangStopp() { if (rundgang.timer) clearInterval(rundgang.timer); rundgang.timer = null; }
@@ -450,11 +525,11 @@ function regieZeichnen() {
     mehrheit,
     h('h3', {}, 'Beschlüsse und Minecraft-Befehl der aktuellen Variante'), tabelle,
     h('div', { class: 'reihe' },
-      h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, '⛏ Bauauftrag (M)'),
+      h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, '⛏ Minecraft (M)'),
       h('button', { type: 'button', onclick: () => resetMission() }, 'Mission zurücksetzen'),
       h('button', { type: 'button', onclick: () => $('#neu').showModal() }, 'Neu beginnen …')),
     h('h3', {}, 'Tasten'),
-    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt'], ['A B C', 'Vorschau'], ['Enter', 'Übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Bauauftrag'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
+    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt'], ['A B C', 'Vorschau'], ['Enter', 'In Stadt übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
     h('h3', {}, 'Verlauf'), h('ul', {}, ...Z.verlauf.slice(-8).reverse().map(([t, x]) => h('li', {}, `${t} ${x}`))),
   );
 }
@@ -476,7 +551,7 @@ function bauauftragOeffnen() {
   $('#bauTitel').textContent = m.bereiche.length ? `Bauauftrag · ${m.kurz}` : 'Bauaufträge · ganze Stadt';
   inhalt.replaceChildren(
     h('div', { class: 'auftrag' }, h('h3', {}, 'Einmal vor der Vorlesung'),
-      h('p', {}, `Welt „${WELTNAME}“ einmal importieren. Danach bleibt sie geöffnet; jeder Beschluss wird nur noch per Knopf oder Befehl getauscht.`),
+      h('p', {}, `Nur nötig, wenn ihr in einer schon geöffneten Welt etwas von Hand ändern wollt. Für die Show im Finale „Minecraft-Welt erstellen“ – sie enthält alle Beschlüsse.`),
       befehlZeile('Einrichten', ALLGEMEIN.ticking), befehlZeile('Regieraum', ALLGEMEIN.regieraum), befehlZeile('Ruhig', ALLGEMEIN.ruhe)),
     ...bereiche.map((b) => {
       const box = h('div', { class: 'auftrag' });
@@ -517,6 +592,7 @@ function aktion(a) {
   else if (a === 'regie') { const r = $('#regie'); r.hidden = !r.hidden; $('[data-aktion="regie"]').setAttribute('aria-pressed', String(!r.hidden)); if (!r.hidden) regieZeichnen(); }
   else if (a === 'vollbild') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
   else if (a === 'vorher') { vorherAn = !vorherAn; anzeigen(); }
+  else if (a === 'seite') { document.body.classList.toggle('ohne-seite'); anzeigen(); }
   else if (a === 'reset') resetMission();
   else if (a === 'zurueck') zurueck();
   else if (a === 'weiter') weiter();
@@ -570,13 +646,9 @@ async function start() {
   $('#textLaden').addEventListener('click', () => herunterladen(alleBauauftraege(), 'START-IT-SMART_Bauauftraege.txt', 'text/plain;charset=utf-8'));
   $('#mcworldLaden').addEventListener('click', async () => {
     const st2 = $('#bauStatus');
-    st2.textContent = 'Welt wird erzeugt …';
-    await new Promise((r) => setTimeout(r, 30));
-    try {
-      const t0 = performance.now(), { daten } = await stadtMcworld();
-      herunterladen(daten, 'START-IT-SMART_Stadt-2050.mcworld', 'application/octet-stream');
-      st2.textContent = `Fertig (${(daten.length / 1024 / 1024).toFixed(1)} MB, ${Math.round(performance.now() - t0)} ms). Doppelklick öffnet sie in Minecraft Education.`;
-    } catch (e) { st2.textContent = 'Fehler beim Erzeugen: ' + e.message; }
+    st2.textContent = 'Welt wird erstellt und geprüft …';
+    const x = await weltErstellen();
+    st2.textContent = x.fehler ? `Fehler: ${x.fehler}` : !x.pruefung.ok ? 'Prüfung fehlgeschlagen – Details im Finale (Schritt „Minecraft-Welt“).' : `Fertig und geprüft: ${x.datei} (${Math.round(x.groesse / 1024)} KB). Doppelklick öffnet sie in Minecraft Education.`;
   });
   $('#laden').classList.add('weg');
   setTimeout(() => ($('#laden').hidden = true), 450);
@@ -585,7 +657,7 @@ async function start() {
   for (const m of MISSIONEN) for (const s of m.schritte) if (s.art === 'wahl' && s.bereich !== 'laternen') for (const o of s.optionen) vorbereiten.push([s.bereich, o.v]);
   const naechstes = () => { const x = vorbereiten.shift(); if (!x) return; bildFuer(...x); setTimeout(naechstes, 60); };
   setTimeout(naechstes, 800);
-  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent) };
+  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent), weltErstellen, exportStand: () => exportStand, sollStand, kameraKey: () => kameraKey };
   window.__stadtOk = true;
 }
 start().catch((e) => {

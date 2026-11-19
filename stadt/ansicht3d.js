@@ -404,14 +404,18 @@ export class Ansicht {
   /* --- Wege (Wegsteine wie im Kollegen-Konfigurator) --- */
   setzeWege(liste) {
     for (const c of [...this.wege.children]) { this.wege.remove(c); c.geometry.dispose(); }
-    for (const { punkte, farbe: hex, start: startHex } of liste || []) {
+    for (const { punkte, farbe: hex, start: startHex, breit } of liste || []) {
       if (!punkte || !punkte.length) continue;
-      const g = new THREE.BoxGeometry(0.74, 0.14, 0.74);
-      const m = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ color: hex }), punkte.length);
+      // breit: durchgehender Weg mit weißem Rand (gut sichtbar auf dem Beamer, Kurze Wege)
+      const lagen = breit ? [[1.5, 0.1, '#ffffff', 0.05], [1.0, 0.16, hex, 0.09]] : [[0.74, 0.14, hex, 0.07]];
       const mat = new THREE.Matrix4();
-      punkte.forEach(([x, z], k) => { mat.makeTranslation(x + 0.5, S + 0.07, z + 0.5); m.setMatrixAt(k, mat); });
-      m.frustumCulled = false;
-      this.wege.add(m);
+      for (const [b, d, c, y] of lagen) {
+        const m = new THREE.InstancedMesh(new THREE.BoxGeometry(b, d, b), new THREE.MeshBasicMaterial({ color: c }), punkte.length);
+        punkte.forEach(([x, z], k) => { mat.makeTranslation(x + 0.5, S + y, z + 0.5); m.setMatrixAt(k, mat); });
+        m.frustumCulled = false;
+        m.userData.weg = c === hex;
+        this.wege.add(m);
+      }
       const ende = punkte[punkte.length - 1], start = punkte[0];
       for (const [x, z, h, c] of [[start[0], start[1], 3.2, startHex || hex], [ende[0], ende[1], 3.2, hex]]) {
         const s = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, h, 10).translate(x + 0.5, S + h / 2, z + 0.5), new THREE.MeshBasicMaterial({ color: c }));
@@ -524,12 +528,18 @@ export class Ansicht {
   }
 
   /* --- Zeichnen --- */
-  resize() {
+  // Größe der Bühne übernehmen (ohne Rückruf) – z. B. direkt nach einem Umbau der Bedienfelder
+  groesseAktualisieren() {
     const w = this.container.clientWidth || 16, h = this.container.clientHeight || 9;
+    if (w === this.breite && h === this.hoehePx) return false;
     this.breite = w; this.hoehePx = h;
     this.renderer.setSize(w, h, false);
     this._kameraSetzen();
     this.anfordern();
+    return true;
+  }
+  resize() {
+    this.groesseAktualisieren();
     if (this.nachResize) this.nachResize();
   }
   anfordern() {

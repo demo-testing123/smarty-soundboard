@@ -12,53 +12,64 @@
 <body>
 <div id="app">
   <main id="buehne" aria-label="Stadt-Konfigurator">
-    <div id="welt" class="welt" aria-label="3D-Modell der Stadt"></div>
-    <div id="tafeln" class="tafeln" aria-hidden="true"></div>
-
     <nav id="leiste" class="leiste" aria-label="Missionen">
       <ol id="missionen" class="missionen"></ol>
       <div class="werkzeuge">
         <button type="button" data-aktion="gesamt" title="Gesamtansicht (G)">Gesamtansicht</button>
         <button type="button" data-aktion="szene" title="Zur Szene (S)">Zur Szene</button>
         <button type="button" data-aktion="nacht" title="Tag / Nacht (N)" aria-pressed="false">Nacht</button>
-        <button type="button" data-aktion="minecraft" title="Minecraft-Bauauftrag (M)">⛏ Bauauftrag</button>
-        <button type="button" data-aktion="regie" title="Regie (I)" aria-pressed="false">Regie</button>
+        <button type="button" data-aktion="minecraft" title="Minecraft: Welt und Bauaufträge (M)">⛏ Minecraft</button>
+        <button type="button" data-aktion="regie" title="Regie und Infos (I)" aria-pressed="false">Regie</button>
         <button type="button" data-aktion="vollbild" title="Vollbild (F)">Vollbild</button>
       </div>
     </nav>
 
-    <section id="hero" class="hero">
-      <div id="kicker" class="kicker"></div>
-      <h1 id="titel"></h1>
-      <p id="intro" class="intro"></p>
+    <!-- Kopfzone: kurzer Titel (Leitfrage) und eine Unterzeile – liegt NICHT über der Stadt -->
+    <header id="hero" class="hero">
+      <div class="kopftext">
+        <div id="kicker" class="kicker"></div>
+        <h1 id="titel"></h1>
+        <p id="intro" class="intro"></p>
+      </div>
       <div id="marken" class="marken"></div>
-    </section>
+    </header>
 
-    <aside id="seite" class="seite" hidden></aside>
-    <section id="panel" class="panel" hidden></section>
-    <p id="fussnote" class="fussnote" hidden></p>
-
-    <div id="navi" class="navi">
-      <button type="button" data-aktion="vorher" title="Vorher / Nachher (V)" aria-pressed="false">Vorher</button>
-      <button type="button" data-aktion="reset" title="Diese Mission zurücksetzen">Reset</button>
-      <span id="schrittInfo" class="schritt-info"></span>
-      <button type="button" data-aktion="zurueck" title="Zurück (←)">← Zurück</button>
-      <button type="button" data-aktion="weiter" class="haupt" title="Weiter (→)">Weiter →</button>
+    <!-- 3D-Bühne (frei) und Seitenleiste daneben -->
+    <div id="mitte" class="mitte">
+      <section id="szene" class="szene">
+        <div id="welt" class="welt" aria-label="3D-Modell der Stadt"></div>
+        <div id="tafeln" class="tafeln" aria-hidden="true"></div>
+        <div id="meldung" class="meldung" role="status" aria-live="polite"></div>
+      </section>
+      <aside id="seite" class="seite" hidden></aside>
     </div>
 
+    <section id="panel" class="panel" hidden></section>
+
+    <footer class="fuss">
+      <p id="fussnote" class="fussnote"></p>
+      <div id="navi" class="navi">
+        <button type="button" data-aktion="seite" title="Seitenleiste ein/aus" aria-pressed="true" hidden>Infos</button>
+        <button type="button" data-aktion="vorher" title="Vorher / Nachher (V)" aria-pressed="false">Vorher</button>
+        <button type="button" data-aktion="reset" title="Nur diese Mission zurücksetzen – andere Beschlüsse bleiben">Mission zurücksetzen</button>
+        <span id="schrittInfo" class="schritt-info"></span>
+        <button type="button" data-aktion="zurueck" title="Zurück (←)">← Zurück</button>
+        <button type="button" data-aktion="weiter" class="haupt" title="Weiter (→)">Weiter →</button>
+      </div>
+    </footer>
+
     <aside id="regie" class="regie" hidden aria-label="Regie"></aside>
-    <div id="meldung" class="meldung" role="status" aria-live="polite"></div>
     <div id="laden" class="laden"><div><b>Stadt wird gebaut …</b><span>Das dauert einen Moment.</span></div></div>
     <div id="fehler" class="fehler" hidden></div>
   </main>
 </div>
 
 <dialog id="bauauftrag" class="dialog" aria-labelledby="bauTitel">
-  <div class="dialogkopf"><div><div class="kicker">Minecraft Education</div><h2 id="bauTitel">Bauauftrag</h2></div><button type="button" class="schliessen" aria-label="Schließen">×</button></div>
-  <p class="dialoghinweis">Der Browser ändert Minecraft <b>nicht</b> automatisch. Die Regie löst jeden Bauauftrag in der geöffneten Welt aus: Knopf im Regieraum oder Befehl im Chat. Gebaut wird nur auf der jeweiligen Baufläche.</p>
+  <div class="dialogkopf"><div><div class="kicker">Minecraft Education</div><h2 id="bauTitel">Bauaufträge (manuelle Variante)</h2></div><button type="button" class="schliessen" aria-label="Schließen">×</button></div>
+  <p class="dialoghinweis"><b>Für die Show:</b> Im Finale „Minecraft-Welt erstellen“ – die Datei enthält die Stadt mit allen übernommenen Beschlüssen, Start draußen am Platz. Die Bauaufträge unten sind nur für Änderungen <b>von Hand</b> in einer schon geöffneten Welt (Knopf im Regieraum oder Befehl im Chat).</p>
   <div id="bauInhalt"></div>
   <div class="dialogleiste">
-    <button type="button" id="mcworldLaden" class="haupt">⬇ Minecraft-Welt „Stadt 2050“ (.mcworld)</button>
+    <button type="button" id="mcworldLaden" class="haupt">⬇ Minecraft-Welt mit den Beschlüssen (.mcworld)</button>
     <button type="button" id="textLaden">⬇ Alle Bauaufträge (.txt)</button>
     <span id="bauStatus" class="status" role="status"></span>
   </div>
@@ -66,7 +77,7 @@
 
 <dialog id="neu" class="dialog klein" aria-labelledby="neuTitel">
   <div class="dialogkopf"><h2 id="neuTitel">Neu beginnen?</h2><button type="button" class="schliessen" aria-label="Schließen">×</button></div>
-  <p>Alle Beschlüsse werden gelöscht. Die Stadt ist danach wieder grau – für eine neue Vorlesung. In Minecraft je Fläche „GRAU“ drücken oder die gesicherte Welt neu öffnen.</p>
+  <p>Alle Beschlüsse, Vorschauen, Mehrheiten und die Kamera werden zurückgesetzt. Die Stadt ist danach wieder grau – für eine neue Vorlesung. Eine schon erstellte Minecraft-Datei bleibt, wie sie ist; für die nächste Gruppe eine neue Welt erstellen.</p>
   <div class="dialogleiste"><button type="button" class="schliessen">Abbrechen</button><button type="button" id="neuJa" class="haupt">Neu beginnen</button></div>
 </dialog>
 

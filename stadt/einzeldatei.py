@@ -22,6 +22,7 @@ MODULE = {   # fester Name → Datei
     'sis/zustand': 'stadt/zustand.js',
     'sis/ansicht3d': 'stadt/ansicht3d.js',
     'sis/minecraft-ausgabe': 'stadt/minecraft-ausgabe.js',
+    'sis/weltleser': 'stadt/weltleser.js',
     'sis/main': 'stadt/main.js',
 }
 NACH_DATEI = {v: k for k, v in MODULE.items()}
@@ -40,6 +41,9 @@ def umschreiben(rel, quelle):
             raise SystemExit(f'unbekannter Import {m.group(2)} in {rel}')
         return f"{m.group(1)}'{NACH_DATEI[ziel]}'"
     quelle = re.sub(r"""(\bfrom\s*|\bimport\s*)['"](\.{1,2}/[^'"]+)['"]""", ersetze, quelle)
+    if rel == 'stadt/main.js':    # Ersatzwelt liegt nicht neben der Einzeldatei: Online-Fassung
+        assert 'href: ERSATZWELT,' in quelle
+        quelle = quelle.replace('href: ERSATZWELT,', f"href: '{ONLINE}stadt/' + ERSATZWELT,")
     if rel == 'stadt/daten.js':   # Links zu den eigenständigen Simulationen: Online-Fassung
         quelle = re.sub(r"href: '\.\./(natur|verkehr|wohnen)/'", lambda m: f"href: '{ONLINE}{m.group(1)}/'", quelle)
     return quelle

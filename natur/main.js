@@ -16,7 +16,7 @@ const h = (tag, attrs = {}, ...kids) => {
 };
 
 let welt = null;
-const S = { modus: 'start', schritt: 0, wahl: null, waerme: false, info: false };
+const S = { modus: 'start', schritt: 0, wahl: null, waerme: false, info: false, beschriftung: true };
 const MODI = ['grau', 'abstimmung', 'beides', 'sommer', 'regen', 'ende'];
 const SCHRITTE = { grau: C.grau.schritte, abstimmung: C.abstimmung.schritte, beides: C.beides.schritte, sommer: C.sommer.schritte, regen: C.regen.schritte, ende: [] };
 
@@ -105,6 +105,7 @@ function anzeigen() {
   sub.innerHTML = '';
   (SCHRITTE[m] || []).forEach((name, k) => sub.append(knopf(name, () => schritt(k), k === i, null, k === i + 1 ? 'wichtig' : '')));
   if (m === 'sommer') sub.append(knopf(C.sommer.waerme.knopf, waermeUmschalten, S.waerme, 'W'));
+  if (m === 'regen' || m === 'ende') sub.append(knopf('Beschriftungen', beschriftungUmschalten, S.beschriftung, 'L'));
   sub.hidden = !sub.children.length;
 
   // Tafel rechts
@@ -142,6 +143,7 @@ function anzeigen() {
 }
 
 function waehlen(id) { S.wahl = S.wahl === id ? null : id; anzeigen(); }
+function beschriftungUmschalten() { S.beschriftung = !S.beschriftung; anzeigen(); }
 function waermeUmschalten() { if (S.modus !== 'sommer') return; S.waerme = !S.waerme; welt.setzeWaerme(S.waerme); anzeigen(); }
 
 /* ---------- Beschriftungen an 3D-Punkten ---------- */
@@ -166,6 +168,11 @@ function beschriftungen() {
     const [a, b, c, d] = C.ende.punkte;
     liste.push(['schatten', a, 'gruen'], ['tiere', b, 'gruen'], ['turm', c, ''], ['tief', d, 'wasser']);
   }
+  if (S.beschriftung === false) liste.length = 0;                       // Schalter „Beschriftungen“ aus: Wasser ganz frei
+  // Starkregen und Endbild: Schilder als Randlegende links mit feiner Linie zum Punkt – nichts liegt über dem Wasser
+  const rand = m === 'regen' || m === 'ende';
+  if (rand) { randlegende(liste); return; }
+  linienSetzen([]);
   // Nur ändern, was sich geändert hat (kein Neu-Layout in jedem Bild); überlappende Schilder weichen nach oben aus
   const belegt = [];
   LABELS.forEach((el, k) => {
@@ -189,6 +196,32 @@ function beschriftungen() {
   });
 }
 const LABEL_STAND = LABELS.map(() => ({ text: '', klasse: '', sichtbar: false, w: 0, h: 0, x: NaN, y: NaN }));
+let linienAlt = '';
+function linienSetzen(linien) {
+  const svg = $('#linien'), neu = JSON.stringify(linien);
+  if (neu === linienAlt) return;
+  linienAlt = neu;
+  svg.innerHTML = linien.map(([x1, y1, x2, y2, farbe]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${farbe}" stroke-width="2"/><circle cx="${x2}" cy="${y2}" r="5" fill="#fff" stroke="${farbe}" stroke-width="2.5"/>`).join('');
+}
+const FARBE = { wasser: '#1d4ed8', gruen: '#15803d', warn: '#b45309', '': '#0f172a' };
+function randlegende(liste) {
+  const W = $('#welt').clientWidth, H = $('#welt').clientHeight, rand = Math.round(H * 0.025), abstand = Math.round(H * 0.085);
+  const punkte = liste.map((e) => [e, welt.bildpunkt(e[0])]).filter(([, pt]) => pt).sort((a, b) => a[1].y - b[1].y);
+  const linien = [];
+  let y = Math.round(H * 0.3);
+  LABELS.forEach((el, k) => {
+    const st = LABEL_STAND[k], eintrag = punkte[k];
+    if (!eintrag) { if (st.sichtbar) { el.hidden = true; st.sichtbar = false; } return; }
+    const [e, pt] = eintrag;
+    if (!st.sichtbar) { el.hidden = false; st.sichtbar = true; st.w = 0; }
+    if (st.text !== e[1] || st.klasse !== 'rand ' + e[2]) { el.textContent = e[1]; el.className = 'label rand ' + e[2]; st.text = e[1]; st.klasse = 'rand ' + e[2]; st.w = 0; }
+    if (!st.w) { st.w = el.offsetWidth; st.h = el.offsetHeight; }
+    if (st.x !== rand || st.y !== y) { el.style.transform = `translate(${rand}px, ${y}px) translate(0, -50%)`; st.x = rand; st.y = y; }
+    linien.push([rand + st.w, y, Math.round(pt.x), Math.round(pt.y), FARBE[e[2]] || FARBE['']]);
+    y += abstand;
+  });
+  linienSetzen(linien);
+}
 
 /* ---------- Schleife ---------- */
 function frame(now) {
@@ -222,6 +255,7 @@ document.addEventListener('keydown', (e) => {
   if (map[k]) { e.preventDefault(); aktionen[map[k]](); return; }
   if ((k === 'a' || k === 'b') && S.modus === 'abstimmung') { e.preventDefault(); waehlen(k.toUpperCase()); return; }
   if (k === 'w') { e.preventDefault(); waermeUmschalten(); return; }
+  if (k === 'l' && (S.modus === 'regen' || S.modus === 'ende')) { e.preventDefault(); beschriftungUmschalten(); return; }
   if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); weiter(1); return; }
   if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); weiter(-1); return; }
   if (k === 'Escape' && S.info) { S.info = false; anzeigen(); }
@@ -237,7 +271,7 @@ document.addEventListener('keydown', (e) => {
   welt = new welt3d.Welt($('#welt'), C);
   new ResizeObserver(() => { welt.resize(); LABEL_STAND.forEach((s) => { s.w = 0; s.x = NaN; }); }).observe($('#welt'));
   modus('start');
-  window.__natur = { S, welt: () => welt, modus, schritt, weiter, zuruecksetzen, waermeUmschalten, waehlen };
+  window.__natur = { S, welt: () => welt, modus, schritt, weiter, zuruecksetzen, waermeUmschalten, waehlen, beschriftungUmschalten, bild: (t) => { welt.render(t ?? performance.now()); beschriftungen(); } };
   window.__naturOk = true;
   $('#laden').hidden = true;
   requestAnimationFrame(frame);

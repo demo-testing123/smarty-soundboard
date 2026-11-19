@@ -1,19 +1,63 @@
 # Stadt-Konfigurator – START IT SMART „Mission Zukunft: Rettet unsere Stadt!“
 
-Regie- und Stadtplanungsanwendung für **alle Missionen** des Drehbuchs (Arbeitsfassung vom 16.11.2026, Auftrag vom 17.11.2026, Ergänzungsauftrag „Kurze Wege“ vom 17.11.2026).
-Der Browser ist **Regieoberfläche und 3D-Vorschau**. Minecraft Education ist die **spielbare Stadt**. Beide zeigen dieselbe graue Stadt.
+Regie- und Stadtplanungsanwendung für **alle Missionen** des Drehbuchs (Arbeitsfassung vom 16.11.2026, Auftrag vom 17.11.2026, Ergänzungsauftrag „Kurze Wege“ vom 17.11.2026, Korrekturauftrag vom 19.11.2026).
+Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **Minecraft-Welt mit allen übernommenen Beschlüssen**, durch die die Kinder in Minecraft Education gehen.
 
 **Start:**
 - Online: https://demo-testing123.github.io/smarty-soundboard/stadt/
 - Im Soundboard: Knopf **🏙 Stadt**
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
-> **Stand:**
+> **Stand (19.11.2026):**
 > - Die Browser-Anwendung ist vollständig, alle Missionen sind enthalten.
-> - Die Minecraft-Welt ist erzeugt und **technisch** doppelt geprüft (Abschnitt 8).
-> - **In Minecraft Education selbst ist sie noch nicht ausgeführt.** Dafür gibt es den Testplan in Abschnitt 6.3.
+> - Die exportierte Welt enthält jetzt die Beschlüsse und startet draußen am Platz (Ursache und Behebung: Abschnitt 0).
+> - Technisch doppelt geprüft (eigener Leser und Amulet). **Der Import auf dem Veranstaltungslaptop steht noch aus** – Testplan in Abschnitt 0.4.
 
 ---
+
+## 0. Korrekturauftrag vom 19.11.2026
+
+### 0.1 Fehlerursachenanalyse Minecraft Education
+
+| | |
+|---|---|
+| **Beobachtet** (Screenshots 14–17) | Nach dem Öffnen der heruntergeladenen `.mcworld` steht die Spielfigur in einem Gebäude ohne Ausgang statt in der grünen Stadt. Im Finale gibt es keinen klaren Schritt „In Minecraft übertragen“, nur den Bauauftrag-Dialog mit `/clone`-Befehlen. |
+| **Reproduziert** | Datei aus dem alten Dialog erzeugt und gelesen: `level.dat` hatte den Startpunkt `8 50 -7` – das ist der **Regieraum unter der Ringstraße Nord** (ringsum Wände, kein Ausgang). Alle Bauflächen der Datei waren im **grauen Ausgangszustand**, obwohl im Konfigurator acht Beschlüsse übernommen waren. |
+| **Ursache** | (b) Startpunkt falsch: bewusst in den Regieraum gelegt, weil die Welt als „Regie-Welt“ gedacht war, in der die Regie live per Knopf baut. (c)/(d) Der Export baute immer nur die graue Stadt plus Vorlagen-Kammern; die Beschlüsse kamen nicht in die Datei. (a) Die Welt selbst war richtig gebaut (Amulet: 0 Abweichungen). (e) Kein Formatproblem: Minecraft Education hat die Datei geöffnet. |
+| **Behebung** | Der Export setzt jede Baufläche so, wie sie beschlossen ist (nur übernommene Beschlüsse, keine Vorschau, offene Flächen grau). Startpunkt **draußen** auf dem Gehweg am Platz in der Stadtmitte (`16 64 -2`), Kreativmodus (Fliegen). Die Datei wird nach dem Erzeugen **gelesen und geprüft** (Startpunkt frei mit offenem Himmel, jede Baufläche Block für Block wie beschlossen); nur eine geprüfte Datei wird angeboten, sonst erscheint eine Fehlermeldung. Neuer letzter Schritt im Finale: „Minecraft-Welt erstellen“ mit Anleitung. Weltname mit Datum und Uhrzeit, damit in Minecraft die neueste Datei erkennbar ist. |
+
+Die Vorlagen-Kammern und der Regieraum bleiben in der Welt (nur per `/tp @s 8 50 -7` erreichbar) – für Änderungen von Hand in einer schon geöffneten Welt.
+Blickrichtung beim ersten Start: Bedrock speichert sie nicht in `level.dat`; neue Spieler schauen nach Süden (+z), also über den Platz. Das ist auf dem Zielsystem zu bestätigen.
+
+### 0.2 Änderungsprotokoll
+
+| Punkt im Auftrag | Änderung |
+|---|---|
+| 0 Minecraft | siehe 0.1; Ersatzwelt mit typischen Beschlüssen: `START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld` (Link im Export-Schritt) |
+| 1 Layout | Eigene Kopfzone (Kicker, Titel als Leitfrage, eine Unterzeile), darunter die **freie 3D-Bühne**, rechts daneben die Seitenleiste (Knopf „Infos“ in der Fußleiste blendet sie aus), darunter Karten und Fußleiste. Kein Text liegt über der Stadt. Jede Kamera wird bei jeder Bühnengröße neu eingepasst (`rahmen` je Ansicht). Hinweisstreifen („Handzeichen …“, „Im Modell …“) entfernt – Inhalte stehen im Regie-Bereich (Taste `I`). „Übernehmen“ heißt jetzt **„In Stadt übernehmen“**. |
+| 2 Ausgangszustand | Bauflächen einer späteren Mission bleiben grau, bis ihre Mission erreicht ist – Natur Szene 1 ist komplett grau, auch wenn schon Beschlüsse gespeichert sind. A/B-Vorschauen speichern nichts. Status je Abstimmung: „Noch offen“, „Vorschau – noch nicht übernommen“, „✓ Übernommen: …“. „Mission zurücksetzen“ (nur diese Mission, zweimal klicken) und „Neu beginnen“ (Regie: Beschlüsse, Mehrheiten, Vorschau, Rundgang, Regen, Nacht, Export, Kamera). Finale und Export nutzen nur übernommene Beschlüsse. |
+| 3 Natur/Starkregen | Konfigurator: Regen-Infos in der Seitenleiste, gekennzeichnet „Vereinfachtes Modell · Zeit gerafft · ohne Mengen“. Natur-Simulation: Beschriftungen beim Starkregen und im Endbild als **Randlegende links mit feinen Linien** zum Wasser, Schalter **„Beschriftungen“** (Taste `L`) blendet sie aus. |
+| 4 Technik | Neue Reihenfolge: Frage „Woher weiß eine Lampe, dass es dunkel ist?“ → **Calliope live** (Sensor → Programm → LED; Regel 2: erst nach etwa 5 s ununterbrochener Dunkelheit) → Abstimmung über die 1.000 Laternen → Ergebnis Tag/Nacht. Keine Kopplung Calliope–Stadt. |
+| 5 Mobilität | Volle Straße → Parken A/B/C → Bus wartet → **mBot live** (Ampel von Hand) → **Verkehrssimulation** (eigene Seite) → **„Fahren 2050 Autos von allein?“** (Sensoren, Kameras, Computer; Möglichkeiten und Grenzen; keine Vorhersage; ohne Fahrer ist nicht automatisch weniger Verkehr) → zurück in die Stadt (Busanmeldung). Szenennummern und SMARTy-Tasten umsortiert. |
+| 6 Wohnen | Texte kürzer und sachlich; Aufstocken als „zusätzliche Bauidee“ gekennzeichnet. |
+| 6 Kurze Wege | Leitfrage „Wo sind die Brötchen am nächsten?“, großer Startpunkt „Hier wohnen wir“, große farbige Ziele A/B/C (nur Buchstaben), breite Wege mit weißem Rand, keine Fragezeichen; erst schätzen, dann „Wege messen“ (Felder im Modell, keine Meter). |
+| 6 Finale | Rundgang heißt „Vorschau-Rundgang“ (im Konfigurator). Nach der letzten Station führt „Weiter“ zu **„Minecraft-Welt erstellen“**: Stadt fertig → Welt erstellen (Download mit Prüfergebnis) → Anleitung zum Öffnen → optional Bauaufträge von Hand. Showablauf (Minecraft-Rundgang, Abschlussfilm mit der Erzählerstimme des Intros, Abschlussfolie mit QR-Codes) steht im Regie-Bereich; Film und Folie sind nicht Teil des Konfigurators. |
+
+### 0.3 Geprüft (automatisch)
+
+- `test.html`: **67 von 67** Prüfungen, darunter neu: Export mit allen Beschlüssen (Datei gelesen, Startpunkt draußen, 8 Bauflächen Block für Block), Wiederholung mit anderen Beschlüssen (keine alten Zustände), Export ohne Beschlüsse = grau, grauer Ausgangszustand trotz gespeicherter Beschlüsse, keine Überdeckung der 3D-Bühne in 9 Szenen (16:9), Kamera-Rahmen ganz auf der Bühne, Reihenfolge Calliope/mBot, Finale → Export, „Neu beginnen“ setzt Export und Kamera zurück.
+- **Amulet** (unabhängiger Leser) mit der Ersatzwelt: 24 Kammern und 8 Bauflächen wie beschlossen, 0 Abweichungen; Startpunkt `16 64 -2` frei bis zum Himmel, darunter Gehweg; 37 Befehlsblöcke lesbar.
+
+### 0.4 Test auf dem Zielsystem (noch offen – bitte auf dem Veranstaltungslaptop)
+
+Nicht von mir ausführbar: Ich habe kein Minecraft Education.
+
+1. Im Konfigurator einige Beschlüsse übernehmen, im Finale „Minecraft-Welt erstellen“. Die Meldung muss „✓ Welt erstellt und geprüft“ zeigen.
+2. Datei doppelklicken (oder Minecraft Education › Spielen › Importieren). Die Welt mit Datum und Uhrzeit im Namen öffnen.
+3. Erwartet: Start **draußen** am Platz in der Stadtmitte, Blick über den Platz. Stimmen Park, Straßen, Wohnen, Einkauf und Bildungsort mit dem Konfigurator überein? (Fliegen: zweimal Leertaste.)
+4. Neu beginnen, **andere** Beschlüsse wählen, neue Welt erstellen und importieren: Die neue Welt zeigt die neuen Beschlüsse.
+5. Die Ersatzwelt ebenso öffnen und prüfen, dann als Sicherheitsnetz auf dem Laptop behalten.
+6. Ergebnis (Version von Minecraft Education, Blickrichtung beim Start, Auffälligkeiten) in diese Datei eintragen.
 
 ## 1. Bestandsaufnahme: Stadt-Konfigurator des Kollegen (Phase A)
 
@@ -53,12 +97,12 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 |---|---|---|---|---|
 | `0` | Szene 0 – graue Stadt | Stadt 2050 · Mission aktiviert | – | ANSICHT Gesamt |
 | `1` | Natur | grauer Platz · Abstimmung A/B (Diskussionsbilder) · **Lösung: Beides gemeinsam** (Übernehmen) · Starkregen grau/grün · Mission geschafft | Spielplatz | SPIELPLATZ GRAU / GRUEN |
-| `2` | Technik | Abstimmung „immer an / nur bei Dunkelheit“ · Calliope live · Ergebnis Tag → Nacht | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
-| `3` | Mobilität | volle Straße · Parken A/B/C · Bus wartet · Verkehrssimulation (eigene Seite) · mBot live · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS |
+| `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope live** · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
+| `3` | Mobilität | volle Straße · Parken A/B/C · Bus wartet · **mBot live** · Verkehrssimulation (eigene Seite) · „Autos von allein?“ · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS |
 | `4` | Wohnen | sechs Familien (Wohnsimulator, eigene Seite) · Wohnformen A/B/C · Aufstocken + 2 Holzgeschosse | Wohngrundstück; Bestandshaus | WOHNEN GRAU/A/B/C, AUFSTOCKEN BESTAND/+2 HOLZ |
-| `5` | Kurze Wege | Brötchen holen: drei Wege von „Unser Wohnhaus“ messen · Standort A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |
+| `5` | Kurze Wege | „Wo sind die Brötchen am nächsten?“: drei Wege von „Hier wohnen wir“ schätzen und messen · Laden A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |
 | `6` | Bildung | ein Raum, zwei Nutzungen · Orte A/B/C mit Teilhabe-Fragen | Südviertel | BILDUNG GRAU/A/B/C |
-| `7` | Finale | Zukunftscheck (nur echte Beschlüsse) · Vorher/Nachher · Rundgang | alle | ANSICHT … |
+| `7` | Finale | Zukunftscheck (nur echte Beschlüsse) · Vorher/Nachher · Vorschau-Rundgang · **Minecraft-Welt erstellen** | alle | Export-Datei mit allen Beschlüssen |
 
 **Extern bleiben:**
 - Introfilm, Live-Ankunft, Zeitmaschinen-KI
@@ -117,7 +161,7 @@ Der Test „Drehbuch: Reihenfolge …“ prüft genau diese Folge und die Buchst
 - beschlossen
 
 **Rücksetzen:**
-- pro Mission: `Reset`, zweimal klicken
+- pro Mission: `Mission zurücksetzen`, zweimal klicken (andere Missionen bleiben)
 - alles: Regie › „Neu beginnen …“
 
 ### Bauflächen (feste Koordinaten; x nach Osten, z nach Süden, Boden y 63)
@@ -200,12 +244,12 @@ Der Test „Drehbuch: Reihenfolge …“ prüft genau diese Folge und die Buchst
 
 ### 6.1 Prinzip
 
-- **Eine** vorbereitete graue Welt: „START IT SMART Stadt 2050“ (`.mcworld`, Knopf im Bauauftrag-Dialog).
-- Die Welt wird **einmal** importiert und bleibt während der Vorlesung offen.
+- **Für die Show:** Im Finale „Minecraft-Welt erstellen“ – die Datei enthält die Stadt mit allen übernommenen Beschlüssen; Start draußen am Platz in der Stadtmitte (`16 64 -2`), Kreativmodus. Name: „START IT SMART Stadt 2050 · TT.MM. hh:mm“.
+- **Von Hand (optional):** Die Welt kann während der Vorlesung offen bleiben und per Bauauftrag geändert werden:
 - Unter jeder Baufläche liegt jede Variante fertig gebaut in einer Kammer, in denselben Chunks.
 - Ein Bauauftrag ist **ein** Befehl: `/clone <Kammer> <Baufläche>`. Er wirkt sofort und überschreibt jeden Block der Fläche, auch mit Luft. Er gilt nur für diese Fläche.
 - **Keine Verbindung Browser → Minecraft.** Die Regie löst jeden Auftrag selbst aus:
-  - im **Regieraum** per Knopf (Startpunkt der Welt, unter der Ringstraße)
+  - im **Regieraum** per Knopf (unter der Ringstraße, erreichbar mit `/tp @s 8 50 -7`)
   - oder im **Chat**
 
 ### 6.2 Einmal vor der Vorlesung
@@ -261,7 +305,7 @@ Alle Befehle stehen im Dialog **⛏ Bauauftrag** (`M`), mit Kopierknöpfen und d
 | **Bauartefakt** | die `.mcworld` mit allen Kammern und Knöpfen; die Bauaufträge (Befehle) | keine laufende Verbindung; wird einmal importiert |
 | **Realer Minecraft-Umbau** | ein Knopf oder Befehl der Regie in der geöffneten Welt | passiert nicht automatisch beim Klicken im Browser |
 
-## 7. Testbericht (`test.html`, 56 Prüfungen, alle bestanden)
+## 7. Testbericht (`test.html`, 67 Prüfungen, alle bestanden – Stand 19.11.2026, Einzelheiten zum Korrekturauftrag in 0.3)
 
 **A · Modell:**
 - Bauflächen überlappen nicht.

@@ -1,20 +1,28 @@
 /* START IT SMART – Stadt-Konfigurator: MINECRAFT-AUSGABE.
  *
- * EINE vorbereitete graue Welt, die während der Vorlesung geöffnet bleibt. Jede Variante jeder Baufläche liegt fertig gebaut
- * in einer Kammer UNTER ihrer Baufläche (gleiche Chunks). Ein Knopf im Regieraum oder ein Chat-Befehl kopiert sie mit
- * /clone … replace auf die Baufläche: sofort, ohne Block-für-Block-Bau, ohne neue Welt. Nachbarflächen bleiben unberührt.
+ * Die exportierte Welt (.mcworld) enthält die Stadt MIT den übernommenen Beschlüssen: Jede Baufläche ist so gebaut,
+ * wie sie im Konfigurator beschlossen wurde (sonst grau). Man startet draußen am Platz in der Stadtmitte.
+ * Zusätzlich liegt jede Variante jeder Baufläche fertig gebaut in einer Kammer UNTER ihrer Baufläche (gleiche Chunks).
+ * Ein Knopf im Regieraum (unter der Ringstraße, nur per /tp erreichbar) oder ein Chat-Befehl kopiert sie mit
+ * /clone … replace auf die Baufläche – für Änderungen live in der geöffneten Welt („manuelle Variante“).
  *
- * Keine direkte Verbindung Browser → Minecraft: Die Regie löst jeden Bauauftrag selbst aus (Knopf oder Chat).
+ * Keine direkte Verbindung Browser → Minecraft: Der Browser erzeugt eine Datei; geöffnet wird sie in Minecraft Education.
  */
 import { Welt } from '../minecraft/welt.js';
 import { mcworld } from '../minecraft/mcworld.js';
-import { BEREICH_MC, BEREICHE, BEREICH_IDS, boxVon, groesseVon, ursprungVon, baueGrundstadt, stift, vorlage, STADT, S } from './stadtmodell.js';
+import { BEREICH_MC, BEREICHE, BEREICH_IDS, boxVon, groesseVon, ursprungVon, baueGrundstadt, stift, vorlage, einsetzen, STADT, S } from './stadtmodell.js';
 import { KAMERAS, MISSIONEN } from './daten.js';
 
 const p3 = (v) => v.join(' ');
 export const WELTNAME = 'START IT SMART Stadt 2050';
 export const TICKING = { name: 'stadt', von: [STADT.x1, STADT.z1], bis: [STADT.x2, STADT.z2] };   // 10 × 10 Chunks (erlaubt: 100)
 export const REGIERAUM = { x1: -12, z1: -13, x2: 29, z2: -5, boden: 49, stand: [8, 50, -7], blick: [8, 52, -13] };
+// Startpunkt der exportierten Welt: draußen auf dem Gehweg der Ringstraße Nord, direkt am Platz in der Stadtmitte.
+// Neue Spieler schauen in Bedrock nach Süden (+z) – also über den Platz. Kreativmodus: Fliegen mit doppelt Leertaste.
+export const START = { stand: [16, S, -2], titel: 'Platz in der Stadtmitte' };
+const zwei = (n) => String(n).padStart(2, '0');
+export function weltName(zeit = new Date()) { return `${WELTNAME} · ${zwei(zeit.getDate())}.${zwei(zeit.getMonth() + 1)}. ${zwei(zeit.getHours())}:${zwei(zeit.getMinutes())}`; }
+export function dateiName(zeit = new Date()) { return `START-IT-SMART_Stadt-2050_${zeit.getFullYear()}-${zwei(zeit.getMonth() + 1)}-${zwei(zeit.getDate())}_${zwei(zeit.getHours())}${zwei(zeit.getMinutes())}.mcworld`; }
 
 // Variantennamen auf Schildern (nur ASCII, wie im Spielplatz-Test)
 const KURZ = {
@@ -92,7 +100,7 @@ export function regieKnoepfe() {
   while (unten.length && unten[unten.length - 1] === null) unten.pop();
   return { unten, oben };
 }
-export function erzeugeStadtWelt() {
+export function erzeugeStadtWelt(beschluesse = {}) {
   const w = new Welt(BEREICH_MC), p = stift(w);
   baueGrundstadt(p);
   // Vorlagen-Kammern: Decke und Boden aus Andesit (nur über der eigenen Fläche), Licht in der Decke, Inhalt = Vorlage
@@ -127,11 +135,17 @@ export function erzeugeStadtWelt() {
     const dx = Math.sign(x - blick[0]), dz = Math.sign(z - blick[2]), bx = x + (Math.abs(x - blick[0]) > Math.abs(z - blick[2]) ? dx : 0), bz = z + (Math.abs(x - blick[0]) > Math.abs(z - blick[2]) ? 0 : dz);
     befehlsblock(p, bx, y - 1, bz, ALLGEMEIN.regieraum.replace('@s', '@p'), 'Zurueck', [bx, y, bz, 'knopf'], null);
   }
+  // Beschlüsse in die Stadt setzen: dieselben Vorlagen wie in den Kammern (wie /clone … replace)
+  for (const id of BEREICH_IDS) {
+    const v = beschluesse[id];
+    if (v && v !== BEREICHE[id].grund && BEREICHE[id].mc.includes(v)) einsetzen(w, id, vorlage(id, v));
+  }
   return w;
 }
-export async function stadtMcworld() {
-  const w = erzeugeStadtWelt();
-  return { daten: await mcworld(w, WELTNAME, REGIERAUM.stand), welt: w };
+// Welt-Datei mit genau diesen Beschlüssen (nur übernommene, keine Vorschau)
+export async function stadtMcworld(beschluesse = {}, zeit = new Date(), name = weltName(zeit)) {
+  const w = erzeugeStadtWelt(beschluesse);
+  return { daten: await mcworld(w, name, START.stand), welt: w, name, datei: dateiName(zeit) };
 }
 
 /* ---------- Bauaufträge als Text ---------- */
@@ -154,7 +168,8 @@ export function bauauftrag(id, v, titelVariante) {
 export function alleBauauftraege() {
   const t = [`START IT SMART – Bauaufträge für Minecraft Education (Welt „${WELTNAME}“)`, '',
     'EINMAL VOR DER VORLESUNG', `   ${ALLGEMEIN.ticking}`, '   (hält die ganze Stadt geladen; 10 × 10 Chunks = die erlaubte Höchstgröße)', `   ${ALLGEMEIN.ruhe}`, '',
-    'REGIERAUM', `   ${ALLGEMEIN.regieraum}`, '', 'ANSICHTEN'];
+    `START: draußen am ${START.titel} (${p3(START.stand)}); die Stadt ist so gebaut wie beim Export beschlossen.`, '',
+    'REGIERAUM (Knöpfe für Ansichten und Bauaufträge, nur per Teleport erreichbar)', `   ${ALLGEMEIN.regieraum}`, `   zurück zum Start: /tp @s ${p3(START.stand)}`, '', 'ANSICHTEN'];
   for (const k of ANSICHTEN) t.push(`   ${KAMERAS[k].titel.padEnd(16)} ${tp(k)}`);
   t.push('', 'ZEIT', `   Tag:   ${ALLGEMEIN.tag}`, `   Nacht: ${ALLGEMEIN.nacht}`, '');
   for (const m of MISSIONEN) for (const id of m.bereiche) {

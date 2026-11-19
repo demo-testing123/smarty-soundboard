@@ -178,6 +178,9 @@ button:focus-visible { outline: .4cqh solid #f5c84c; outline-offset: .3cqh; }
 .label.warn { background: #b45309; }
 .label.grau { background: #475569; }
 .label.gross { font-size: 3.6cqh; }
+/* Starkregen/Endbild: Randlegende links, feine Linie zum Punkt (Korrekturauftrag: nichts über dem Wasser) */
+.label.rand { margin-top: 0; font-size: 2.4cqh; padding: .6cqh 1.3cqh; border-radius: 1cqh; }
+.linien { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .loesung { white-space: pre-line; margin: 0; font-size: 5.4cqh; font-weight: 900; line-height: 1.1; color: #15803d; text-align: center; padding: 1cqh 0; }
 .abst { display: grid; gap: 1.6cqh; }
 .abst button {
