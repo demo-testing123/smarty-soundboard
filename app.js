@@ -388,7 +388,7 @@
       class: 'pad loading', type: 'button', 'data-id': p.id, 'aria-pressed': 'false',
       title: p.text ? p.text : p.title,
     },
-      p.key ? h('kbd', { class: 'key' }, p.key.toUpperCase()) : null,
+      p.key ? h('kbd', { class: 'key' }, p.key === 'ß' ? 'ß' : p.key.toUpperCase()) : null,
       h('span', { class: 'pad-title' }, p.title),
       p.text ? h('span', { class: 'pad-text' }, p.text) : null,
       p.cue ? h('span', { class: 'pad-cue' }, p.cue) : null,

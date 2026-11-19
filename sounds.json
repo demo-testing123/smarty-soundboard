@@ -123,13 +123,23 @@
       "szene": "Mission Natur – Aus Grau wird Grün"
     },
     {
+      "id": "SMARTy_N5_Bodenfeuchte",
+      "stimme": "smarty",
+      "taste": "<",
+      "titel": "N5 · Technikidee Bodenfeuchte",
+      "text": "Technikidee erkannt! Ein Bodenfeuchtesensor liefert Messwerte. Ein Computer kann anzeigen, ob die Erde trocken ist.",
+      "sprechen": "Technikidee erkannt! [Pause 0.45] Ein Bodenfeuchtesensor liefert Messwerte. [Pause 0.4] Ein Computer kann anzeigen, ob die Erde trocken ist.",
+      "einsatz": "Szene 3 · Starkregen – beim Regenwasser für die Bäume (neu laut Sprachtexte-Liste 19.11.2026)",
+      "szene": "Mission Natur – Aus Grau wird Grün"
+    },
+    {
       "id": "SMARTy_T1_Sprachbefehl",
       "stimme": "smarty",
       "taste": "r",
       "titel": "T1 · Sprachbefehl nicht erkannt",
       "text": "Sprachbefehl nicht erkannt. Straßenlaternen besitzen keine Ohren. Vorschlag: Helligkeitssensor verwenden.",
       "sprechen": "Sprachbefehl nicht erkannt. [Pause 0.5] Straßenlaternen besitzen keine Ohren. [Pause 0.6] Vorschlag: Helligkeitssensor verwenden.",
-      "einsatz": "Übergang von der Abstimmung · nach „Bitte nur leuchten, wenn es dunkel ist!“ und kurzer Pause, in der nichts passiert",
+      "einsatz": "Technik zu Beginn – nach „Liebe Straßenlaternen, bitte nur leuchten, wenn es dunkel ist!“, vor dem Calliope-Experiment",
       "szene": "Mission Technik – Straßenlaternen"
     },
     {
@@ -159,7 +169,7 @@
       "titel": "T4 · Experiment erfolgreich",
       "text": "Experiment erfolgreich. Intelligente Straßenbeleuchtung kann in die Stadtplanung übernommen werden.",
       "sprechen": "Experiment erfolgreich. [Pause 0.5] Intelligente Straßenbeleuchtung kann in die Stadtplanung übernommen werden.",
-      "einsatz": "Nach dem Experiment, vor Minecraft",
+      "einsatz": "Nach dem Calliope-Experiment, vor der Laternenabstimmung",
       "szene": "Mission Technik – Straßenlaternen"
     },
     {
@@ -169,7 +179,7 @@
       "titel": "T5 · Mission Technik abgeschlossen",
       "text": "Mission Technik abgeschlossen. Zukunftsstadt aktualisiert.",
       "sprechen": "Mission Technik abgeschlossen. [Pause 0.4] Zukunftsstadt aktualisiert.",
-      "einsatz": "Nach der Minecraft-Demonstration (Tag: Laternen aus, Nacht: Laternen an)",
+      "einsatz": "Nach der Laternenabstimmung und Tag/Nacht in der Stadt",
       "szene": "Mission Technik – Straßenlaternen"
     },
     {
@@ -213,6 +223,16 @@
       "szene": "Mission Mobilität – Platz für alle"
     },
     {
+      "id": "SMARTy_M9_Simulation",
+      "stimme": "smarty",
+      "taste": ".",
+      "titel": "M9 · Simulation erkannt",
+      "text": "Simulation erkannt. Verschiedene Lösungen lassen sich am Computer vergleichen, bevor in der echten Stadt gebaut wird.",
+      "sprechen": "Simulation erkannt. [Pause 0.45] Verschiedene Lösungen lassen sich am Computer vergleichen, bevor in der echten Stadt gebaut wird.",
+      "einsatz": "Szene 2 · Parkplatzentscheidung – nach M3, beim Vergleich der Varianten im Stadt-Konfigurator (neu 19.11.2026)",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
       "id": "SMARTy_M4_Geduld",
       "stimme": "smarty",
       "taste": "v",
@@ -223,13 +243,23 @@
       "szene": "Mission Mobilität – Platz für alle"
     },
     {
+      "id": "SMARTy_M7_Test_erfolgreich",
+      "stimme": "smarty",
+      "taste": "m",
+      "titel": "M7 · Test erfolgreich (mBot)",
+      "text": "Test erfolgreich. Unser Roboter hält und fährt auf ein Signal hin weiter. Die Ampel steuert ihn heute noch nicht selbst.",
+      "sprechen": "Test erfolgreich. [Pause 0.45] Unser Roboter hält und fährt auf ein Signal hin weiter. [Pause 0.5] Die Ampel steuert ihn heute noch nicht selbst.",
+      "einsatz": "mBot auf der Bühne (vor der Verkehrssimulation) – nach dem Test bei Grün",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
       "id": "SMARTy_M5_Funkverbindung",
       "stimme": "smarty",
       "taste": "b",
       "titel": "M5 · Funkverbindung",
       "text": "Funkverbindung hergestellt. Der Bus meldet sich an der Ampel.",
       "sprechen": "Funkverbindung hergestellt. [Pause 0.45] Der Bus meldet sich an der Ampel.",
-      "einsatz": "Szene 4 · nach „Jetzt verändern wir genau eine Sache …“, vor Versuch B in der Verkehrssimulation",
+      "einsatz": "Verkehrssimulation (nach dem mBot) – vor Versuch B: der Bus meldet sich an",
       "szene": "Mission Mobilität – Platz für alle"
     },
     {
@@ -239,17 +269,7 @@
       "titel": "M6 · Niemand gefährden",
       "text": "Eine intelligente Ampel darf niemanden gefährden. Der Bus kann früher Grün bekommen – andere warten dann vielleicht etwas länger.",
       "sprechen": "Eine intelligente Ampel darf niemanden gefährden. [Pause 0.5] Der Bus kann früher Grün bekommen. [Pause 0.3] Andere warten dann vielleicht etwas länger.",
-      "einsatz": "Szene 4 · nach „Aber was passiert mit den Autos auf der anderen Straße?“",
-      "szene": "Mission Mobilität – Platz für alle"
-    },
-    {
-      "id": "SMARTy_M7_Test_erfolgreich",
-      "stimme": "smarty",
-      "taste": "m",
-      "titel": "M7 · Test erfolgreich (mBot)",
-      "text": "Test erfolgreich. Unser Roboter hält und fährt auf ein Signal hin weiter. Die Ampel steuert ihn heute noch nicht selbst.",
-      "sprechen": "Test erfolgreich. [Pause 0.45] Unser Roboter hält und fährt auf ein Signal hin weiter. [Pause 0.5] Die Ampel steuert ihn heute noch nicht selbst.",
-      "einsatz": "Szene 5 · nach dem mBot-Test bei Grün",
+      "einsatz": "Verkehrssimulation – nach „Aber was passiert mit den Autos auf der anderen Straße?“",
       "szene": "Mission Mobilität – Platz für alle"
     },
     {
@@ -286,10 +306,10 @@
       "id": "SMARTy_W3_Drei_Entwuerfe",
       "stimme": "smarty",
       "taste": "j",
-      "titel": "W3 · Alle drei Entwürfe",
-      "text": "Alle drei Entwürfe bieten sechs Wohnungen. Aber nicht jede Grünfläche ist für alle zugänglich.",
-      "sprechen": "Alle drei Entwürfe bieten sechs Wohnungen. [Pause 0.5] Aber nicht jede Grünfläche ist für alle zugänglich.",
-      "einsatz": "Szene 2 · nach den Fragen zu privatem Grün, Hof und Park, vor der Abstimmung",
+      "titel": "W3 · Drei Bauweisen",
+      "text": "Sechs Familien, drei Bauweisen. Unterschiedlicher Platzbedarf – aber keine Lösung ist für alle Menschen gleich gut.",
+      "sprechen": "Sechs Familien, drei Bauweisen. [Pause 0.45] Unterschiedlicher Platzbedarf. [Pause 0.3] Aber keine Lösung ist für alle Menschen gleich gut.",
+      "einsatz": "Szene 2 · Drei Wohnformen – drei Folgen (Wortlaut 19.11.2026)",
       "szene": "Mission Wohnen und Bauen – Sechs Familien"
     },
     {
@@ -323,6 +343,16 @@
       "szene": "Mission Kurze Wege – Wo liegt der Laden?"
     },
     {
+      "id": "SMARTy_K3_Digitale_Stadtplanung",
+      "stimme": "smarty",
+      "taste": "ß",
+      "titel": "K3 · Digitale Stadtplanung",
+      "text": "Digitale Stadtplanung: Standorte und Fußwege vergleichen. So werden kurze und längere Wege sichtbar.",
+      "sprechen": "Digitale Stadtplanung: [Pause 0.35] Standorte und Fußwege vergleichen. [Pause 0.45] So werden kurze und längere Wege sichtbar.",
+      "einsatz": "nach K1, wenn die Wege im Stadt-Konfigurator zu sehen sind (neu 19.11.2026)",
+      "szene": "Mission Kurze Wege – Wo liegt der Laden?"
+    },
+    {
       "id": "SMARTy_K2_Kurze_Wege",
       "stimme": "smarty",
       "taste": "ä",
@@ -340,7 +370,7 @@
       "text": "Raumanalyse: Vormittags Unterricht. Nachmittags Werkstatt. Ein Gebäude, zwei Nutzungen.",
       "sprechen": "Raumanalyse: [Pause 0.35] Vormittags Unterricht. [Pause 0.35] Nachmittags Werkstatt. [Pause 0.45] Ein Gebäude, zwei Nutzungen.",
       "einsatz": "Szene 1 · nach „Könnte sie dann eine Werkstatt sein?“",
-      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+      "szene": "Mission Bildung, Freizeit und Teilhabe"
     },
     {
       "id": "SMARTy_B2_Zugang",
@@ -350,7 +380,7 @@
       "text": "Zugang prüfen: Ist der Ort erreichbar, bezahlbar und auch ohne eigenes Smartphone nutzbar?",
       "sprechen": "Zugang prüfen: [Pause 0.35] Ist der Ort erreichbar, bezahlbar und auch ohne eigenes Smartphone nutzbar?",
       "einsatz": "Szene 2 · nach der Frage, ob Eintritt oder Smartphone-Anmeldung für alle fair ist",
-      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+      "szene": "Mission Bildung, Freizeit und Teilhabe"
     },
     {
       "id": "SMARTy_B3_Mitmachen",
@@ -360,7 +390,7 @@
       "text": "Eine lebenswerte Stadt bietet nicht nur Räume. Sie macht das Mitmachen möglich.",
       "sprechen": "Eine lebenswerte Stadt bietet nicht nur Räume. [Pause 0.45] Sie macht das Mitmachen möglich.",
       "einsatz": "Szene 2 · nach der Abstimmung A, B oder C",
-      "szene": "Mission Bildung und Teilhabe – Eine Stadt für alle"
+      "szene": "Mission Bildung, Freizeit und Teilhabe"
     },
     {
       "id": "SMARTy_F1_Zukunftsanalyse",
@@ -369,8 +399,28 @@
       "titel": "F1 · Zukunftsanalyse",
       "text": "Zukunftsanalyse abgeschlossen. Diese Stadt ist nicht nur intelligent. Sie ist auch lebenswert.",
       "sprechen": "Zukunftsanalyse abgeschlossen. [Pause 0.45] Diese Stadt ist nicht nur intelligent. [Pause 0.35] Sie ist auch lebenswert.",
-      "einsatz": "nach „Der Bus kann sich an der Ampel anmelden … einen Ort, an dem Kinder nachmittags mitmachen können.“ · F2 (Schlusssatz) ist der vorhandene Clip 06 „Das Finale“ (Taste 6)",
-      "szene": "Finale – SMARTys Zukunftscheck"
+      "einsatz": "nach „Der Bus kann sich an der Ampel anmelden … einen Ort, an dem Kinder nachmittags mitmachen können.“ · F2 (Schlusssatz) ist der vorhandene Clip 06 „Das Finale“ (Taste 6) · nicht in der Sprachtexte-Liste vom 19.11.2026 – nur bei Bedarf",
+      "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
+    },
+    {
+      "id": "SMARTy_F5a_Zukunftscheck",
+      "stimme": "smarty",
+      "taste": "'",
+      "titel": "F5a · Zukunftscheck gestartet",
+      "text": "Zukunftscheck gestartet. Verbindung zum Jahr 2050 wird hergestellt.",
+      "sprechen": "Zukunftscheck gestartet. [Pause 0.5] Verbindung zum Jahr zweitausendfünfzig wird hergestellt.",
+      "einsatz": "Szene 3 · Nachricht aus dem Jahr 2050 – zuerst F5a (Taste Umschalt + #)",
+      "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
+    },
+    {
+      "id": "SMARTy_F5b_Nachricht_2050",
+      "stimme": "smarty",
+      "taste": "&",
+      "titel": "F5b · Nachricht empfangen",
+      "text": "Nachricht aus dem Jahr 2050 empfangen.",
+      "sprechen": "Nachricht aus dem Jahr zweitausendfünfzig empfangen.",
+      "einsatz": "Szene 3 · direkt danach F5b (Taste Umschalt + 6), dann Erzähler „Grüße aus dem Jahr 2050“ (Taste -)",
+      "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
     },
     {
       "id": "SMARTy_01_Landung",
@@ -409,7 +459,7 @@
       "titel": "06 · Das Finale",
       "text": "Mission erfolgreich! Danke, Zukunftscrew! Ich werde eure Ideen niemals vergessen!",
       "sprechen": "Mission erfolgreich! [Pause 0.3] Danke, Zukunftskru! Ich werde eure Ideen niemals vergessen!",
-      "einsatz": "Am Ende der Show.",
+      "einsatz": "Am Ende der Show. Nicht in der Sprachtexte-Liste vom 19.11.2026 (dort folgen auf F5b die Erzähler-Botschaft und der Abschlussfilm).",
       "szene": "Weitere Sätze (nicht im Drehbuch vom 16.11.)"
     },
     {

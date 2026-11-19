@@ -7,7 +7,7 @@ Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler 
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `Y`–`,`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä + #` gelten für die deutsche Tastatur. |
+| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `<`–`.`, `ß`, Umschalt + `#` und Umschalt + `6`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä ß < + #` gelten für die deutsche Tastatur. |
 | Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
 | Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
 | Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
@@ -72,7 +72,7 @@ Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einze
 
 ## SMARTy nach Szenen (Drehbuch vom 16.11.2026)
 
-Die SMARTy-Pads sind nach den Szenen im Drehbuch geordnet. Die Tasten der älteren Sätze sind gleich geblieben.
+Die SMARTy-Pads sind nach der Live-Dramaturgie geordnet (Sprachtexte-Liste vom 19.11.2026: Technik erst Calliope, dann Laternenwahl; Mobilität erst mBot, dann Verkehrssimulation). Die Tasten der älteren Sätze sind gleich geblieben. Vollständige Zuordnung Szene → Clip → Datei, mit den noch offenen Texten: **[SMARTy_Zuordnung.md](SMARTy_Zuordnung.md)**.
 
 | Szene | Taste | Clip |
 |---|---|---|
@@ -81,18 +81,20 @@ Die SMARTy-Pads sind nach den Szenen im Drehbuch geordnet. Die Tasten der älter
 | | `4` | N2 · Aha! Menschen brauchen also nicht nur Computer … |
 | | `W` | N3 · Wetterwarnung! Starkregen im Anmarsch … (Textvorschlag, erst nach Freigabe) |
 | | `E` | N4 · Neue Erkenntnis gespeichert: … Regenwasser auffangen … (Textvorschlag, erst nach Freigabe) |
+| | `<` | N5 · Technikidee erkannt! Ein Bodenfeuchtesensor liefert Messwerte … (neu 19.11.) |
 | Mission Technik | `R` | T1 · Sprachbefehl nicht erkannt … Helligkeitssensor verwenden. |
 | | `T` | T2 · Programm verstanden. Bereit für den Praxistest. |
 | | `Z` | T3 · Programmoptimierung erkannt … Sehr gute Idee, Zukunftsteam! |
 | | `U` | T4 · Experiment erfolgreich … in die Stadtplanung übernommen werden. |
 | | `I` | T5 · Mission Technik abgeschlossen. Zukunftsstadt aktualisiert. |
 | | `O` | T6 · Warnung. Verkehrsproblem erkannt. (optional) |
-| Mission Mobilität | `Y` `X` `C` `V` | M1 · Verkehrsanalyse … · M2 · Jeder Parkplatz braucht Fläche … · M3 · Vorschlag: Parkplätze bündeln … · M4 · … Geduld … nicht erkannt. |
-| | `B` `N` `M` `,` | M5 · Funkverbindung hergestellt … · M6 · … darf niemanden gefährden … · M7 · Test erfolgreich (mBot) … · M8 · Mission Mobilität abgeschlossen … |
-| Mission Wohnen | `G` `H` `J` `K` `L` | W1 · Bauauftrag erkannt … · W2 · Messung abgeschlossen … · W3 · Alle drei Entwürfe … · W4 · Alternative erkannt: … aufstocken · W5 · Klimacheck … |
-| Mission Kurze Wege | `Ö` `Ä` | K1 · Wegvergleich gestartet … · K2 · Stadt der kurzen Wege … |
+| Mission Mobilität | `Y` `X` `C` `.` `V` | M1 · Verkehrsanalyse … · M2 · Jeder Parkplatz braucht Fläche … · M3 · Vorschlag: Parkplätze bündeln … · M9 · Simulation erkannt … (neu 19.11.) · M4 · … Geduld … nicht erkannt. |
+| | `M`, dann `B` `N`, dann `,` | M7 · Test erfolgreich (mBot) … · M5 · Funkverbindung hergestellt … · M6 · … darf niemanden gefährden … · M8 · Mission Mobilität abgeschlossen … |
+| Mission Wohnen | `G` `H` `J` `K` `L` | W1 · Bauauftrag erkannt … · W2 · Messung abgeschlossen … · W3 · Sechs Familien, drei Bauweisen … (neuer Wortlaut 19.11.) · W4 · Alternative erkannt: … aufstocken · W5 · Klimacheck … |
+| Mission Kurze Wege | `Ö` `ß` `Ä` | K1 · Wegvergleich gestartet … · K3 · Digitale Stadtplanung … (neu 19.11.) · K2 · Stadt der kurzen Wege … |
 | Mission Bildung | `P` `Ü` `+` | B1 · Raumanalyse … · B2 · Zugang prüfen … · B3 · … macht das Mitmachen möglich. |
-| Finale | `#`, dann `6` | F1 · Zukunftsanalyse abgeschlossen … · F2 = Clip 06 „Mission erfolgreich! Danke, Zukunftscrew! …“ |
+| Finale | Umschalt + `#`, dann Umschalt + `6` | F5a · Zukunftscheck gestartet … · F5b · Nachricht aus dem Jahr 2050 empfangen. (neu 19.11.) – danach Erzähler `-` |
+| | `#` · `6` | F1 · Zukunftsanalyse … · Clip 06 „Mission erfolgreich! …“ (frühere Fassung, nicht in der Liste vom 19.11.) |
 | Weitere Sätze | `1` `2` `5` `6` `7` | Landung · Entdeckung · Zukunftsalarm · Finale · Soundcheck (stehen nicht im aktuellen Drehbuch) |
 
 ## Anordnung für alle Geräte

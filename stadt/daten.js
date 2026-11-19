@@ -114,7 +114,7 @@ export const MISSIONEN = [
         text: 'Wohin läuft das Wasser – auf Stein und auf offener Erde?',
         punkte: ['Stein und Asphalt: Wasser fließt schnell ab.', 'Offener Boden nimmt einen Teil auf.', 'Der tiefere Spielbereich sammelt kurz Wasser – nur bei Starkregen.', 'Gesammeltes Regenwasser gießt später Bäume.'],
         regie: ['Knöpfe „grau“ / „grün“ zeigen den Unterschied; Regen startet mit dem Knopf (Taste R).', 'Ausführlich: Natur-Simulation (eigene Seite).', 'Optional SMARTy-Bewässerungsrätsel – keine Messwerte als echte Sensordaten zeigen.'],
-        smarty: [['N3 · Wetterwarnung', 'W'], ['N4 · Regenwasser', 'E']],
+        smarty: [['N5 · Technikidee Bodenfeuchte', '<'], ['N3 · Wetterwarnung (früherer Vorschlag)', 'W'], ['N4 · Regenwasser (früherer Vorschlag)', 'E']],
         link: { text: 'Natur-Simulation öffnen', href: '../natur/' },
       },
       {
@@ -182,7 +182,7 @@ export const MISSIONEN = [
           { v: 'C', b: 'C', titel: 'Parkhaus am Rand des Wohnviertels', pro: 'Platz für Gehwege, Grün und Spiel', contra: 'Mit Einkäufen weiter laufen' },
         ],
         regie: ['Handzeichen: A, B oder C? Jede Variante bekommt eine sichere Querung.', 'SMARTy M2/M3: „Parkplätze bündeln, Gehwege verbreitern und sichere Übergänge schaffen.“', 'Die gezeigte Variante ist genau die gewählte – nicht mehr behaupten.'],
-        smarty: [['M2 · Jeder Parkplatz braucht Fläche', 'X'], ['M3 · Vorschlag', 'C']],
+        smarty: [['M2 · Jeder Parkplatz braucht Fläche', 'X'], ['M3 · Vorschlag', 'C'], ['M9 · Simulation erkannt', '.']],
       },
       {
         art: 'bild', kicker: 'Mission Mobilität · Szene 3', titel: 'Der Bus wartet', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
@@ -212,6 +212,7 @@ export const MISSIONEN = [
         seiteTitel: 'Möglichkeiten und Grenzen',
         punkte: ['Sensoren und Kameras erkennen Straße, Ampeln und Menschen.', 'Ein Computer entscheidet: bremsen, warten, fahren.', 'Das könnte Menschen helfen, die nicht selbst fahren können.', 'Grenzen: Schnee, Baustellen, unklare Lagen – Menschen müssen eingreifen können.', 'Ein Auto ohne Fahrer ist trotzdem ein Auto: weniger Verkehr gibt es nur mit Bus, Rad und Fußwegen.'],
         regie: ['Kurzer Ausblick, etwa eine Minute: Möglichkeiten und Grenzen, keine Vorhersage.', 'Frage ans Publikum: „Was müsste so ein Auto alles erkennen?“'],
+        smarty: [['M10 · selbstfahrende Autos', '–'], ['M11 · selbstfahrende Autos', '–']],
       },
       {
         art: 'schalter', kicker: 'Mission Mobilität · Szene 7', titel: 'Zurück in der Zukunftsstadt', kamera: 'kreuzung', bereich: 'kreuzung',
@@ -244,8 +245,8 @@ export const MISSIONEN = [
           { v: 'B', b: 'B', titel: 'Kompakte Häuser mit gemeinsamem Hof', pro: 'Ein Hof für alle Nachbarn', contra: 'Den Hof teilen sich alle' },
           { v: 'C', b: 'C', titel: 'Höheres Haus mit großem Park', pro: 'Ein großer Park für alle', contra: 'Oben ist der Weg nach draußen länger' },
         ],
-        regie: ['Fragen: „Wo gibt es private Grünflächen? Wo treffen sich Nachbarn? Wo ist Platz für einen Park, den alle nutzen?“', 'Sachlich vergleichen – keine Variante ist „gut“ oder „schlecht“.', 'SMARTy W3: „Nicht jede Grünfläche ist für alle zugänglich.“'],
-        smarty: [['W3 · Alle drei Entwürfe', 'J']],
+        regie: ['Fragen: „Wo gibt es private Grünflächen? Wo treffen sich Nachbarn? Wo ist Platz für einen Park, den alle nutzen?“', 'Sachlich vergleichen – keine Variante ist „gut“ oder „schlecht“.', 'SMARTy W3: „Sechs Familien, drei Bauweisen … keine Lösung ist für alle Menschen gleich gut.“'],
+        smarty: [['W3 · Drei Bauweisen', 'J']],
       },
       {
         art: 'schalter', kicker: 'Mission Wohnen · Szene 3 · zusätzliche Bauidee', titel: 'Aufstocken statt neu bauen?', kamera: 'aufstocken', bereich: 'aufstocken',
@@ -272,7 +273,7 @@ export const MISSIONEN = [
         text: 'Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen.',
         tafeln: ['hierWohnen', 'ladenA', 'ladenB', 'ladenC'],
         regie: ['Z1: „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen. Wie weit müsstet ihr bis zum nächsten Laden laufen?“', 'Z2: „Welche Strecke sieht am kürzesten aus? Und wo gibt es vielleicht die größte Auswahl?“', 'Erst schätzen lassen, dann „Wege messen“: Gezählt werden Felder im Modell – keine Meter, keine Minuten.'],
-        smarty: [['K1 · Wegvergleich', 'Ö']],
+        smarty: [['K1 · Wegvergleich', 'Ö'], ['K3 · Digitale Stadtplanung', 'ß']],
       },
       {
         art: 'wahl', kicker: 'Mission Kurze Wege · Abstimmung', titel: 'Welchen Laden wählt ihr für unser Viertel?', kamera: 'einkaufen', bereich: 'einkaufen', wege: true,
@@ -322,13 +323,13 @@ export const MISSIONEN = [
         art: 'finale', kicker: 'Finale · Vorschau im Konfigurator', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
         text: 'Erst hier als Vorschau – gleich gehen wir in Minecraft durch die Stadt.',
         regie: ['Nur tatsächlich übernommene Beschlüsse sind zu sehen.', '„Vorher / Nachher“ vergleicht mit der grauen Stadt.', '„Vorschau-Rundgang“: Station für Station mit → oder automatisch. Nach der letzten Station führt „Weiter“ zur Minecraft-Welt.'],
-        smarty: [['F1 · Zukunftsanalyse', '#']],
+        smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Stadtplanung abgeschlossen', '–'], ['F4 · Sensoren, Computer, Simulationen', '–']],
       },
       {
         art: 'export', kicker: 'Finale · Minecraft Education', titel: 'Unsere Stadt wird eine Minecraft-Welt', kamera: 'finale',
         text: 'Aus euren Beschlüssen entsteht eine Welt, durch die wir gleich gehen.',
         regie: ['Showablauf: fertige Stadt → „Minecraft-Welt erstellen“ → Datei in Minecraft Education öffnen → etwa drei Minuten Rundgang in Minecraft → vorproduzierter Abschlussfilm aus der Vogelperspektive (Erzählerstimme wie im Intro) → Abschlussfolie mit Download- und Feedback-QR-Code.', 'Sicherheitsnetz: eine bei der Probe erstellte und in Minecraft Education geprüfte Welt auf dem Laptop bereithalten (oder die Ersatzwelt unten).', 'Bauaufträge (/clone) sind nur für Änderungen von Hand in einer schon geöffneten Welt.'],
-        smarty: [['F2 · Mission erfolgreich', '6'], ['Erzähler · Grüße aus dem Jahr 2050', '-']],
+        smarty: [['F5a · Zukunftscheck gestartet (Umschalt + #)', "'"], ['F5b · Nachricht aus 2050 empfangen (Umschalt + 6)', '&'], ['Erzähler · Grüße aus dem Jahr 2050', '-'], ['06 · Mission erfolgreich (frühere Fassung)', '6']],
       },
     ],
   },
