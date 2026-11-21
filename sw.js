@@ -1,6 +1,7 @@
 /* Offline-Speicher: beide Dashboards (Regie-Soundboard, Show-Zentrale), alle Sprachclips und die Filme bleiben
  * nach dem ersten Besuch im Browser, damit die Show in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v22';
+const CACHE = 'smarty-v23';
+const FILM_CACHE = 'smarty-filme';
 const CORE = ['./', 'index.html', 'regie.js', 'show.html', 'show.js', 'show.json', 'dashboard.css', 'symbole.js', 'qr.js',
   'sounds.json', 'audio/manifest.json', 'bilder/start-it-smart-logo.png', 'bilder/intro.jpg', 'bilder/abschluss.jpg',
   'bilder/stadt.jpg', 'bilder/wohnen.jpg', 'bilder/verkehr.jpg', 'bilder/minecraft.jpg'];
@@ -34,7 +35,14 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+    for (const k of await caches.keys()) if (k !== CACHE && k !== FILM_CACHE) await caches.delete(k);
+    // nur die aktuellen Filmfassungen behalten
+    try {
+      const m = await (await fetch('audio/manifest.json', { cache: 'no-store' })).json();
+      const aktuell = new Set(Object.values(m).filter((x) => x.film).map((x) => new URL(`${x.datei}?v=${x.hash}`, self.registration.scope).href));
+      const c = await caches.open(FILM_CACHE);
+      for (const r of await c.keys()) if (!aktuell.has(r.url)) await c.delete(r);
+    } catch { /* offline: alles behalten */ }
     await self.clients.claim();
   })());
 });
@@ -48,14 +56,15 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
 
-  // Filme: immer die ganze Datei (ohne Teilanfrage) speichern und ausliefern; die Adresse enthält die Version ?v=…
+  // Filme: immer die ganze Datei (ohne Teilanfrage). Beim ersten Mal sofort weiterreichen (der Film startet, während er lädt)
+  // und nebenher speichern. Eigener Speicher: ein neues CACHE-Kürzel lädt die großen Filme nicht neu. Adresse enthält ?v=…
   if (url.pathname.includes('/film/')) {
     e.respondWith((async () => {
-      const c = await caches.open(CACHE);
+      const c = await caches.open(FILM_CACHE);
       const hit = await c.match(url.href);
       if (hit) return hit;
       const res = await fetch(url.href);
-      if (res.status === 200) await c.put(url.href, res.clone());
+      if (res.status === 200) e.waitUntil(c.put(url.href, res.clone()).catch(() => {}));
       return res;
     })());
     return;
