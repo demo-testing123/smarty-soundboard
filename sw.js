@@ -1,7 +1,9 @@
-/* Offline-Speicher: Seite und alle Sounds bleiben nach dem ersten Besuch im Browser,
- * damit das Soundboard in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v21';
-const CORE = ['./', 'index.html', 'style.css', 'app.js', 'qr.js', 'beamer.html', 'sounds.json', 'layout.json', 'audio/manifest.json'];
+/* Offline-Speicher: beide Dashboards (Regie-Soundboard, Show-Zentrale), alle Sprachclips und die Filme bleiben
+ * nach dem ersten Besuch im Browser, damit die Show in der Turnhalle auch ohne Internet läuft. */
+const CACHE = 'smarty-v22';
+const CORE = ['./', 'index.html', 'regie.js', 'show.html', 'show.js', 'show.json', 'dashboard.css', 'symbole.js', 'qr.js',
+  'sounds.json', 'audio/manifest.json', 'bilder/start-it-smart-logo.png', 'bilder/intro.jpg', 'bilder/abschluss.jpg',
+  'bilder/stadt.jpg', 'bilder/wohnen.jpg', 'bilder/verkehr.jpg', 'bilder/minecraft.jpg'];
 // Simulationen für die Bühne (eigene Seiten im selben Projekt) – ebenfalls offline verfügbar
 const SPIELE = [
   'lib/three.module.min.js',
@@ -46,8 +48,21 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
 
-  // Sounds und Film: erst Speicher (Adresse enthält Version ?v=…), sonst Netz + speichern
-  if ((url.pathname.includes('/audio/') || url.pathname.includes('/film/')) && !url.pathname.endsWith('.json')) {
+  // Filme: immer die ganze Datei (ohne Teilanfrage) speichern und ausliefern; die Adresse enthält die Version ?v=…
+  if (url.pathname.includes('/film/')) {
+    e.respondWith((async () => {
+      const c = await caches.open(CACHE);
+      const hit = await c.match(url.href);
+      if (hit) return hit;
+      const res = await fetch(url.href);
+      if (res.status === 200) await c.put(url.href, res.clone());
+      return res;
+    })());
+    return;
+  }
+
+  // Sounds: erst Speicher (Adresse enthält Version ?v=…), sonst Netz + speichern
+  if (url.pathname.includes('/audio/') && !url.pathname.endsWith('.json')) {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
       const hit = await c.match(req);

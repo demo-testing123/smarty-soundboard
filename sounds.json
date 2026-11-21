@@ -17,7 +17,6 @@
       }
     ]
   },
-  "github": "demo-testing123/smarty-soundboard",
   "stimmen": [
     {
       "id": "smarty",
@@ -65,6 +64,323 @@
         "praesenz": 2.5
       },
       "robo": 0
+    }
+  ],
+  "missionen": [
+    {
+      "id": "eroeffnung",
+      "name": "Eröffnung",
+      "titel": "Introfilm und Live-Ankunft",
+      "clips": [
+        {
+          "hinweis": "Davor: Introfilm – startet in der Show-Zentrale (Ton steckt im Film)."
+        },
+        {
+          "id": "KI_01_Zeitreise_abgeschlossen",
+          "nr": "KI1",
+          "szene": "Szene 2 · Live-Ankunft · Leinwand „ZEITREISE ABGESCHLOSSEN“"
+        },
+        {
+          "id": "KI_02_Systemfehler_Alterstransformation",
+          "nr": "KI2",
+          "szene": "Szene 2 · Live-Ankunft · Leinwand „SYSTEMFEHLER: ALTERSTRANSFORMATION“"
+        },
+        {
+          "id": "KI_03_Unbekannter_Passagier",
+          "nr": "KI3",
+          "szene": "Szene 3 · Blinder Passagier · Leinwand „UNBEKANNTER PASSAGIER ERKANNT“"
+        },
+        {
+          "id": "SMARTy_01_Landung",
+          "nr": "01",
+          "szene": "Szene 3 · Blinder Passagier · SMARTy kommt auf die Bühne"
+        },
+        {
+          "id": "SMARTy_08_Heimlicher_Passagier",
+          "nr": "08",
+          "szene": "frühere Fassung der Ankunft",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_09_Mitgeschmuggelt",
+          "nr": "09",
+          "szene": "frühere Fassung der Ankunft",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_10_Sehr_guter_Grund",
+          "nr": "10",
+          "szene": "frühere Fassung der Ankunft",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_02_Entdeckung",
+          "nr": "02",
+          "szene": "ältere Sätze",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_05_Zukunftsalarm",
+          "nr": "05",
+          "szene": "ältere Sätze",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_07_Stimmtest",
+          "nr": "07",
+          "szene": "Soundcheck vor der Show",
+          "reserve": true
+        }
+      ]
+    },
+    {
+      "id": "natur",
+      "name": "Natur",
+      "titel": "Aus Grau wird Grün",
+      "clips": [
+        {
+          "id": "SMARTy_03_Frage",
+          "nr": "N1",
+          "szene": "Szene 1 · Der graue Platz (Clip 03)"
+        },
+        {
+          "id": "SMARTy_04_Aha",
+          "nr": "N2",
+          "szene": "Szene 2 · Park oder Spielplatz? (Clip 04)"
+        },
+        {
+          "id": "SMARTy_N5_Bodenfeuchte",
+          "nr": "N5",
+          "szene": "Szene 3 · Starkregen"
+        },
+        {
+          "id": "SMARTy_N3_Wetterwarnung",
+          "nr": "N3",
+          "szene": "früherer Textvorschlag (Starkregen)",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_N4_Regenwasser",
+          "nr": "N4",
+          "szene": "früherer Textvorschlag (Starkregen)",
+          "reserve": true
+        }
+      ]
+    },
+    {
+      "id": "technik",
+      "name": "Technik",
+      "titel": "Straßenlaternen",
+      "clips": [
+        {
+          "id": "SMARTy_T1_Sprachbefehl",
+          "nr": "T1",
+          "szene": "Frage / Bühnendialog"
+        },
+        {
+          "id": "SMARTy_T2_Programm_verstanden",
+          "nr": "T2",
+          "szene": "Calliope-Experiment"
+        },
+        {
+          "id": "SMARTy_T3_Programmoptimierung",
+          "nr": "T3",
+          "szene": "Calliope-Experiment"
+        },
+        {
+          "id": "SMARTy_T4_Experiment_erfolgreich",
+          "nr": "T4",
+          "szene": "nach dem Experiment"
+        },
+        {
+          "id": "SMARTy_T5_Mission_Technik",
+          "nr": "T5",
+          "szene": "nach Abstimmung und Tag/Nacht"
+        },
+        {
+          "id": "SMARTy_T6_Verkehrsproblem",
+          "nr": "T6",
+          "szene": "Übergang zur Mobilität (optional)"
+        }
+      ]
+    },
+    {
+      "id": "mobilitaet",
+      "name": "Mobilität",
+      "titel": "Platz für alle",
+      "clips": [
+        {
+          "id": "SMARTy_M1_Verkehrsanalyse",
+          "nr": "M1",
+          "szene": "Szene 1 · Die Straße ist voll"
+        },
+        {
+          "id": "SMARTy_M2_Parkplatz_Flaeche",
+          "nr": "M2",
+          "szene": "Szene 2 · Parkplatzentscheidung"
+        },
+        {
+          "id": "SMARTy_M3_Vorschlag",
+          "nr": "M3",
+          "szene": "Szene 2 · Parkplatzentscheidung"
+        },
+        {
+          "id": "SMARTy_M9_Simulation",
+          "nr": "M9",
+          "szene": "Szene 2 · Parkplatzentscheidung"
+        },
+        {
+          "id": "SMARTy_M4_Geduld",
+          "nr": "M4",
+          "szene": "Szene 3 · Der Bus wartet"
+        },
+        {
+          "id": "SMARTy_M7_Test_erfolgreich",
+          "nr": "M7",
+          "szene": "mBot auf der Bühne"
+        },
+        {
+          "id": "SMARTy_M5_Funkverbindung",
+          "nr": "M5",
+          "szene": "Verkehrssimulation"
+        },
+        {
+          "id": "SMARTy_M6_Niemand_gefaehrden",
+          "nr": "M6",
+          "szene": "Verkehrssimulation"
+        },
+        {
+          "hinweis": "M10, M11 · Selbstfahrende Autos 2050: Text fehlt noch, nicht vertont."
+        },
+        {
+          "id": "SMARTy_M8_Mission_Mobilitaet",
+          "nr": "M8",
+          "szene": "Abschluss, zurück in die Stadt"
+        }
+      ]
+    },
+    {
+      "id": "wohnen",
+      "name": "Wohnen",
+      "titel": "Sechs Familien",
+      "clips": [
+        {
+          "id": "SMARTy_W1_Bauauftrag",
+          "nr": "W1",
+          "szene": "Szene 1 · Wie viel Platz …?"
+        },
+        {
+          "id": "SMARTy_W2_Messung",
+          "nr": "W2",
+          "szene": "Szene 1 · Ein Grundstück, drei Wohnformen"
+        },
+        {
+          "id": "SMARTy_W3_Drei_Entwuerfe",
+          "nr": "W3",
+          "szene": "Szene 2 · Drei Wohnformen – drei Folgen"
+        },
+        {
+          "id": "SMARTy_W4_Aufstocken",
+          "nr": "W4",
+          "szene": "Szene 3 · Aufstocken, Holz und CO₂"
+        },
+        {
+          "id": "SMARTy_W5_Klimacheck",
+          "nr": "W5",
+          "szene": "Szene 3 · Aufstocken, Holz und CO₂"
+        }
+      ]
+    },
+    {
+      "id": "wege",
+      "name": "Kurze Wege",
+      "titel": "Wo liegt der Laden?",
+      "clips": [
+        {
+          "id": "SMARTy_K1_Wegvergleich",
+          "nr": "K1",
+          "szene": "Ladenstandorte und Wegvergleich"
+        },
+        {
+          "id": "SMARTy_K3_Digitale_Stadtplanung",
+          "nr": "K3",
+          "szene": "Ladenstandorte und Wegvergleich"
+        },
+        {
+          "id": "SMARTy_K2_Kurze_Wege",
+          "nr": "K2",
+          "szene": "nach der Abstimmung"
+        }
+      ]
+    },
+    {
+      "id": "bildung",
+      "name": "Bildung",
+      "titel": "Bildung, Freizeit und Teilhabe",
+      "clips": [
+        {
+          "id": "SMARTy_B1_Raumanalyse",
+          "nr": "B1",
+          "szene": "Szene 1 · Ein Raum, zwei Nutzungen"
+        },
+        {
+          "id": "SMARTy_B4_Stadtmodell",
+          "nr": "B4",
+          "szene": "Szene 1 · Ein Raum, zwei Nutzungen"
+        },
+        {
+          "id": "SMARTy_B2_Zugang",
+          "nr": "B2",
+          "szene": "Szene 2 · Welche Orte passen zu allen?"
+        },
+        {
+          "id": "SMARTy_B3_Mitmachen",
+          "nr": "B3",
+          "szene": "Szene 2 · Welche Orte passen zu allen?"
+        }
+      ]
+    },
+    {
+      "id": "finale",
+      "name": "Finale",
+      "titel": "Unsere Zukunftsstadt ist fertig!",
+      "clips": [
+        {
+          "id": "SMARTy_F3_Stadtplanung_abgeschlossen",
+          "nr": "F3",
+          "szene": "Szene 1 · Wir haben es geschafft!"
+        },
+        {
+          "id": "SMARTy_F4_Sensoren_Computer",
+          "nr": "F4",
+          "szene": "Szene 2 · Spaziergang durch die Zukunftsstadt"
+        },
+        {
+          "id": "SMARTy_F5a_Zukunftscheck",
+          "nr": "F5a",
+          "szene": "Szene 3 · Nachricht aus dem Jahr 2050"
+        },
+        {
+          "id": "SMARTy_F5b_Nachricht_2050",
+          "nr": "F5b",
+          "szene": "Szene 3 · Nachricht aus dem Jahr 2050 – direkt vor dem Abschlussfilm"
+        },
+        {
+          "hinweis": "Danach: Abschlussfilm (Show-Zentrale) → Bühnenverabschiedung → Abschlussfolie mit QR-Codes (Show-Zentrale)."
+        },
+        {
+          "id": "SMARTy_F1_Zukunftsanalyse",
+          "nr": "F1",
+          "szene": "frühere Finale-Fassung (Drehbuch 16.11.)",
+          "reserve": true
+        },
+        {
+          "id": "SMARTy_06_Finale",
+          "nr": "F2",
+          "szene": "frühere Finale-Fassung (Drehbuch 16.11., Clip 06)",
+          "reserve": true
+        }
+      ]
     }
   ],
   "saetze": [

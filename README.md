@@ -1,66 +1,91 @@
-# SMARTy Soundboard
+# START IT SMART – Regie-Soundboard und Show-Zentrale
 
-Soundboard für die Grundschul-Bühnenshow **START IT SMART · Mission Zukunft: Rettet unsere Stadt!**
-Hier liegen die Sätze des Roboterhunds SMARTy und die Eröffnung mit Erzähler und Musik. Jeder Satz wird per Klick oder Taste abgespielt.
+Zwei getrennte Oberflächen für die Grundschul-Bühnenshow **START IT SMART · Mission Zukunft: Rettet unsere Stadt!** (Anforderungen vom 21.11.2026):
 
-## Bedienung
+| Dashboard | Adresse | Inhalt |
+|---|---|---|
+| **1 · Regie-Soundboard** | [demo-testing123.github.io/smarty-soundboard/](https://demo-testing123.github.io/smarty-soundboard/) (`index.html`) | Nur die einzelnen Sprachclips von SMARTy und der Zeitmaschinen-KI, nach Missionen und Drehbuch sortiert. Schlicht und textorientiert. |
+| **2 · Show-Zentrale** | [demo-testing123.github.io/smarty-soundboard/show.html](https://demo-testing123.github.io/smarty-soundboard/show.html) | Große Kacheln: Introfilm, Abschlussfilm, 3D-Stadtkonfigurator, Wohnsimulation, Verkehrssimulation, Minecraft Education, Calliope, Präsentationsmaterialien. |
+
+Beide Seiten verlinken sich gegenseitig: „Show-Zentrale →“ und „← Zurück zum Soundboard“. Sie öffnen sich dabei in festen Tabs, damit keine Fenster doppelt entstehen. Beide nutzen das Original-Logo (`bilder/start-it-smart-logo.png`, unverändert) und die Projektfarben Petrol, Türkis, Gelb und Weiß.
+
+## Dashboard 1 · Regie-Soundboard
 
 | Aktion | Klick / Taste |
 |---|---|
-| Satz abspielen | Pad anklicken oder Taste drücken (SMARTy `1`–`0`, `W`–`Ü` `+`, `G`–`#`, `<`–`.`, `ß`, Umschalt + `#` `6` `+` `ß` `-`; Eröffnung als Film `Q`, Grüße aus 2050 `-`, Zeitmaschine `A S D`). `Ü Ö Ä ß < + #` gelten für die deutsche Tastatur. |
-| Laufenden Satz stoppen | dasselbe Pad oder dieselbe Taste noch einmal |
-| Alles sofort stoppen | `Leertaste` oder `Esc`, roter Knopf |
-| Alles weich ausblenden (1,5 s) | `F` oder „Ausblenden“ |
-| Lautstärke | Regler oben oder `↑` / `↓` |
-| Robo-Anteil je Stimme | Regler „Robo“ (Standard SMARTy 20 %, Erzähler 0 %; Doppelklick setzt zurück) |
-| Mehrere Sätze gleichzeitig | Haken bei „Überlappen“ |
-| Satz als WAV speichern (mit Effekt) | Symbol ⤓ unten rechts auf dem Pad |
-| Pads und Bereiche umstellen, Platz verteilen | „⇄ Anordnen“: Pad oder Kopf eines Bereichs ziehen = verschieben; Griff zwischen zwei Blöcken nach links/rechts ziehen = Breite zwischen beiden verteilen; Tastatur `←` `→` bzw. `Umschalt`+`←` `→`. Danach „Für alle Geräte speichern“ (siehe unten) |
+| Clip abspielen | Play-Knopf in der Zeile oder die Taste des Clips (steht unter der Nummer) |
+| Laufenden Clip stoppen | derselbe Knopf (zeigt dann ■) |
+| Sofort stoppen | `Leertaste`, `Esc` oder roter Knopf „Stopp“ unten |
+| Weich ausblenden (1,5 s) | `F` |
+| Lautstärke | Regler unten (0–150 %) oder `↑` / `↓` |
+| Nur einen Sprecher zeigen | „Alle · SMARTy · Zeitmaschinen-KI“ oben |
+| Zu einer Mission springen | Missionsknöpfe oben (Eröffnung … Finale). Ein Klick auf den Missionskopf klappt sie auf oder zu. |
 
-Ohne „Überlappen“ beendet ein neuer Satz den laufenden Satz.
+- **Pro Clip angezeigt:**
+  - Kennung, z. B. `KI2`, `N1`, `F5b`
+  - Taste
+  - Szene
+  - Sprecher
+  - vollständiger gesprochener Text
+  - Dauer aus der Audiodatei
+  - Play/Stopp
+  - Status: bereit · läuft · ✓ gespielt · Datei fehlt
+- **Ein Clip zur Zeit:** Ein neuer Clip beendet den laufenden. Nach dem Ende startet **nichts automatisch**; der nächste Clip im Drehbuch ist nur dezent als „als Nächstes“ markiert. Der laufende Clip ist gelb hinterlegt und steht unten mit der abgelaufenen Zeit.
+- **Reihenfolge:** Sie steht in `sounds.json` unter `"missionen"`: je Mission eine Liste in Drehbuch-Reihenfolge, mit Kennung und Szene.
+  - Die Zeitmaschinen-KI (`KI1`–`KI3`) steht als eigener Sprecher dort, wo das Drehbuch sie vorsieht: in der Eröffnung (Live-Ankunft), vor SMARTys erstem Satz.
+  - Clips, die im aktuellen Drehbuch nicht vorkommen, stehen am Ende ihrer Mission unter „Reserve“.
+  - Hinweiszeilen wie „Davor: Introfilm“ dienen nur der Orientierung.
+- **Klang:** Die Clips laufen über dieselbe Web-Audio-Kette wie bisher: Robo-Anteil je Stimme aus `sounds.json` (`"robo"`, SMARTy 20 %, KI 0 %), Präsenz-EQ und leichter Kompressor.
+- Die Häkchen „gespielt“ gelten für diesen Browser-Tab. Unten lassen sie sich zurücksetzen.
+- **Nicht mehr im Soundboard** (laut Anforderung): Filme, Beamerfenster, Erzähler-Pads (Eröffnung, Grüße aus 2050), Stimmproben, Anordnen, Überlappen, Robo-Regler, WAV-Export und eigener Sound. Die frühere Fassung steht im Git-Verlauf (Commit `c67cdb8`).
 
-## Eröffnung „Die Zukunft braucht euch“ (Taste `Q`)
+## Dashboard 2 · Show-Zentrale
 
-Der Erzähler hat zwei Sounds:
+| Kachel | Ziel |
+|---|---|
+| Introfilm | `film/Eroeffnung_Film.mp4` (1:33, KI-Hinweis in den ersten Sekunden) |
+| Abschlussfilm | `film/Abschlussfilm_2050.mp4` (85,8 s, Sprecheraufnahme vollständig) |
+| 3D-Stadtkonfigurator | `stadt/`. Die Starkregen-Simulation erreicht man dort über Mission Natur → Szene 3 → „Natur-Simulation öffnen“; sie hat **keine** eigene Kachel. |
+| Wohnsimulation | `wohnen/` |
+| Verkehrssimulation | `verkehr/` |
+| Minecraft Education | Anleitung in drei Schritten: App über das Startmenü starten (oder „Direkt starten versuchen“ über `https://education.minecraft.net/open`), Welt aus dem Konfigurator exportieren oder Ersatzwelt laden, Weltimport und Startpunkt getrennt testen |
+| Calliope mini | MakeCode für Calliope (`https://makecode.calliope.cc/`), externer Link |
+| Präsentationsmaterialien | Canva-Link (einstellbar), Abschlussfolie mit zwei QR-Codes, Hinweis auf die lokale PowerPoint-Datei |
 
-- **Eröffnung** (Taste `Q`): die komplette Eröffnung als eine Sequenz mit Pausen, Musik und Effekten, etwa 1:33 lang. Grundlage sind die Musik- und Soundregie aus dem Intro-PDF und die **Sprecheraufnahme** `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`.
-- **Abschlussfilm – Nachricht aus 2050 (1:25)** (Knopf im Erzähler-Bereich, **keine Taste**, nur per bewusstem Klick): Animationsfilm mit der vollständigen Aufnahme „Grüße aus dem Jahr 2050“ (`film/Abschlussfilm_2050.mp4`, 85,8 s). Läuft im **Beamerfenster**; solange er läuft, sind alle anderen Sounds gesperrt, damit nichts parallel tönt. Renderprojekt: `Downloads/StartItSmart_Abschlussfilm` (siehe LIESMICH dort).
-- **Beamerfenster** (`🖥 Beamerfenster`, Seite `beamer.html`): für den erweiterten Desktop. Fenster auf den Beamer ziehen, dort einmal „Vollbild + Ton freigeben“ klicken, dann zurück ins Soundboard. Eröffnungsfilm (`Q`) und Abschlussfilm laufen dann auf dem Beamer, die Steuerung bleibt hier. Ohne Beamerfenster spielt `Q` wie bisher im Vollbild dieses Fensters; der Abschlussfilm fragt vorher nach. Tasten, die im Beamerfenster gedrückt werden, kommen im Soundboard an.
-- **Abschlussfolie (QR)** (`🔳 Abschlussfolie (QR)`): zwei QR-Codes „Stadt herunterladen“ und „Feedback geben“ auf dem Beamer – erst nach Film und Bühnenverabschiedung (vorher fragt das Soundboard nach). Links unter „Links …“ (gelten auf diesem Gerät; Vorgabe in `sounds.json` unter `abschlussfolie`). Vorgabe für „Stadt herunterladen“ ist die Ersatzwelt `stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld`; der Feedback-Link fehlt noch. `■ Beamer schwarz` stoppt alles und macht die Leinwand schwarz.
-- **Grüße aus dem Jahr 2050** (Taste `-`): nur Ton, **Ersatz**, falls der Abschlussfilm nicht gezeigt werden kann (gleiche Aufnahme – nie zusätzlich zum Film). Botschaft zum Showende, etwa 1:26, nur Stimme. Sprecheraufnahme von ElevenLabs in derselben Stimme wie die Eröffnung (`audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3`, auf −16 LUFS angeglichen wie alle Sounds). Wird nicht vom Generator erzeugt; eine neue Aufnahme einfach unter demselben Namen ablegen und `python tools/generate.py` laufen lassen.
+- **Filme:** Ein Klick auf „… starten“ spielt den Film in einem normalen Video-Element ab und schaltet dabei in den Vollbildmodus, auf dem Bildschirm, auf dem das Fenster liegt.
+  - Es gibt nur ein Video-Element. Der Filmton läuft also genau einmal, und ein zweiter Film ersetzt den ersten.
+  - Maus bewegen blendet eine Leiste mit Pause, Vollbild und Schließen ein. `Leertaste` = Pause/Weiter.
+  - Nach dem Ende bleibt das Bild schwarz. `Esc` oder ✕ führt zurück.
+- **In eigenem Fenster** (Link unter dem Startknopf): öffnet nur den Film (`show.html?film=intro` bzw. `…=abschluss`). Das Fenster lässt sich auf einen anderen Bildschirm ziehen und dort starten. Ferngesteuert wird nichts.
+- Beide Filme werden beim Öffnen der Show-Zentrale vollständig geladen. Danach steht „bereit (auch offline)“, und sie starten sofort.
+- **Links bearbeiten …** (unten): Canva, Calliope und die zwei QR-Links.
+  - Die Einträge gelten nur in diesem Browser.
+  - Für alle Geräte: Canva und Calliope in `show.json`, die QR-Links in `sounds.json` unter `abschlussfolie`.
+  - Der Feedback-Link fehlt noch.
+- Kacheln, Texte und Bilder stehen in `show.json`. Die Kachelbilder liegen in `bilder/` (Filmstandbilder und Bildschirmfotos der Anwendungen).
 
-- **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“, der Countdown kommt etwa im Sekundentakt.
-- **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen. Der Ablauf: leises Pulsieren → heller Teil mit Rhythmus und Signaltönen → Einschnitt bei „Doch …“ mit Summen → warmer, aufsteigender Akkord → Trommeln, Akzent auf „EUCH!“ → Startsignal, Puls, Impuls auf jede Countdown-Zahl → Whoosh/Impact bei „ZEITSPRUNG!“.
+### Abnahmetest vor der Show (auf dem Veranstaltungslaptop)
+
+1. Beide Seiten einmal mit Internet öffnen. Unten im Soundboard muss „Offline bereit“ stehen, bei den Filmen „bereit (auch offline)“.
+2. Soundboard: einen SMARTy-Clip abspielen. Er endet, und der nächste startet nicht von selbst.
+3. Eröffnung: `KI1`–`KI3` (Tasten `A` `S` `D`) mit richtigem Text, danach SMARTy `01`.
+4. Show-Zentrale: Jede Kachel öffnet das richtige Ziel. Calliope und Canva sind Links.
+5. Intro- und Abschlussfilm starten bildschirmfüllend, der Ton ist genau einmal zu hören. Der Ton läuft über die Windows-Tonausgabe (HDMI oder Anlage).
+6. Es gibt keine Starkregen-Kachel. Starkregen über den Stadtkonfigurator öffnen.
+7. Minecraft Education starten. Weltimport und Startposition getrennt testen (stadt/LIESMICH, Abschnitt 0.4).
+8. Automatische Prüfung: `test-dashboards.html` öffnen.
+
+## Eröffnung (Introfilm mit Tonspur)
+
+Der Introfilm (`film/Eroeffnung_Film.mp4`, 1920×1080, 1:32,8) startet aus der Show-Zentrale. Bildwechsel, Countdown-Zahlen und der weiße Blitz sind auf die Tonspur gerendert und laufen dadurch bildgenau synchron. In den ersten Sekunden (0,25–4,95 s) steht „Diese Zukunftsvision wurde mit KI erstellt.“ im Bild. Erzeugt wird der Film im Projekt `StartItSmart_Eroeffnung_Film` (`tools/film.py`). Ändert sich die Tonspur, dort neu rendern und die Datei nach `film/` kopieren.
+
+Die Tonspur baut `tools/intro.py` aus der Sprecheraufnahme `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3`:
+
+- **Sprache:** Die Aufnahme bleibt unverändert, sie wird nur sanft komprimiert. An den Stellen aus der Regie verlängert das Skript die Pausen zwischen den Sätzen: „Doch … irgendetwas“, „Fantasie / Mut / Ideen“, vor „EUCH!“. Der Countdown kommt etwa im Sekundentakt.
+- **Musik und Effekte** sind komplett selbst berechnet (`tools/intro.py`), es gibt keine fremden Samples. Damit sind sie frei für öffentliche Aufführungen.
 - Unter der Sprache wird die Musik automatisch etwa 10 dB leiser, in den Pausen kommt sie wieder hoch.
 - **[`audio/intro/Regie.md`](audio/intro/Regie.md)** listet die tatsächlichen Zeitmarken aller Einsätze, nützlich für Licht und Leinwand.
 - **Getrennte Spuren** für Audacity: `audio/intro/Spur_Sprecher.mp3`, `Spur_Musik.mp3`, `Spur_Effekte.mp3`.
-
-### Test mit erweitertem Desktop (vor der Show auf dem Veranstaltungslaptop)
-
-Nicht von mir ausführbar: Ich habe keinen zweiten Bildschirm und keinen Beamer. Im Browser-Bereich geprüft: Verbindung, Start und Stopp über das Beamerfenster, Tasten aus dem Beamerfenster, Sperre und QR-Folie.
-
-1. Windows-Taste + P → **Erweitern**. Soundboard in Chrome oder Edge öffnen und einmal online laden (Offline-Speicher).
-2. `🖥 Beamerfenster` → Fenster auf den Beamer ziehen → dort „▶ Vollbild + Ton freigeben“. Im Soundboard muss stehen: „Beamer bereit · Vollbild · Ton frei · Filme 2/2“.
-   - Fragt der Browser „Fenster auf allen Bildschirmen verwalten“, **Zulassen**: Beim nächsten Öffnen erscheint das Fenster gleich auf dem Beamer.
-   - Pop-ups für die Seite erlauben, falls blockiert.
-3. Einmal ins Soundboard klicken. `Q` → Eröffnung läuft auf dem Beamer, das Soundboard zeigt die Restzeit, auf dem Laptop läuft kein Bild. `Leertaste` stoppt.
-4. Ton: Windows-Tonausgabe auf die Hallenanlage oder den HDMI-Beamer stellen. Der Filmton kommt aus dem Beamerfenster, die SMARTy-Sounds kommen aus dem Soundboard, beide über dieselbe Ausgabe.
-5. Abschlussfilm-Knopf anklicken. Er läuft auf dem Beamer. Eine SMARTy-Taste drücken: **Nichts darf erklingen**, das Soundboard meldet „… gesperrt“. Taste `-` (Grüße) ebenfalls gesperrt.
-6. Nach dem Filmende ist der Beamer schwarz, und das Soundboard meldet „Abschlussfilm zu Ende“. `🔳 Abschlussfolie (QR)` zeigen und beide Codes mit dem Handy aus der letzten Reihe scannen.
-7. Mit Minecraft: Minecraft Education auf dem Beamer im Vollbild, dann den Abschlussfilm starten. Das Beamerfenster sollte nach vorn kommen. Falls nicht: Minecraft vorher schließen oder minimieren (Windows-Taste + ↓).
-
-### Eröffnungsfilm (Beamer)
-
-Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnung_Film.mp4`, 1920×1080). Bildwechsel, Countdown-Zahlen und der weiße Blitz sind auf die Tonspur gerendert und bleiben dadurch bildgenau synchron. Seit 19.11.2026 steht in den ersten Sekunden (0,25–4,95 s, davon 4,2 s voll sichtbar) „Diese Zukunftsvision wurde mit KI erstellt.“ im Bild – sonst unverändert (Handlung, Sprecheraufnahme, Länge 1:32,8, „ZEITSPRUNG!“; die Tonspur ist bitgenau die alte).
-
-- **Erweiterter Desktop** (empfohlen): zuerst `🖥 Beamerfenster` öffnen und einrichten (siehe oben). Dann läuft der Film im Beamerfenster, die Steuerung bleibt im Soundboard.
-- **Gespiegelt** (ohne Beamerfenster): Die Seite schaltet beim Start selbst in den Vollbildmodus.
-- Nach dem Blitz bleibt das Bild **schwarz stehen**. Die SMARTy-Tasten `1`–`7` funktionieren weiter, man sieht sie dabei nur nicht. Während der Film läuft, brechen andere Sounds ihn nicht ab.
-- `Leertaste` stoppt den Film sofort, `F` blendet Bild und Ton weich nach Schwarz aus. In beiden Fällen bleibt das Bild schwarz.
-- `Esc` (oder ein Klick nach dem Filmende) beendet das Vollbild und führt zurück zum Soundboard. Während der Film läuft, ignoriert die Seite Klicks.
-- Ohne Haken bei **🎬 Film zeigen** (im Erzähler-Bereich) spielt `Q` nur den Ton, z. B. für Proben ohne Beamer.
-- Der Film wird wie die Sounds im Browser gespeichert und läuft dadurch auch offline. 🎞 auf dem Feld speichert ihn als MP4.
-- Erzeugt wird er im Projekt `StartItSmart_Eroeffnung_Film` (`tools/film.py`). Ändert sich die Tonspur, dort neu rendern und die Datei nach `film/` kopieren.
 
 **Einstellungen** am Eintrag `Erzaehler_00_Eroeffnung` in `sounds.json` (GitHub baut danach automatisch neu):
 
@@ -76,81 +101,49 @@ Taste `Q` spielt die Eröffnung als **Film mit Ton im Vollbild** (`film/Eroeffnu
 
 **Neue Aufnahme einsetzen:** Die Datei unter demselben Namen hochladen, also `audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3` ersetzen. Wenn sich das Tempo ändert, die sechs Startzeiten bei `abschnitte` anpassen. Das Skript findet die Satzteile über die Pausen selbst. Es bricht mit einer Meldung ab, wenn die Startzeiten nicht passen.
 
+**Abschlussfilm:** Renderprojekt `Downloads/StartItSmart_Abschlussfilm` (LIESMICH dort), dort auch eine Fassung mit exakt 85,0 s. Die Aufnahme „Grüße aus dem Jahr 2050“ (`audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3`) steckt im Film. Im Soundboard ist sie nicht mehr einzeln abspielbar.
+
 ## Zeitmaschine (KI) – Tasten `A S D`
 
 Der Bordcomputer der Zeitmaschine meldet sich in der Ankunftsszene nach dem Intro. Die Stimme ist weiblich (Grundstimme Tanja), klar, sachlich und etwas langsamer. Sie klingt leicht elektronisch, aber ohne Roboterverzerrung, und unterscheidet sich damit deutlich vom Erzähler und von SMARTy.
 
-| Taste | Ansage | Ton | Leinwand |
+| Kennung · Taste | Ansage | Ton | Leinwand |
 |---|---|---|---|
-| `A` | Zeitreise abgeschlossen. Ziel erreicht. Willkommen in der Vergangenheit. | Bestätigungston vorweg | ZEITREISE ABGESCHLOSSEN |
-| `S` | Warnung! Systemfehler! Unerwartete Alterstransformation festgestellt. … | zwei Warntöne vorweg | SYSTEMFEHLER: ALTERSTRANSFORMATION |
-| `D` | Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet. | Scan-Geräusch in der Pause | UNBEKANNTER PASSAGIER ERKANNT |
+| `KI1` · `A` | Zeitreise abgeschlossen. Ziel erreicht. Willkommen in der Vergangenheit. | Bestätigungston vorweg | ZEITREISE ABGESCHLOSSEN |
+| `KI2` · `S` | Warnung! Systemfehler! Unerwartete Alterstransformation festgestellt. Biologisches Alter der Zeitreisenden verändert. | zwei Warntöne vorweg | SYSTEMFEHLER: ALTERSTRANSFORMATION |
+| `KI3` · `D` | Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet. | Scan-Geräusch in der Pause | UNBEKANNTER PASSAGIER ERKANNT |
 
-Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einzeln abspielen. Mit ⤓ speichert man sie als WAV.
+Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einzeln abspielen. Das Drehbuch sieht im Finale noch eine „Abschlussmeldung / Rückreise nach Regieentscheidung“ der Zeitmaschine vor. Dafür gibt es noch keinen Text und keinen Clip.
 
-## SMARTy nach Szenen (Drehbuch vom 16.11.2026)
+## SMARTy nach Szenen
 
-Die SMARTy-Pads sind nach der Live-Dramaturgie geordnet (Sprachtexte-Liste vom 19.11.2026: Technik erst Calliope, dann Laternenwahl; Mobilität erst mBot, dann Verkehrssimulation). Die Tasten der älteren Sätze sind gleich geblieben. Vollständige Zuordnung Szene → Clip → Datei, mit den noch offenen Texten: **[SMARTy_Zuordnung.md](SMARTy_Zuordnung.md)**.
-
-| Szene | Taste | Clip |
-|---|---|---|
-| Ankunft | `8` `9` `0` | Heimlicher Passagier · Mitgeschmuggelt · Sehr guter Grund |
-| Mission Natur | `3` | N1 · Ich habe 327 Computerspiele gespeichert … |
-| | `4` | N2 · Aha! Menschen brauchen also nicht nur Computer … |
-| | `W` | N3 · Wetterwarnung! Starkregen im Anmarsch … (Textvorschlag, erst nach Freigabe) |
-| | `E` | N4 · Neue Erkenntnis gespeichert: … Regenwasser auffangen … (Textvorschlag, erst nach Freigabe) |
-| | `<` | N5 · Technikidee erkannt! Ein Bodenfeuchtesensor liefert Messwerte … (neu 19.11.) |
-| Mission Technik | `R` | T1 · Sprachbefehl nicht erkannt … Helligkeitssensor verwenden. |
-| | `T` | T2 · Programm verstanden. Bereit für den Praxistest. |
-| | `Z` | T3 · Programmoptimierung erkannt … Sehr gute Idee, Zukunftsteam! |
-| | `U` | T4 · Experiment erfolgreich … in die Stadtplanung übernommen werden. |
-| | `I` | T5 · Mission Technik abgeschlossen. Zukunftsstadt aktualisiert. |
-| | `O` | T6 · Warnung. Verkehrsproblem erkannt. (optional) |
-| Mission Mobilität | `Y` `X` `C` `.` `V` | M1 · Verkehrsanalyse … · M2 · Jeder Parkplatz braucht Fläche … · M3 · Vorschlag: Parkplätze bündeln … · M9 · Simulation erkannt … (neu 19.11.) · M4 · … Geduld … nicht erkannt. |
-| | `M`, dann `B` `N`, dann `,` | M7 · Test erfolgreich (mBot) … · M5 · Funkverbindung hergestellt … · M6 · … darf niemanden gefährden … · M8 · Mission Mobilität abgeschlossen … |
-| Mission Wohnen | `G` `H` `J` `K` `L` | W1 · Bauauftrag erkannt … · W2 · Messung abgeschlossen … · W3 · Sechs Familien, drei Bauweisen … (neuer Wortlaut 19.11.) · W4 · Alternative erkannt: … aufstocken · W5 · Klimacheck … |
-| Mission Kurze Wege | `Ö` `ß` `Ä` | K1 · Wegvergleich gestartet … · K3 · Digitale Stadtplanung … (neu 19.11.) · K2 · Stadt der kurzen Wege … |
-| Mission Bildung | `P`, Umschalt + `+`, `Ü` `+` | B1 · Raumanalyse … · B4 · Stadtmodell aktualisiert … (neu 19.11.) · B2 · Zugang prüfen … · B3 · … macht das Mitmachen möglich. |
-| Finale | Umschalt + `ß` · Umschalt + `-` | F3 · Stadtplanung abgeschlossen … Bereit für den Rundgang. · F4 · Sensoren können messen … Die Ideen aber kommen von euch! (neu 19.11.) |
-| | Umschalt + `#`, dann Umschalt + `6` | F5a · Zukunftscheck gestartet … · F5b · Nachricht aus dem Jahr 2050 empfangen. (neu 19.11.) – danach Erzähler `-` |
-| | `#` · `6` | F1 · Zukunftsanalyse … · Clip 06 „Mission erfolgreich! …“ (frühere Fassung, nicht in der Liste vom 19.11.) |
-| Weitere Sätze | `1` `2` `5` `6` `7` | Landung · Entdeckung · Zukunftsalarm · Finale · Soundcheck (stehen nicht im aktuellen Drehbuch) |
-
-## Anordnung für alle Geräte
-
-Die gemeinsame Anordnung steht in **`layout.json`**. Jedes Gerät lädt sie beim Öffnen der Seite. Auf dem Handy liegen naturgemäß weniger Blöcke nebeneinander, Reihenfolge und Breitenverhältnis sind aber dieselben.
-
-- Was man im Modus „⇄ Anordnen“ ändert, gilt zunächst nur auf diesem Gerät. Oben erscheint dann der Hinweis „noch nicht für alle Geräte gespeichert“.
-- **Für alle Geräte speichern** schreibt `layout.json` ins Repository. Nach etwa 2 Minuten zeigen alle Geräte die neue Anordnung (Seite neu laden). **Verwerfen** holt die gemeinsame Anordnung zurück.
-- **Mit Token (ein Klick):** Beim ersten Speichern fragt die Seite nach einem GitHub-Token. Er wird einmal pro Gerät angelegt, auf dem man anordnet: [neuer Fine-grained Token](https://github.com/settings/personal-access-tokens/new), *Repository access* nur `smarty-soundboard`, *Permissions* „Contents: Read and write“. Der Token bleibt nur in diesem Browser; „Token auf diesem Gerät löschen“ entfernt ihn.
-- **Ohne Token:** „Ohne Token …“ kopiert den Text und öffnet `layout.json` im GitHub-Editor. Dort alles markieren, einfügen und „Commit changes“ klicken.
-- Zum Abspielen braucht kein Gerät einen Token. Offline gilt die zuletzt geladene Anordnung.
+Die vollständige Zuordnung Szene → Clip → Datei steht in **[SMARTy_Zuordnung.md](SMARTy_Zuordnung.md)**. Die Anzeige im Soundboard folgt `sounds.json` → `"missionen"`. Noch offen sind M10/M11 (selbstfahrende Autos); der Text fehlt.
 
 ## Verkehrssimulation „Die schlaue Ampel“ (`verkehr/`)
 
-Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, im Soundboard oben über **🚦 Verkehr** (öffnet ein neues Fenster für den Beamer). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
+Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, in der Show-Zentrale über die Kachel **Verkehrssimulation** (eigener Tab). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
 
 ## Wohnen, Bauen und CO₂ „Wie bauen wir unsere Zukunftsstadt?“ (`wohnen/`)
 
-Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/wohnen/**, im Soundboard oben über **🏠 Wohnen**. Experiment mit sechs Wohnmodulen (nebeneinander/stapeln), Varianten A/B/C auf demselben 12 × 12-Raster, Aufstocken mit zwei Holzgeschossen und Materialwissen. Tasten: `1`–`5` Modi, `←`/`→` oder `Leertaste` Schritte, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung, Rastermodell und Einschränkungen: [wohnen/LIESMICH.md](wohnen/LIESMICH.md). Prüfseite: `wohnen/test.html`.
+Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/wohnen/**, in der Show-Zentrale über die Kachel **Wohnsimulation**. Experiment mit sechs Wohnmodulen (nebeneinander/stapeln), Varianten A/B/C auf demselben 12 × 12-Raster, Aufstocken mit zwei Holzgeschossen und Materialwissen. Tasten: `1`–`5` Modi, `←`/`→` oder `Leertaste` Schritte, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung, Rastermodell und Einschränkungen: [wohnen/LIESMICH.md](wohnen/LIESMICH.md). Prüfseite: `wohnen/test.html`.
 
 ## Mission Natur „Aus Grau wird Grün“ (`natur/`)
 
-Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/natur/**, im Soundboard oben über **🌳 Natur**. Die Spielplatzszene des Drehbuchs als 3D-Simulation in Blockgrafik, mit demselben Platz wie in der Minecraft-Testwelt. Abschnitte: grauer Platz, Abstimmung A/B, Verwandlung „Beides gemeinsam“ Schicht für Schicht, Sommertag mit Schatten und vereinfachter Wärme-Ansicht, Starkregen (grau: Abfluss; grün: Versickern, Regenmulde, tiefer Bereich, Zisterne, Gießen), Endbild. Tasten: `1`–`6` Abschnitte, `←`/`→` oder `Leertaste` Schritte, `A`/`B` Abstimmung, `W` Wärme, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung und Vereinfachungen: [natur/LIESMICH.md](natur/LIESMICH.md). Prüfseite: `natur/test.html`.
+Eigene Seite: **https://demo-testing123.github.io/smarty-soundboard/natur/**, über den Stadtkonfigurator (Mission Natur, Szene 3 „Natur-Simulation öffnen“), ohne eigene Kachel. Die Spielplatzszene des Drehbuchs als 3D-Simulation in Blockgrafik, mit demselben Platz wie in der Minecraft-Testwelt. Abschnitte: grauer Platz, Abstimmung A/B, Verwandlung „Beides gemeinsam“ Schicht für Schicht, Sommertag mit Schatten und vereinfachter Wärme-Ansicht, Starkregen (grau: Abfluss; grün: Versickern, Regenmulde, tiefer Bereich, Zisterne, Gießen), Endbild. Tasten: `1`–`6` Abschnitte, `←`/`→` oder `Leertaste` Schritte, `A`/`B` Abstimmung, `W` Wärme, `R` Zurücksetzen, `I` Moderationsinfo, `F` Vollbild. Anleitung und Vereinfachungen: [natur/LIESMICH.md](natur/LIESMICH.md). Prüfseite: `natur/test.html`.
 
 ## Stadt-Konfigurator für alle Missionen (`stadt/`)
 
-Seite: **https://demo-testing123.github.io/smarty-soundboard/stadt/**, im Soundboard oben über **🏙 Stadt**. Regie- und Stadtplanungsanwendung nach dem Drehbuch (Arbeitsfassung 16.11.2026), gestaltet nach dem Stadt-Konfigurator des Kollegen: graue Stadt 2050, Mission Natur (A/B-Denkimpuls, „Beides gemeinsam“, Starkregen), Technik (Laternen mit Tag/Nacht), Mobilität (Parken A/B/C, Kreuzung mit Busanmeldung), Wohnen (sechs Wohnungen A/B/C, Aufstocken), Kurze Wege (gemessene Fußwege), Bildung (A/B/C), Finale mit Zukunftscheck und Rundgang. Jede Entscheidung ändert nur ihre feste Baufläche; Beschlüsse bleiben gespeichert. Dieselbe Stadt gibt es als Minecraft-Education-Welt mit einer Vorlagen-Kammer je Variante und einem Regieraum mit Knöpfen (`/clone`-Bauaufträge). Tasten: `0`–`7` Missionen, `←`/`→` Schritte, `A`/`B`/`C` Vorschau, `Enter` Übernehmen, `V` Vorher/Nachher, `N` Nacht, `M` Bauauftrag, `I` Regie, `F` Vollbild. Offline auch als Einzeldatei `stadt/START-IT-SMART_Stadtkonfigurator.html` (Doppelklick). Anleitung, Inventar, Datenmodell, Testbericht: [stadt/LIESMICH.md](stadt/LIESMICH.md). Abnahmetests: `stadt/test.html`. In Minecraft Education selbst noch nicht getestet.
+Seite: **https://demo-testing123.github.io/smarty-soundboard/stadt/**, in der Show-Zentrale über die Kachel **3D-Stadtkonfigurator**. Regie- und Stadtplanungsanwendung nach dem Drehbuch (Arbeitsfassung 16.11.2026), gestaltet nach dem Stadt-Konfigurator des Kollegen: graue Stadt 2050, Mission Natur (A/B-Denkimpuls, „Beides gemeinsam“, Starkregen), Technik (Laternen mit Tag/Nacht), Mobilität (Parken A/B/C, Kreuzung mit Busanmeldung), Wohnen (sechs Wohnungen A/B/C, Aufstocken), Kurze Wege (gemessene Fußwege), Bildung (A/B/C), Finale mit Zukunftscheck und Rundgang. Jede Entscheidung ändert nur ihre feste Baufläche; Beschlüsse bleiben gespeichert. Dieselbe Stadt gibt es als Minecraft-Education-Welt mit einer Vorlagen-Kammer je Variante und einem Regieraum mit Knöpfen (`/clone`-Bauaufträge). Tasten: `0`–`7` Missionen, `←`/`→` Schritte, `A`/`B`/`C` Vorschau, `Enter` Übernehmen, `V` Vorher/Nachher, `N` Nacht, `M` Bauauftrag, `I` Regie, `F` Vollbild. Offline auch als Einzeldatei `stadt/START-IT-SMART_Stadtkonfigurator.html` (Doppelklick). Anleitung, Inventar, Datenmodell, Testbericht: [stadt/LIESMICH.md](stadt/LIESMICH.md). Abnahmetests: `stadt/test.html`. In Minecraft Education selbst noch nicht getestet.
 
 ## Minecraft Education: Spielplatz-Test (`minecraft/`)
 
-Seite: **https://demo-testing123.github.io/smarty-soundboard/minecraft/**, im Soundboard oben über **⛏ Minecraft**. Prototyp für Mission Natur: Testwelt (`.mcworld`) mit grauem Platz und zwei Vorlagen-Kammern darunter. Ein Knopf auf dem Regieplatz oder der Chatbefehl `/clone` tauscht den Platz in derselben geöffneten Welt gegen den Natur-Abenteuerspielplatz (Regenmulde, tiefer Spielbereich, Zisterne) und zurück. Dazu gibt es Testplan mit `/testforblocks`, Bestandsanalyse des Stadt-Konfigurators, Technikentscheidung und Grenzen: [minecraft/LIESMICH.md](minecraft/LIESMICH.md). Selbsttests: `minecraft/test.html`. In Minecraft Education selbst noch nicht getestet.
+Seite: **https://demo-testing123.github.io/smarty-soundboard/minecraft/**, nicht mehr in den Dashboards verlinkt (Prototyp; für die Show gilt die Minecraft-Kachel der Show-Zentrale). Prototyp für Mission Natur: Testwelt (`.mcworld`) mit grauem Platz und zwei Vorlagen-Kammern darunter. Ein Knopf auf dem Regieplatz oder der Chatbefehl `/clone` tauscht den Platz in derselben geöffneten Welt gegen den Natur-Abenteuerspielplatz (Regenmulde, tiefer Spielbereich, Zisterne) und zurück. Dazu gibt es Testplan mit `/testforblocks`, Bestandsanalyse des Stadt-Konfigurators, Technikentscheidung und Grenzen: [minecraft/LIESMICH.md](minecraft/LIESMICH.md). Selbsttests: `minecraft/test.html`. In Minecraft Education selbst noch nicht getestet.
 
-**Ohne Internet auf dem Vorführ-Laptop:** `start-lokal.bat` doppelklicken (braucht Python 3). Dann laufen Soundboard, Verkehr, Wohnen, Natur und die Minecraft-Seite unter `http://localhost:8000/`.
+**Ohne Internet auf dem Vorführ-Laptop:** `start-lokal.bat` doppelklicken (braucht Python 3). Dann laufen Soundboard, Show-Zentrale (`/show.html`), Stadtkonfigurator, Verkehr, Wohnen, Natur und die Minecraft-Seite unter `http://localhost:8000/`.
 
 ## In der Turnhalle
 
-- Die Seite **vorher einmal mit Internet öffnen**. Unten erscheint dann „offline bereit“. Ab dann läuft sie im selben Browser auch ohne Netz.
+- Beide Seiten **vorher einmal mit Internet öffnen**. Unten im Soundboard steht dann „Offline bereit“, in der Show-Zentrale bei den Filmen „bereit (auch offline)“. Ab dann läuft alles im selben Browser auch ohne Netz. Calliope und Canva brauchen Internet.
 - Laptop per Klinke oder USB an die Tonanlage anschließen. Mit **07 · Soundcheck** die Verständlichkeit im Raum prüfen.
 - Am besten Chrome oder Edge verwenden. Den Laptop vorher auf „nicht schlafen“ stellen.
 
@@ -171,9 +164,9 @@ Alles steht in **`sounds.json`**. Die Datei lässt sich direkt auf GitHub bearbe
 ```
 
 - `id`: eindeutig, wird zum Dateinamen (`audio/SMARTy_11_Bellen.mp3`)
-- `text`: steht auf dem Pad. `sprechen` (optional) wird gesprochen, mit Pausen wie `[Pause 0.5]` (Sekunden)
+- `text`: der gesprochene Text, so wie er im Soundboard steht. `sprechen` (optional) ist die Vorlage für die Sprachausgabe, mit Pausen wie `[Pause 0.5]` (Sekunden)
 - `taste` (optional): sonst wird eine freie Taste vergeben
-- `szene` (optional): Überschrift im Board; die Pads erscheinen in der Reihenfolge der Datei
+- Im Soundboard steht ein neuer SMARTy- oder KI-Satz erst an der richtigen Stelle, wenn er unter `"missionen"` eingetragen ist (`{ "id": …, "nr": "T7", "szene": "…" }`). Bis dahin zeigt ihn das Soundboard unter „Weitere“.
 - `tts` (optional): Einstellungen nur für diesen Satz, z. B. `{ "rate": "-10%" }`
 - Töne im Text (selbst berechnet, dezent): `[Ton bestaetigung]`, `[Ton warnung]`, `[Ton scan 1.4]` (Dauer in Sekunden)
 
@@ -202,13 +195,11 @@ Optional formt `"klang"` die Stimme, z. B. `{ "formant": -0.8, "tiefe": 2, "waer
 
 Deutsche Grundstimmen: `de-DE-ChristophNeural`, `de-DE-TanjaNeural`, `de-AT-JonasNeural`, `de-AT-IngridNeural`, `de-CH-JanNeural`, `de-CH-LeniNeural`. Die mehrsprachigen Stimmen wie `en-US-AndrewMultilingualNeural` sprechen auch Deutsch, aber mit Akzent. `pitch` hebt oder senkt die Tonhöhe (`+20Hz`), `rate` ändert das Tempo (`-10%`).
 
-**Stimmproben:** Sätze mit `"gruppe": "proben"` erscheinen unten im Bereich „Stimmproben“ und haben keine Taste.
+**Stimmproben:** Sätze mit `"gruppe": "proben"` werden erzeugt, erscheinen aber nicht im Soundboard.
 
 ## Eigene Aufnahmen statt Computerstimme
 
-- **Schnell, nur auf einem Gerät:** „＋ Eigener Sound“ öffnen und eine Datei laden oder mit dem Mikrofon aufnehmen. Der Robo-Effekt der Stimme wird live dazugemischt. Die Lautstärke wird automatisch angeglichen.
 - **Dauerhaft für alle:** Die Datei z. B. als `audio/eigene/SMARTy_01_Landung.mp3` hochladen. Beim Satz in `sounds.json` dann `"datei": "audio/eigene/SMARTy_01_Landung.mp3"` eintragen. Dieser Satz wird nicht mehr per Computerstimme erzeugt.
-- Mit ⤓ lässt sich jeder Satz samt Robo-Effekt als WAV speichern, z. B. für eine andere Abspiel-Software.
 
 ## Lokal arbeiten (optional)
 
@@ -226,4 +217,4 @@ python -m http.server 8000        # Seite unter http://localhost:8000
 - **Robo-Effekt** (live): Ringmodulator mit 55 Hz und metallischer Kammfilter mit 7 ms werden dem Originalklang beigemischt. Dazu kommen ein Präsenz-EQ bei 3 kHz für die Verständlichkeit in der Halle und ein leichter Kompressor.
 - **Sprachdateien:** [edge-tts](https://github.com/rany2/edge-tts) mit Microsoft-Neuralstimmen. Die Dateien werden auf −16 LUFS und −1,5 dBTP angeglichen. edge-tts nutzt den Vorlesedienst von Microsoft Edge über eine inoffizielle Schnittstelle. Für die Schulshow ist das üblich. Wer ganz sicher gehen will, spricht selbst ein (siehe oben).
 - **Erzähler:** Sprecheraufnahme von ElevenLabs (`audio/eigene/`). Ob und wie du sie öffentlich aufführen und veröffentlichen darfst, hängt von deinem ElevenLabs-Tarif ab.
-- **Offline:** Ein Service Worker speichert Seite und Sounds im Browser.
+- **Offline:** Ein Service Worker (`sw.js`) speichert beide Dashboards, die Sounds, die Filme und die Anwendungen im Browser.

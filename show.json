@@ -1,0 +1,102 @@
+{
+  "titel": "Show-Zentrale",
+  "untertitel": "Filme, Anwendungen und Materialien für die Live-Show",
+  "kacheln": [
+    {
+      "id": "intro",
+      "art": "film",
+      "titel": "Introfilm",
+      "unter": "Die Zeitreise ins Jahr 2050",
+      "icon": "film",
+      "bild": "bilder/intro.jpg",
+      "film": "film/Eroeffnung_Film.mp4",
+      "manifest": "Erzaehler_00_Eroeffnung__film",
+      "knopf": "Introfilm starten",
+      "info": "1:33 · Ton steckt im Film · KI-Hinweis in den ersten Sekunden"
+    },
+    {
+      "id": "abschluss",
+      "art": "film",
+      "titel": "Abschlussfilm",
+      "unter": "Nachricht aus 2050 – unsere Zukunftsstadt",
+      "icon": "film",
+      "bild": "bilder/abschluss.jpg",
+      "film": "film/Abschlussfilm_2050.mp4",
+      "manifest": "Film_Abschluss_2050__film",
+      "knopf": "Abschlussfilm starten",
+      "info": "1:25 · Sprecheraufnahme und Musik im Film · nach SMARTy F5b"
+    },
+    {
+      "id": "stadt",
+      "art": "link",
+      "titel": "3D-Stadtkonfigurator",
+      "unter": "Gemeinsam unsere Zukunftsstadt gestalten",
+      "icon": "wuerfel",
+      "bild": "bilder/stadt.jpg",
+      "href": "stadt/",
+      "fenster": "smarty-stadt",
+      "knopf": "Stadtkonfigurator öffnen",
+      "info": "Alle Missionen · Starkregen: Mission Natur → Szene 3 → „Natur-Simulation öffnen“"
+    },
+    {
+      "id": "wohnen",
+      "art": "link",
+      "titel": "Wohnsimulation",
+      "unter": "Wie wollen wir im Jahr 2050 wohnen?",
+      "icon": "haus",
+      "bild": "bilder/wohnen.jpg",
+      "href": "wohnen/",
+      "fenster": "smarty-wohnen",
+      "knopf": "Wohnsimulation starten",
+      "info": "Mission Wohnen · Tasten 1–5: Experiment, Varianten A–C, Aufstocken"
+    },
+    {
+      "id": "verkehr",
+      "art": "link",
+      "titel": "Verkehrssimulation",
+      "unter": "Wie bleiben wir in unserer Stadt mobil?",
+      "icon": "auto",
+      "bild": "bilder/verkehr.jpg",
+      "href": "verkehr/",
+      "fenster": "smarty-verkehr",
+      "knopf": "Verkehrssimulation starten",
+      "info": "Mission Mobilität · „Die schlaue Ampel“"
+    },
+    {
+      "id": "minecraft",
+      "art": "minecraft",
+      "titel": "Minecraft Education",
+      "unter": "Unsere Stadt in Minecraft erkunden",
+      "icon": "bloecke",
+      "bild": "bilder/minecraft.jpg",
+      "knopf": "Minecraft Education öffnen",
+      "info": "Desktop-App · Anleitung zum Starten und zum Laden der Welt"
+    },
+    {
+      "id": "calliope",
+      "art": "extern",
+      "titel": "Calliope mini",
+      "unter": "Programmieren im Technik-Experiment",
+      "icon": "calliope",
+      "href": "https://makecode.calliope.cc/",
+      "linkfeld": "calliope",
+      "fenster": "smarty-calliope",
+      "knopf": "Calliope-Editor öffnen",
+      "info": "MakeCode für Calliope mini · externe Seite, Internet nötig"
+    },
+    {
+      "id": "praesentation",
+      "art": "praesentation",
+      "titel": "Präsentationsmaterialien",
+      "unter": "Folien, Bilder und Zusatzmaterial",
+      "icon": "praesentation",
+      "canva": "",
+      "knopf": "Präsentation öffnen",
+      "dateien": "PowerPoint vom Laptop (z. B. Eroeffnung_Show.pptx im Ordner StartItSmart_Eroeffnung_Film): im Explorer doppelklicken. Der Browser kann lokale PowerPoint-Dateien nicht selbst starten."
+    }
+  ],
+  "minecraft": {
+    "start": "https://education.minecraft.net/open",
+    "ersatzwelt": "stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld"
+  }
+}

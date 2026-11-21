@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show-Zentrale · START IT SMART</title>
+<meta name="description" content="Show-Zentrale für START IT SMART: Introfilm, Abschlussfilm, Stadtkonfigurator, Simulationen, Minecraft Education, Calliope und Präsentation.">
+<meta name="theme-color" content="#0a4d52">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffbd59'/%3E%3Crect x='14' y='14' width='16' height='16' rx='3' fill='%23017374'/%3E%3Crect x='34' y='14' width='16' height='16' rx='3' fill='%23017374'/%3E%3Crect x='14' y='34' width='16' height='16' rx='3' fill='%23017374'/%3E%3Crect x='34' y='34' width='16' height='16' rx='3' fill='%23017374'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<script src="symbole.js"></script>
+<div id="seite">
+  <header class="kopf">
+    <img class="logo" src="bilder/start-it-smart-logo.png" alt="START IT SMART" width="464" height="72">
+    <span class="trenner" aria-hidden="true"></span>
+    <div>
+      <h1 id="titel">Show-Zentrale</h1>
+      <p id="untertitel">Filme, Anwendungen und Materialien für die Live-Show</p>
+    </div>
+    <div class="rechts">
+      <a class="kopf-link" href="index.html" target="smarty-soundboard" title="Zurück zum Regie-Soundboard (eigener Tab)"><svg class="ico"><use href="#i-zurueck"/></svg> Zurück zum Soundboard</a>
+    </div>
+  </header>
+  <main class="zentrale">
+    <div class="kacheln" id="kacheln"><p>Kacheln werden geladen …</p></div>
+    <div class="fuss">
+      <button type="button" class="knopf klein" id="linksAuf">Links bearbeiten …</button>
+      <span>Anwendungen öffnen sich in eigenen Tabs. Filme laufen hier im Browser, auf Wunsch im Vollbild auf dem Bildschirm, auf dem dieses Fenster liegt.</span>
+    </div>
+  </main>
+</div>
+
+<!-- Filmwiedergabe -->
+<div id="kino" hidden>
+  <video id="kinoVideo" playsinline preload="auto"></video>
+  <button type="button" id="kinoKlick" hidden>▶ Zum Abspielen klicken</button>
+  <div class="kino-leiste" id="kinoLeiste">
+    <span class="titel" id="kinoTitel"></span>
+    <span class="zeit" id="kinoZeit"></span>
+    <button type="button" id="kinoPause">Pause</button>
+    <button type="button" id="kinoVoll">Vollbild</button>
+    <button type="button" id="kinoZu">✕ Schließen</button>
+  </div>
+</div>
+
+<!-- Abschlussfolie mit QR-Codes -->
+<div id="folie" hidden title="Klicken oder Esc: schließen">
+  <div class="folie-inhalt">
+    <h1 id="folieTitel">Danke, Zukunftsteam!</h1>
+    <p class="unter" id="folieUnter"></p>
+    <div class="qr-reihe" id="qrReihe"></div>
+  </div>
+</div>
+
+<dialog id="mcDlg" aria-labelledby="mcTitel">
+  <div class="dlg-kopf"><svg class="ico"><use href="#i-bloecke"/></svg><h2 id="mcTitel">Minecraft Education</h2><button type="button" class="zu" data-zu aria-label="Schließen">×</button></div>
+  <div class="dlg-inhalt">
+    <ol>
+      <li><b>App starten</b>
+        <p>Minecraft Education ist eine Desktop-App. Am sichersten: über das Windows-Startmenü öffnen und anmelden.</p>
+        <a class="knopf" id="mcStart" href="#" target="_blank" rel="noopener"><svg class="ico"><use href="#i-extern"/></svg> Direkt starten versuchen</a>
+        <p class="klein">Öffnet die Startseite von Minecraft Education. Ob die App dann startet, hängt von der Installation und vom Browser ab. Falls nichts passiert: Startmenü.</p>
+      </li>
+      <li><b>Unsere Stadt als Welt laden</b>
+        <p>Im Stadtkonfigurator im Finale „Minecraft-Welt erstellen“ wählen. Die heruntergeladene <code>.mcworld</code>-Datei doppelklicken, dann importiert Minecraft Education die Welt.</p>
+        <div class="zweit">
+          <a class="knopf" href="stadt/" target="smarty-stadt"><svg class="ico"><use href="#i-wuerfel"/></svg> Stadtkonfigurator öffnen</a>
+          <a class="knopf" id="mcErsatz" href="#" download><svg class="ico"><use href="#i-bloecke"/></svg> Ersatzwelt herunterladen</a>
+        </div>
+      </li>
+      <li><b>Vor der Show prüfen</b>
+        <p>Export, Startpunkt und freie Laufwege werden getrennt getestet (stadt/LIESMICH, Abschnitt 0.4). Vor dem Abschlussfilm Minecraft minimieren oder schließen.</p>
+      </li>
+    </ol>
+  </div>
+</dialog>
+
+<dialog id="linksDlg" aria-labelledby="linksTitel">
+  <form method="dialog">
+    <div class="dlg-kopf"><h2 id="linksTitel">Links bearbeiten</h2><button type="button" class="zu" data-zu aria-label="Schließen">×</button></div>
+    <div class="dlg-inhalt">
+      <p class="klein">Die Einträge gelten nur in diesem Browser. Für alle Geräte trägt man sie auf GitHub ein: Canva und Calliope in <code>show.json</code>, die QR-Links in <code>sounds.json</code> unter <code>abschlussfolie</code>.</p>
+      <label for="lkCanva">Canva-Präsentation</label><input type="url" id="lkCanva" placeholder="https://www.canva.com/…" spellcheck="false">
+      <label for="lkCalliope">Calliope-Editor oder -Projekt</label><input type="url" id="lkCalliope" spellcheck="false">
+      <label for="lkStadt">QR-Code „Stadt herunterladen“</label><input type="url" id="lkStadt" spellcheck="false">
+      <label for="lkFeedback">QR-Code „Feedback geben“</label><input type="url" id="lkFeedback" placeholder="https://…" spellcheck="false">
+      <div class="dlg-knoepfe">
+        <button type="button" class="knopf" id="lkStandard">Vorgaben wiederherstellen</button>
+        <button value="cancel" class="knopf" formnovalidate>Abbrechen</button>
+        <button value="ok" class="knopf haupt">Speichern</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script src="qr.js"></script>
+<script src="show.js"></script>
+</body>
+</html>

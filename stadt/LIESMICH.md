@@ -5,7 +5,7 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 
 **Start:**
 - Online: https://demo-testing123.github.io/smarty-soundboard/stadt/
-- Im Soundboard: Knopf **🏙 Stadt**
+- In der Show-Zentrale (`show.html`): Kachel **3D-Stadtkonfigurator**
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
 > **Stand (19.11.2026):**

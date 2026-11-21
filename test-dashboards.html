@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboards – Abnahmetests</title>
+<style>
+  body { margin: 0; padding: 24px; background: #f3f7f7; color: #133033; font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  p { color: #56706f; margin: 0 0 14px; max-width: 980px; }
+  button { font: 700 17px system-ui, sans-serif; padding: 10px 18px; border-radius: 10px; border: 0; background: #017374; color: #fff; cursor: pointer; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; background: #fff; margin-top: 14px; }
+  td, th { text-align: left; padding: 7px 10px; border-bottom: 1px solid #d3e3e3; vertical-align: top; }
+  .ok { color: #0a7a3a; font-weight: 700; } .fail { color: #b4232c; font-weight: 700; } .hand { color: #8a5a00; font-weight: 700; }
+  #summary { font-size: 1.2rem; margin: 14px 0 0; font-weight: 700; }
+  .rahmen { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  iframe { width: 640px; height: 420px; border: 1px solid #d3e3e3; background: #fff; }
+</style>
+</head>
+<body>
+<h1>Regie-Soundboard und Show-Zentrale · Abnahmetests</h1>
+<p>Prüft die Abnahmetests aus den Anforderungen vom 21.11.2026 automatisch in den beiden eingebetteten Seiten. Für den Wiedergabetest läuft kurz ein SMARTy-Clip und je zwei Sekunden Film, mit Ton. Das Vollbild prüft man von Hand.</p>
+<button type="button" id="los">▶ Tests starten (mit Ton)</button>
+<div id="summary"></div>
+<table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Details</th></tr></thead><tbody id="rows"></tbody></table>
+<div class="rahmen">
+  <iframe id="d1" src="index.html" title="Regie-Soundboard" allow="autoplay; fullscreen"></iframe>
+  <iframe id="d2" src="show.html" title="Show-Zentrale" allow="autoplay; fullscreen"></iframe>
+</div>
+<script>
+'use strict';
+const KI_TEXTE = [   // START_IT_SMART_KI_Systemansagen_Claude.pdf
+  'Zeitreise abgeschlossen. Ziel erreicht. Willkommen in der Vergangenheit.',
+  'Warnung! Systemfehler! Unerwartete Alterstransformation festgestellt. Biologisches Alter der Zeitreisenden verändert.',
+  'Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet.',
+];
+const MISSIONEN = ['Eröffnung', 'Natur', 'Technik', 'Mobilität', 'Wohnen', 'Kurze Wege', 'Bildung', 'Finale'];
+const KACHELN = ['Introfilm', 'Abschlussfilm', '3D-Stadtkonfigurator', 'Wohnsimulation', 'Verkehrssimulation', 'Minecraft Education', 'Calliope mini', 'Präsentationsmaterialien'];
+const warte = (ms) => new Promise((r) => setTimeout(r, ms));
+const rows = [];
+function check(name, ok, detail = '', art) {
+  rows.push({ name, ok: art === 'hand' ? null : !!ok, detail });
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${name}</td><td class="${art === 'hand' ? 'hand' : ok ? 'ok' : 'fail'}">${art === 'hand' ? 'von Hand' : ok ? '✓ bestanden' : '✗ nicht bestanden'}</td><td>${String(detail).replace(/</g, '&lt;')}</td>`;
+  document.getElementById('rows').append(tr);
+}
+async function bereit(frame, sel, ms = 15000) {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) {
+    const d = frame.contentDocument;
+    if (d && d.querySelector(sel)) return d;
+    await warte(200);
+  }
+  throw new Error('Zeitüberschreitung: ' + sel);
+}
+
+async function tests() {
+  document.getElementById('rows').innerHTML = '';
+  rows.length = 0;
+  const [cfg, man, show] = await Promise.all(['sounds.json', 'audio/manifest.json', 'show.json'].map((u) => fetch(u, { cache: 'no-store' }).then((r) => r.json())));
+
+  // ---------------- Dashboard 1
+  const d1 = await bereit(document.getElementById('d1'), '.clip');
+  const t1 = performance.now();
+  while (d1.querySelector('.clip .status') && [...d1.querySelectorAll('.clip .status')].some((s) => s.textContent.includes('lädt')) && performance.now() - t1 < 20000) await warte(250);
+  const zeilen = [...d1.querySelectorAll('.clip')];
+  const stimmen = new Set(zeilen.map((z) => z.dataset.stimme));
+  const erwartet = cfg.missionen.flatMap((m) => m.clips.filter((c) => c.id)).length;
+  check('Soundboard: nur Clips von SMARTy und Zeitmaschinen-KI', [...stimmen].every((s) => s === 'smarty' || s === 'ki') && zeilen.length === erwartet, `${zeilen.length} Clips (erwartet ${erwartet}), Sprecher: ${[...stimmen].join(', ')}`);
+  const text1 = d1.body.innerText;
+  check('Soundboard: keine Filme, kein Beamerfenster, kein Calliope', !d1.querySelector('video') && !/beamerfenster/i.test(text1) && !/calliope-live/i.test(text1) && !d1.querySelector('[href*="film/"]'), 'kein Video-Element, keine Film-Links, kein Text „Beamerfenster“');
+  const titel = [...d1.querySelectorAll('.mission h2')].map((h) => h.textContent);
+  check('Soundboard: Missionen in der Reihenfolge Eröffnung … Finale', MISSIONEN.every((m, i) => titel[i] && titel[i].includes(m)), titel.map((t) => t.split(' – ')[0]).join(' · '));
+  let fehlend = [];
+  for (const z of zeilen) {
+    const id = z.dataset.id, m = man[id] || {};
+    const dauer = parseFloat(z.querySelector('.dauer').textContent.replace(',', '.'));
+    if (!z.querySelector('.nr b').textContent || !z.querySelector('.sprecher').textContent.trim() || !z.querySelector('.text').textContent.trim() || !z.querySelector('.play') || !z.querySelector('.status').textContent
+        || !(Math.abs(dauer - (m.dauer || 0)) < 0.15)) fehlend.push(id);
+  }
+  check('Soundboard: je Clip Kennung, Szene, Sprecher, Text, Dauer, Play, Status', !fehlend.length, fehlend.length ? 'unvollständig: ' + fehlend.join(', ') : `alle ${zeilen.length} vollständig, Dauer = Audiodatei`);
+  const texte = new Map(cfg.saetze.map((s) => [s.id, s.text]));
+  check('Soundboard: angezeigter Text = Text des Clips', zeilen.every((z) => z.querySelector('.text').textContent === texte.get(z.dataset.id)), 'Vergleich mit sounds.json');
+  const eroeff = [...d1.querySelectorAll('#m-eroeffnung .tabelle > .clip')];
+  const ki = zeilen.filter((z) => z.dataset.stimme === 'ki');
+  check('Zeitmaschinen-KI: richtiger Text, richtige Reihenfolge (nach Intro, vor SMARTy 01)',
+    eroeff.slice(0, 3).every((z, i) => z.dataset.stimme === 'ki' && z.querySelector('.text').textContent === KI_TEXTE[i]) && eroeff[3] && eroeff[3].querySelector('.nr b').textContent === '01',
+    eroeff.slice(0, 4).map((z) => z.querySelector('.nr b').textContent).join(' → '));
+  check('Zeitmaschinen-KI: nicht pauschal in jeder Mission', ki.length === 3 && ki.every((z) => z.closest('#m-eroeffnung')), `${ki.length} KI-Clips, alle in der Eröffnung: ${ki.every((z) => z.closest('#m-eroeffnung'))}`);
+  check('Soundboard: Lautstärke und globaler Stopp vorhanden', d1.getElementById('lautstaerke') && d1.getElementById('stoppAlles'), '');
+
+  // Einzelwiedergabe: kürzester Hauptclip (T6, 2,4 s)
+  const z = d1.querySelector('.clip[data-id="SMARTy_T6_Verkehrsproblem"]') || zeilen[0];
+  z.querySelector('.play').click();
+  await warte(900);
+  const laeuft = [...d1.querySelectorAll('.clip.laeuft')].map((e) => e.dataset.id);
+  const fortschritt = z.querySelector('.status').textContent;
+  const dauer = (man[z.dataset.id] || {}).dauer || 3;
+  await warte(dauer * 1000 + 900);
+  const danach = [...d1.querySelectorAll('.clip.laeuft')].map((e) => e.dataset.id);
+  check('Einzelner SMARTy-Clip spielt, ist markiert und endet', laeuft.length === 1 && laeuft[0] === z.dataset.id && !/0,0 s/.test(fortschritt) && z.querySelector('.status').textContent.includes('gespielt'),
+    `während: ${laeuft.join(', ') || '–'} (${fortschritt}) · danach: ${z.querySelector('.status').textContent}${/0,0 s/.test(fortschritt) ? ' · Ton gesperrt? einmal ins Soundboard klicken und wiederholen' : ''}`);
+  check('Nach dem Ende startet kein weiterer Clip automatisch', danach.length === 0, danach.length ? 'läuft: ' + danach.join(', ') : 'nichts läuft');
+
+  // ---------------- Dashboard 2
+  const d2 = await bereit(document.getElementById('d2'), '.kachel');
+  const k = [...d2.querySelectorAll('.kachel')];
+  const ktitel = k.map((x) => x.querySelector('h2').textContent);
+  check('Show-Zentrale: alle Kacheln vorhanden', KACHELN.every((t) => ktitel.includes(t)) && k.length === KACHELN.length, ktitel.join(' · '));
+  check('Starkregen hat keine eigene Kachel', !ktitel.some((t) => /starkregen/i.test(t)), '');
+  const daten = await fetch('stadt/daten.js', { cache: 'no-store' }).then((r) => r.text());
+  check('Starkregen ist über den Stadtkonfigurator erreichbar', /Starkregen/.test(daten) && daten.includes("href: '../natur/'"), 'Mission Natur, Szene 3: Link „Natur-Simulation öffnen“ → natur/');
+  const ziele = [];
+  for (const x of show.kacheln.filter((x) => x.art === 'link')) {
+    const a = d2.querySelector(`.kachel[data-id="${x.id}"] a.los`);
+    const r = await fetch(x.href, { cache: 'no-store' });
+    ziele.push({ id: x.id, ok: !!a && a.getAttribute('href') === x.href && r.ok, info: `${x.href} → ${r.status}` });
+  }
+  check('Kacheln öffnen die vorhandenen Anwendungen', ziele.every((x) => x.ok), ziele.map((x) => x.info).join(' · '));
+  const cal = d2.querySelector('.kachel[data-id="calliope"] a.los');
+  check('Calliope ist ein Link (kein Nachbau)', cal && /^https:\/\//.test(cal.href) && !d2.querySelector('.kachel[data-id="calliope"] iframe'), cal ? cal.href : 'kein Link');
+  const pr = d2.querySelector('.kachel[data-id="praesentation"] .los');
+  check('Canva/Präsentation ist ein Link oder fehlt sichtbar (kein Nachbau)', pr && (pr.tagName === 'A' ? /^https:\/\//.test(pr.href) : /fehlt/.test(pr.textContent)), pr ? `${pr.tagName === 'A' ? pr.href : pr.textContent}` : '');
+  const ersatz = await fetch(show.minecraft.ersatzwelt, { method: 'HEAD', cache: 'no-store' });
+  check('Minecraft Education: Kachel mit Start- und Import-Anleitung, Ersatzwelt erreichbar', d2.querySelector('[data-minecraft]') && d2.getElementById('mcDlg') && ersatz.ok, `${show.minecraft.start} · Ersatzwelt ${ersatz.status}`);
+  check('Show-Zentrale: kein Beamerfenster-System', !/beamerfenster/i.test(d2.body.innerText) && !d2.querySelector('[id*="beamer" i]'), '');
+  check('Rücksprung zum Soundboard', d2.querySelector('a.kopf-link[href="index.html"]'), 'Kopf: „Zurück zum Soundboard“');
+
+  // Filme: ein Video-Element, Ton genau einmal
+  const v = d2.getElementById('kinoVideo');
+  d2.querySelector('[data-film="intro"]').click();
+  await warte(1800);
+  const a1 = { titel: d2.getElementById('kinoTitel').textContent, t: v.currentTime, laut: !v.muted && v.volume > 0, spielend: [...d2.querySelectorAll('video, audio')].filter((m) => !m.paused).length };
+  d2.querySelector('[data-film="abschluss"]').click();
+  await warte(1800);
+  const a2 = { titel: d2.getElementById('kinoTitel').textContent, t: v.currentTime, spielend: [...d2.querySelectorAll('video, audio')].filter((m) => !m.paused).length, dauer: v.duration };
+  d2.getElementById('kinoZu').click();
+  check('Introfilm startet aus der Show-Zentrale, mit Ton, ein einziger Tonkanal', a1.titel === 'Introfilm' && a1.t > 0.5 && a1.laut && a1.spielend === 1, `läuft ${a1.t.toFixed(1)} s, laut: ${a1.laut}, spielende Medien: ${a1.spielend}`);
+  check('Abschlussfilm ersetzt den laufenden Film (Ton genau einmal)', a2.titel === 'Abschlussfilm' && a2.t > 0.5 && a2.spielend === 1, `läuft ${a2.t.toFixed(1)} s von ${a2.dauer.toFixed(1)} s, spielende Medien: ${a2.spielend}`);
+  check('Filme bildschirmfüllend', true, 'Kino-Ebene füllt das Fenster; Vollbild verlangt einen echten Klick auf „… starten“ in der Show-Zentrale – bitte dort prüfen', 'hand');
+
+  const n = rows.filter((r) => r.ok === false).length, ok = rows.filter((r) => r.ok).length;
+  document.getElementById('summary').innerHTML = n ? `<span class="fail">${n} von ${ok + n} Prüfungen nicht bestanden</span>` : `<span class="ok">Alle ${ok} automatischen Prüfungen bestanden</span> · Vollbild von Hand prüfen`;
+}
+document.getElementById('los').addEventListener('click', () => tests().catch((e) => { document.getElementById('summary').innerHTML = `<span class="fail">Abbruch: ${e.message}</span>`; }));
+</script>
+</body>
+</html>
