@@ -363,6 +363,52 @@
    ]
   ]
  },
+ "SMARTy_M10_Selbstfahrende_Autos": {
+  "datei": "audio/SMARTy_M10_Selbstfahrende_Autos.mp3",
+  "hash": "35bb45494d",
+  "lufs": -16.5,
+  "tp": -2.2,
+  "dauer": 10.37,
+  "teile": [
+   [
+    0.04,
+    1.173
+   ],
+   [
+    1.523,
+    4.89
+   ],
+   [
+    5.34,
+    8.192
+   ],
+   [
+    8.492,
+    10.116
+   ]
+  ]
+ },
+ "SMARTy_M11_Fehler_moeglich": {
+  "datei": "audio/SMARTy_M11_Fehler_moeglich.mp3",
+  "hash": "d365c66a1e",
+  "lufs": -16.9,
+  "tp": -1.9,
+  "dauer": 7.51,
+  "teile": [
+   [
+    0.04,
+    0.727
+   ],
+   [
+    1.127,
+    3.008
+   ],
+   [
+    3.458,
+    7.258
+   ]
+  ]
+ },
  "SMARTy_M5_Funkverbindung": {
   "datei": "audio/SMARTy_M5_Funkverbindung.mp3",
   "hash": "d64f0fdbbd",
@@ -609,22 +655,22 @@
  },
  "SMARTy_B4_Stadtmodell": {
   "datei": "audio/SMARTy_B4_Stadtmodell.mp3",
-  "hash": "9970cd891b",
-  "lufs": -16.5,
-  "tp": -2.2,
-  "dauer": 7.04,
+  "hash": "c2f3480a0c",
+  "lufs": -16.9,
+  "tp": -1.9,
+  "dauer": 7.79,
   "teile": [
    [
     0.04,
-    1.498
+    1.5
    ],
    [
-    1.948,
-    4.402
+    1.95,
+    4.406
    ],
    [
-    4.802,
-    6.789
+    4.806,
+    7.542
    ]
   ]
  },
@@ -685,39 +731,39 @@
  },
  "SMARTy_F3_Stadtplanung_abgeschlossen": {
   "datei": "audio/SMARTy_F3_Stadtplanung_abgeschlossen.mp3",
-  "hash": "24a747dcaf",
-  "lufs": -16.7,
-  "tp": -2.2,
-  "dauer": 6.35,
+  "hash": "20ab0a15e0",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 7.58,
   "teile": [
    [
     0.04,
-    1.466
+    1.927
    ],
    [
-    1.916,
-    4.517
+    2.377,
+    5.267
    ],
    [
-    4.917,
-    6.096
+    5.667,
+    7.328
    ]
   ]
  },
  "SMARTy_F4_Sensoren_Computer": {
   "datei": "audio/SMARTy_F4_Sensoren_Computer.mp3",
-  "hash": "8178a7e19b",
+  "hash": "6d578d953c",
   "lufs": -16.8,
   "tp": -1.9,
-  "dauer": 7.15,
+  "dauer": 6.24,
   "teile": [
    [
     0.04,
-    4.759
+    2.549
    ],
    [
-    5.259,
-    6.901
+    3.049,
+    5.987
    ]
   ]
  },

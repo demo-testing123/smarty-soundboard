@@ -114,7 +114,7 @@ export const MISSIONEN = [
         text: 'Wohin läuft das Wasser – auf Stein und auf offener Erde?',
         punkte: ['Stein und Asphalt: Wasser fließt schnell ab.', 'Offener Boden nimmt einen Teil auf.', 'Der tiefere Spielbereich sammelt kurz Wasser – nur bei Starkregen.', 'Gesammeltes Regenwasser gießt später Bäume.'],
         regie: ['Knöpfe „grau“ / „grün“ zeigen den Unterschied; Regen startet mit dem Knopf (Taste R).', 'Ausführlich: Natur-Simulation (eigene Seite).', 'Optional SMARTy-Bewässerungsrätsel – keine Messwerte als echte Sensordaten zeigen.'],
-        smarty: [['N5 · Technikidee Bodenfeuchte', '<'], ['N3 · Wetterwarnung (früherer Vorschlag)', 'W'], ['N4 · Regenwasser (früherer Vorschlag)', 'E']],
+        smarty: [['N3 · Wetterwarnung – nach Z2s Frage, vor der Simulation', 'W'], ['N5 · Technikidee Bodenfeuchte', '<'], ['N4 · Regenwasser auffangen – vor dem Szenenabschluss', 'E']],
         link: { text: 'Natur-Simulation öffnen', href: '../natur/' },
       },
       {
@@ -212,7 +212,7 @@ export const MISSIONEN = [
         seiteTitel: 'Möglichkeiten und Grenzen',
         punkte: ['Sensoren und Kameras erkennen Straße, Ampeln und Menschen.', 'Ein Computer entscheidet: bremsen, warten, fahren.', 'Das könnte Menschen helfen, die nicht selbst fahren können.', 'Grenzen: Schnee, Baustellen, unklare Lagen – Menschen müssen eingreifen können.', 'Ein Auto ohne Fahrer ist trotzdem ein Auto: weniger Verkehr gibt es nur mit Bus, Rad und Fußwegen.'],
         regie: ['Kurzer Ausblick, etwa eine Minute: Möglichkeiten und Grenzen, keine Vorhersage.', 'Frage ans Publikum: „Was müsste so ein Auto alles erkennen?“'],
-        smarty: [['M10 · selbstfahrende Autos', '–'], ['M11 · selbstfahrende Autos', '–']],
+        smarty: [['M10 · Zukunftsprognose: selbstfahrende Autos', '-'], ['M11 · Auch schlaue Autos machen Fehler', 'Q']],
       },
       {
         art: 'schalter', kicker: 'Mission Mobilität · Szene 7', titel: 'Zurück in der Zukunftsstadt', kamera: 'kreuzung', bereich: 'kreuzung',
@@ -323,7 +323,7 @@ export const MISSIONEN = [
         art: 'finale', kicker: 'Finale · Vorschau im Konfigurator', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
         text: 'Erst hier als Vorschau – gleich gehen wir in Minecraft durch die Stadt.',
         regie: ['Nur tatsächlich übernommene Beschlüsse sind zu sehen.', '„Vorher / Nachher“ vergleicht mit der grauen Stadt.', '„Vorschau-Rundgang“: Station für Station mit → oder automatisch. Nach der letzten Station führt „Weiter“ zur Minecraft-Welt.'],
-        smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Stadtplanung abgeschlossen (Umschalt + ß)', '?'], ['F4 · Sensoren, Computer, Simulationen (Umschalt + -)', '_']],
+        smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Digitale Stadtplanung abgeschlossen (Umschalt + ß)', '?'], ['F4 · Menschen, die mitdenken (Umschalt + -)', '_']],
       },
       {
         art: 'export', kicker: 'Finale · Minecraft Education', titel: 'Unsere Stadt wird eine Minecraft-Welt', kamera: 'finale',

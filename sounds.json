@@ -83,7 +83,7 @@
         {
           "id": "KI_02_Systemfehler_Alterstransformation",
           "nr": "KI2",
-          "szene": "Szene 2 · Live-Ankunft · Leinwand „SYSTEMFEHLER: ALTERSTRANSFORMATION“"
+          "szene": "Szene 2 · Alterstransformation · Leinwand „SYSTEMFEHLER: ALTERSTRANSFORMATION“"
         },
         {
           "id": "KI_03_Unbekannter_Passagier",
@@ -92,43 +92,42 @@
         },
         {
           "id": "SMARTy_01_Landung",
-          "nr": "01",
-          "szene": "Szene 3 · Blinder Passagier · SMARTy kommt auf die Bühne"
-        },
-        {
-          "id": "SMARTy_08_Heimlicher_Passagier",
-          "nr": "08",
-          "szene": "frühere Fassung der Ankunft",
-          "reserve": true
+          "nr": "O1",
+          "szene": "Szene 3 · Systemcheck – SMARTy ist auf der Bühne, nach Z2 „Du bist uns heimlich gefolgt!“"
         },
         {
           "id": "SMARTy_09_Mitgeschmuggelt",
-          "nr": "09",
+          "nr": "O9",
+          "szene": "Szene 3 · nach Z1 „Aber warum bist du überhaupt mitgekommen?“"
+        },
+        {
+          "id": "SMARTy_08_Heimlicher_Passagier",
+          "nr": "O8",
           "szene": "frühere Fassung der Ankunft",
           "reserve": true
         },
         {
           "id": "SMARTy_10_Sehr_guter_Grund",
-          "nr": "10",
+          "nr": "O10",
           "szene": "frühere Fassung der Ankunft",
           "reserve": true
         },
         {
           "id": "SMARTy_02_Entdeckung",
-          "nr": "02",
+          "nr": "O2",
           "szene": "ältere Sätze",
           "reserve": true
         },
         {
           "id": "SMARTy_05_Zukunftsalarm",
-          "nr": "05",
+          "nr": "O5",
           "szene": "ältere Sätze",
           "reserve": true
         },
         {
           "id": "SMARTy_07_Stimmtest",
-          "nr": "07",
-          "szene": "Soundcheck vor der Show",
+          "nr": "O7",
+          "szene": "Soundcheck vor der Show – nicht der Intro-Systemcheck (anderer Text)",
           "reserve": true
         }
       ]
@@ -146,24 +145,22 @@
         {
           "id": "SMARTy_04_Aha",
           "nr": "N2",
-          "szene": "Szene 2 · Park oder Spielplatz? (Clip 04)"
-        },
-        {
-          "id": "SMARTy_N5_Bodenfeuchte",
-          "nr": "N5",
-          "szene": "Szene 3 · Starkregen"
+          "szene": "Szene 2 · Park oder Spielplatz? – nach „Beides gemeinsam“ (Clip 04)"
         },
         {
           "id": "SMARTy_N3_Wetterwarnung",
           "nr": "N3",
-          "szene": "früherer Textvorschlag (Starkregen)",
-          "reserve": true
+          "szene": "Szene 3 · Starkregen – nach Z2s Frage, vor der Simulation"
+        },
+        {
+          "id": "SMARTy_N5_Bodenfeuchte",
+          "nr": "N5",
+          "szene": "Szene 3 · Starkregen – Sensoren messen die Bodenfeuchte"
         },
         {
           "id": "SMARTy_N4_Regenwasser",
           "nr": "N4",
-          "szene": "früherer Textvorschlag (Starkregen)",
-          "reserve": true
+          "szene": "Szene 3 · Starkregen – nach Sensor und Mensch, vor dem Szenenabschluss"
         }
       ]
     },
@@ -175,27 +172,27 @@
         {
           "id": "SMARTy_T1_Sprachbefehl",
           "nr": "T1",
-          "szene": "Frage / Bühnendialog"
+          "szene": "Bühnendialog – nach „Liebe Straßenlaternen …“, nichts passiert"
         },
         {
           "id": "SMARTy_T2_Programm_verstanden",
           "nr": "T2",
-          "szene": "Calliope-Experiment"
+          "szene": "Programmierfolie – vor dem Calliope-Test"
         },
         {
           "id": "SMARTy_T3_Programmoptimierung",
           "nr": "T3",
-          "szene": "Calliope-Experiment"
+          "szene": "Zusatzaufgabe kurze Wolke – Regel mit fünf Sekunden"
         },
         {
           "id": "SMARTy_T4_Experiment_erfolgreich",
           "nr": "T4",
-          "szene": "nach dem Experiment"
+          "szene": "Ergebnis im Stadt-Konfigurator"
         },
         {
           "id": "SMARTy_T5_Mission_Technik",
           "nr": "T5",
-          "szene": "nach Abstimmung und Tag/Nacht"
+          "szene": "nach der Tag-/Nachtansicht"
         },
         {
           "id": "SMARTy_T6_Verkehrsproblem",
@@ -227,7 +224,7 @@
         {
           "id": "SMARTy_M9_Simulation",
           "nr": "M9",
-          "szene": "Szene 2 · Parkplatzentscheidung"
+          "szene": "Szene 2 · Probe-Bauen am Computer"
         },
         {
           "id": "SMARTy_M4_Geduld",
@@ -235,27 +232,34 @@
           "szene": "Szene 3 · Der Bus wartet"
         },
         {
-          "id": "SMARTy_M7_Test_erfolgreich",
-          "nr": "M7",
-          "szene": "mBot auf der Bühne"
-        },
-        {
           "id": "SMARTy_M5_Funkverbindung",
           "nr": "M5",
-          "szene": "Verkehrssimulation"
+          "szene": "Szene 4 · Verkehrssimulation – Versuch B, Bus meldet sich an"
         },
         {
           "id": "SMARTy_M6_Niemand_gefaehrden",
           "nr": "M6",
-          "szene": "Verkehrssimulation"
+          "szene": "Szene 4 · Verkehrssimulation – nach der Frage nach den Autos"
         },
         {
-          "hinweis": "M10, M11 · Selbstfahrende Autos 2050: Text fehlt noch, nicht vertont."
+          "id": "SMARTy_M7_Test_erfolgreich",
+          "nr": "M7",
+          "szene": "Szene 5 · mBot als Bus – nach dem Test bei Grün"
+        },
+        {
+          "id": "SMARTy_M10_Selbstfahrende_Autos",
+          "nr": "M10",
+          "szene": "Szene 5 · nach Z2 „Fahren Autos dann vielleicht ganz allein?“"
+        },
+        {
+          "id": "SMARTy_M11_Fehler_moeglich",
+          "nr": "M11",
+          "szene": "Szene 5 · nach Z1 „… dass nie etwas schiefgehen kann?“"
         },
         {
           "id": "SMARTy_M8_Mission_Mobilitaet",
           "nr": "M8",
-          "szene": "Abschluss, zurück in die Stadt"
+          "szene": "Szene 6 · Abschluss und Rückkehr in die Zukunftsstadt"
         }
       ]
     },
@@ -267,7 +271,7 @@
         {
           "id": "SMARTy_W1_Bauauftrag",
           "nr": "W1",
-          "szene": "Szene 1 · Wie viel Platz …?"
+          "szene": "Szene 1 · Wie viel Platz brauchen sechs Wohnungen?"
         },
         {
           "id": "SMARTy_W2_Messung",
@@ -304,7 +308,7 @@
         {
           "id": "SMARTy_K3_Digitale_Stadtplanung",
           "nr": "K3",
-          "szene": "Ladenstandorte und Wegvergleich"
+          "szene": "Ladenstandorte und Wegvergleich – vor der Abstimmung"
         },
         {
           "id": "SMARTy_K2_Kurze_Wege",
@@ -326,7 +330,7 @@
         {
           "id": "SMARTy_B4_Stadtmodell",
           "nr": "B4",
-          "szene": "Szene 1 · Ein Raum, zwei Nutzungen"
+          "szene": "Szene 1 · Ein Raum, zwei Nutzungen – vorhandene Gebäude nutzen"
         },
         {
           "id": "SMARTy_B2_Zugang",
@@ -336,37 +340,37 @@
         {
           "id": "SMARTy_B3_Mitmachen",
           "nr": "B3",
-          "szene": "Szene 2 · Welche Orte passen zu allen?"
+          "szene": "Szene 2 · nach der Abstimmung"
         }
       ]
     },
     {
       "id": "finale",
       "name": "Finale",
-      "titel": "Unsere Zukunftsstadt ist fertig!",
+      "titel": "Unsere Stadt wird begehbar",
       "clips": [
         {
           "id": "SMARTy_F3_Stadtplanung_abgeschlossen",
           "nr": "F3",
-          "szene": "Szene 1 · Wir haben es geschafft!"
+          "szene": "vor dem Minecraft-Rundgang"
         },
         {
           "id": "SMARTy_F4_Sensoren_Computer",
           "nr": "F4",
-          "szene": "Szene 2 · Spaziergang durch die Zukunftsstadt"
+          "szene": "im Minecraft-Rundgang – nach Z1 „… die kamen heute von euch!“"
         },
         {
           "id": "SMARTy_F5a_Zukunftscheck",
           "nr": "F5a",
-          "szene": "Szene 3 · Nachricht aus dem Jahr 2050"
+          "szene": "Zukunftscheck – nach Z1 „SMARTy, kannst du das überprüfen?“"
         },
         {
           "id": "SMARTy_F5b_Nachricht_2050",
           "nr": "F5b",
-          "szene": "Szene 3 · Nachricht aus dem Jahr 2050 – direkt vor dem Abschlussfilm"
+          "szene": "Nachricht aus dem Jahr 2050 – direkt vor dem Abschlussfilm"
         },
         {
-          "hinweis": "Danach: Abschlussfilm (Show-Zentrale) → Bühnenverabschiedung → Abschlussfolie mit QR-Codes (Show-Zentrale)."
+          "hinweis": "Danach: Abschlussfilm (Show-Zentrale) → Bühnenabschied → Abschlussfolie mit QR-Codes (Show-Zentrale)."
         },
         {
           "id": "SMARTy_F1_Zukunftsanalyse",
@@ -401,7 +405,7 @@
       "titel": "09 · Mitgeschmuggelt",
       "text": "Ich habe mich mitgeschmuggelt. Ihr habt vergessen, mich einzuladen.",
       "sprechen": "Ich habe mich mitgeschmuggelt. [Pause 0.5] Ihr habt vergessen, mich einzuladen.",
-      "einsatz": "Ankunftsszene.",
+      "einsatz": "Eröffnung, Szene 3 – nach SMARTys Systemcheck und Z1 „Aber warum bist du überhaupt mitgekommen?“ · reaktiviert (Drehbuch 22.11.2026)",
       "szene": "Ankunft"
     },
     {
@@ -441,7 +445,7 @@
       "titel": "N3 · Wetterwarnung",
       "text": "Wetterwarnung! Starkregen im Anmarsch. Prognose: sehr, sehr nasse Pfoten.",
       "sprechen": "Wetterwarnung! [Pause 0.3] Starkregen im Anmarsch. [Pause 0.6] Prognose: sehr, sehr nasse Pfoten.",
-      "einsatz": "Mission Natur · nach „Mission geschafft! Oder?“ · Textvorschlag: laut Drehbuch erst nach Freigabe einsetzen",
+      "einsatz": "Natur, Szene 3 – nach Z2s Frage nach Starkregen, vor der Simulation · reaktiviert (Drehbuch 22.11.2026)",
       "szene": "Mission Natur – Aus Grau wird Grün"
     },
     {
@@ -451,7 +455,7 @@
       "titel": "N4 · Regenwasser auffangen",
       "text": "Neue Erkenntnis gespeichert: Ein guter Spielplatz kann auch Regenwasser auffangen. Multifunktional. Gefällt mir!",
       "sprechen": "Neue Erkenntnis gespeichert: Ein guter Spielplatz kann auch Regenwasser auffangen. [Pause 0.5] Multifunktional. [Pause 0.45] Gefällt mir!",
-      "einsatz": "Mission Natur · nach „… zum Gießen der Bäume nutzen!“ · Textvorschlag: laut Drehbuch erst nach Freigabe einsetzen",
+      "einsatz": "Natur, Szene 3 – nach der Erklärung Sensor/Mensch, vor dem Szenenabschluss · reaktiviert (Drehbuch 22.11.2026)",
       "szene": "Mission Natur – Aus Grau wird Grün"
     },
     {
@@ -581,7 +585,27 @@
       "titel": "M7 · Test erfolgreich (mBot)",
       "text": "Test erfolgreich. Unser Roboter hält und fährt auf ein Signal hin weiter. Die Ampel steuert ihn heute noch nicht selbst.",
       "sprechen": "Test erfolgreich. [Pause 0.45] Unser Roboter hält und fährt auf ein Signal hin weiter. [Pause 0.5] Die Ampel steuert ihn heute noch nicht selbst.",
-      "einsatz": "mBot auf der Bühne (vor der Verkehrssimulation) – nach dem Test bei Grün",
+      "einsatz": "Szene 5 · mBot auf der Bühne (nach der Verkehrssimulation) – nach dem Test bei Grün",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M10_Selbstfahrende_Autos",
+      "stimme": "smarty",
+      "taste": "-",
+      "titel": "M10 · Zukunftsprognose: selbstfahrende Autos",
+      "text": "Zukunftsprognose: Manche Autos könnten 2050 selbstständig fahren. Dafür brauchen sie Kameras, Sensoren, Computer – und sehr gute Sicherheitsregeln.",
+      "sprechen": "Zukunftsprognose: [Pause 0.35] Manche Autos könnten zweitausendfünfzig selbstständig fahren. [Pause 0.45] Dafür brauchen sie Kameras, Sensoren, Computer [Pause 0.3] und sehr gute Sicherheitsregeln.",
+      "einsatz": "Szene 5 · nach M7 und Z2 „Fahren Autos dann vielleicht ganz allein?“ · Drehbuch 22.11.2026",
+      "szene": "Mission Mobilität – Platz für alle"
+    },
+    {
+      "id": "SMARTy_M11_Fehler_moeglich",
+      "stimme": "smarty",
+      "taste": "q",
+      "titel": "M11 · Auch schlaue Autos machen Fehler",
+      "text": "Negativ! Auch schlaue Autos können Fehler machen. Darum müssen Menschen Technik gründlich testen und klare Regeln festlegen.",
+      "sprechen": "Negativ! [Pause 0.4] Auch schlaue Autos können Fehler machen. [Pause 0.45] Darum müssen Menschen Technik gründlich testen und klare Regeln festlegen.",
+      "einsatz": "Szene 5 · nach M10 und Z1 „Aber heißt selbstfahrend auch, dass nie etwas schiefgehen kann?“ · Drehbuch 22.11.2026",
       "szene": "Mission Mobilität – Platz für alle"
     },
     {
@@ -709,9 +733,9 @@
       "stimme": "smarty",
       "taste": "*",
       "titel": "B4 · Stadtmodell aktualisiert",
-      "text": "Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das spart Fläche und Baumaterial.",
-      "sprechen": "Stadtmodell aktualisiert. [Pause 0.45] Bestehende Gebäude können neue Aufgaben bekommen. [Pause 0.4] Das spart Fläche und Baumaterial.",
-      "einsatz": "Szene 1 · Ein Raum, zwei Nutzungen – nach B1 (Taste Umschalt + +) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
+      "text": "Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das spart möglicherweise Baumaterial und Platz.",
+      "sprechen": "Stadtmodell aktualisiert. [Pause 0.45] Bestehende Gebäude können neue Aufgaben bekommen. [Pause 0.4] Das spart möglicherweise Baumaterial und Platz.",
+      "einsatz": "Szene 1 · Ein Raum, zwei Nutzungen – nach „Vielleicht können wir Gebäude nutzen, die schon da sind.“ (Taste Umschalt + +) · Wortlaut Drehbuch 22.11.2026",
       "szene": "Mission Bildung, Freizeit und Teilhabe"
     },
     {
@@ -748,20 +772,20 @@
       "id": "SMARTy_F3_Stadtplanung_abgeschlossen",
       "stimme": "smarty",
       "taste": "?",
-      "titel": "F3 · Stadtplanung abgeschlossen",
-      "text": "Stadtplanung abgeschlossen. Digitales Zukunftsmodell erfolgreich erstellt. Bereit für den Rundgang.",
-      "sprechen": "Stadtplanung abgeschlossen. [Pause 0.45] Digitales Zukunftsmodell erfolgreich erstellt. [Pause 0.4] Bereit für den Rundgang.",
-      "einsatz": "Szene 1 · Wir haben es geschafft! (Taste Umschalt + ß) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
+      "titel": "F3 · Digitale Stadtplanung abgeschlossen",
+      "text": "Digitale Stadtplanung abgeschlossen. Eure Entscheidungen wurden im Stadtmodell zusammengeführt. Bereit für den virtuellen Rundgang!",
+      "sprechen": "Digitale Stadtplanung abgeschlossen. [Pause 0.45] Eure Entscheidungen wurden im Stadtmodell zusammengeführt. [Pause 0.4] Bereit für den virtuellen Rundgang!",
+      "einsatz": "Finale – vor dem Minecraft-Rundgang (Taste Umschalt + ß) · Wortlaut Drehbuch 22.11.2026",
       "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
     },
     {
       "id": "SMARTy_F4_Sensoren_Computer",
       "stimme": "smarty",
       "taste": "_",
-      "titel": "F4 · Sensoren, Computer, Simulationen",
-      "text": "Sensoren können messen, Computer können rechnen und Simulationen können beim Planen helfen. Die Ideen aber kommen von euch!",
-      "sprechen": "Sensoren können messen, Computer können rechnen und Simulationen können beim Planen helfen. [Pause 0.5] Die Ideen aber kommen von euch!",
-      "einsatz": "Szene 2 · Spaziergang durch die Zukunftsstadt (Taste Umschalt + -) · Satzende ergänzt (Liste vom 19.11.2026 bricht ab), Vorschlag freigegeben am 19.11.2026",
+      "titel": "F4 · Menschen, die mitdenken",
+      "text": "Computer können rechnen, messen und simulieren. Aber eine lebenswerte Stadt braucht Menschen, die mitdenken.",
+      "sprechen": "Computer können rechnen, messen und simulieren. [Pause 0.5] Aber eine lebenswerte Stadt braucht Menschen, die mitdenken.",
+      "einsatz": "Finale – im Minecraft-Rundgang, nach Z1 „… die kamen heute von euch!“ (Taste Umschalt + -) · Wortlaut Drehbuch 22.11.2026",
       "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
     },
     {
@@ -837,7 +861,6 @@
     {
       "id": "Erzaehler_00_Eroeffnung",
       "stimme": "erzaehler",
-      "taste": "q",
       "titel": "Eröffnung komplett · mit Musik",
       "text": "„Die Zukunft braucht euch“ – Film mit Ton im Vollbild (Beamer). Danach bleibt das Bild schwarz; Esc oder Klick führt zurück.",
       "aufnahme": "audio/eigene/Erzaehler_Eroeffnung_ElevenLabs.mp3",
@@ -911,7 +934,6 @@
     {
       "id": "Erzaehler_01_Gruesse_2050",
       "stimme": "erzaehler",
-      "taste": "-",
       "titel": "Grüße aus dem Jahr 2050",
       "text": "Hallo, liebe Zukunftsgestalter!\n\nWir senden euch herzliche Grüße aus dem Jahr 2050.\n\nUnd wir haben eine wunderbare Nachricht für euch:\n\nEure Mission war erfolgreich!\n\nErinnert ihr euch noch an unsere graue, heiße Stadt? An die vielen Autos, die wenigen Bäume und die Plätze, auf denen man kaum spielen konnte?\n\nSchaut euch unsere Stadt heute an!\n\nHier wachsen wieder Bäume. Es gibt grüne Spielplätze, schattige Wege und Orte, an denen Regenwasser gesammelt wird.\n\nUnsere Straßen sind sicherer geworden. Busse, Fahrräder und Fußgänger haben mehr Platz.\n\nWir haben neue Ideen fürs Wohnen gefunden. Es gibt grüne Innenhöfe, gemeinsame Gärten und Platz für viele Menschen.\n\nGeschäfte, Schulen und Treffpunkte sind gut erreichbar. Unsere Stadt ist ein Ort geworden, an dem wir gerne leben.\n\nUnd wisst ihr, was das Wichtigste ist?\n\nDiese Veränderungen haben mit Ideen angefangen. Mit Fragen, mit Experimenten und mit Menschen, die gemeinsam nach Lösungen gesucht haben.\n\nGenau wie ihr!\n\nDeshalb möchten wir euch heute etwas sagen:\n\nVielen Dank, liebe Zukunftsgestalter!\n\nAber denkt daran: Die Zukunft ist niemals ganz fertig. Es gibt immer neue Ideen, neue Fragen und neue Dinge zu entdecken.\n\nBleibt neugierig. Probiert Dinge aus. Und gestaltet die Welt um euch herum mit.\n\nDenn die Zukunft beginnt mit euch!\n\nViele Grüße aus dem Jahr 2050!",
       "datei": "audio/eigene/Erzaehler_Gruesse_2050_ElevenLabs.mp3",

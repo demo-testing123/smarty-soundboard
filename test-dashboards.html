@@ -35,6 +35,25 @@ const KI_TEXTE = [   // START_IT_SMART_KI_Systemansagen_Claude.pdf
   'Achtung! Zusätzlicher Passagier erkannt. Identifikation läuft … Roboterhund SMARTy identifiziert. Passagier war nicht angemeldet.',
 ];
 const MISSIONEN = ['Eröffnung', 'Natur', 'Technik', 'Mobilität', 'Wohnen', 'Kurze Wege', 'Bildung', 'Finale'];
+// Änderungsauftrag vom 22.11.2026, Abschnitt D (Bühnenfassung) – nur die Hauptclips, Reserve getrennt
+const REIHENFOLGE = {
+  eroeffnung: ['KI1', 'KI2', 'KI3', 'O1', 'O9'], natur: ['N1', 'N2', 'N3', 'N5', 'N4'], technik: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+  mobilitaet: ['M1', 'M2', 'M3', 'M9', 'M4', 'M5', 'M6', 'M7', 'M10', 'M11', 'M8'], wohnen: ['W1', 'W2', 'W3', 'W4', 'W5'],
+  wege: ['K1', 'K3', 'K2'], bildung: ['B1', 'B4', 'B2', 'B3'], finale: ['F3', 'F4', 'F5a', 'F5b'],
+};
+const RESERVE = ['O8', 'O10', 'O2', 'O5', 'O7', 'F1', 'F2'];
+// Wortlaut aus dem Drehbuch vom 22.11.2026 (neu, reaktiviert oder geändert)
+const WORTLAUT = {
+  O9: 'Ich habe mich mitgeschmuggelt. Ihr habt vergessen, mich einzuladen.',
+  N3: 'Wetterwarnung! Starkregen im Anmarsch. Prognose: sehr, sehr nasse Pfoten.',
+  N4: 'Neue Erkenntnis gespeichert: Ein guter Spielplatz kann auch Regenwasser auffangen. Multifunktional. Gefällt mir!',
+  M10: 'Zukunftsprognose: Manche Autos könnten 2050 selbstständig fahren. Dafür brauchen sie Kameras, Sensoren, Computer – und sehr gute Sicherheitsregeln.',
+  M11: 'Negativ! Auch schlaue Autos können Fehler machen. Darum müssen Menschen Technik gründlich testen und klare Regeln festlegen.',
+  B4: 'Stadtmodell aktualisiert. Bestehende Gebäude können neue Aufgaben bekommen. Das spart möglicherweise Baumaterial und Platz.',
+  F3: 'Digitale Stadtplanung abgeschlossen. Eure Entscheidungen wurden im Stadtmodell zusammengeführt. Bereit für den virtuellen Rundgang!',
+  F4: 'Computer können rechnen, messen und simulieren. Aber eine lebenswerte Stadt braucht Menschen, die mitdenken.',
+  O1: 'Systemcheck abgeschlossen. Zeitreise überstanden. Moment mal … wo sind wir denn hier gelandet?',
+};
 const KACHELN = ['Introfilm', 'Abschlussfilm', '3D-Stadtkonfigurator', 'Wohnsimulation', 'Verkehrssimulation', 'Minecraft Education', 'Calliope mini', 'Präsentationsmaterialien'];
 const warte = (ms) => new Promise((r) => setTimeout(r, ms));
 const rows = [];
@@ -84,8 +103,41 @@ async function tests() {
   const eroeff = [...d1.querySelectorAll('#m-eroeffnung .tabelle > .clip')];
   const ki = zeilen.filter((z) => z.dataset.stimme === 'ki');
   check('Zeitmaschinen-KI: richtiger Text, richtige Reihenfolge (nach Intro, vor SMARTy 01)',
-    eroeff.slice(0, 3).every((z, i) => z.dataset.stimme === 'ki' && z.querySelector('.text').textContent === KI_TEXTE[i]) && eroeff[3] && eroeff[3].querySelector('.nr b').textContent === '01',
+    eroeff.slice(0, 3).every((z, i) => z.dataset.stimme === 'ki' && z.querySelector('.text').textContent === KI_TEXTE[i]) && eroeff[3] && eroeff[3].querySelector('.nr b').textContent === 'O1',
     eroeff.slice(0, 4).map((z) => z.querySelector('.nr b').textContent).join(' → '));
+  // Änderungsauftrag 22.11.2026 – Abnahme
+  const kenn = (z) => z.querySelector('.nr b').textContent;
+  const ist = {};
+  for (const id of Object.keys(REIHENFOLGE)) ist[id] = [...d1.querySelectorAll(`#m-${id} .tabelle > .clip`)].map(kenn);
+  const abw = Object.keys(REIHENFOLGE).filter((id) => ist[id].join() !== REIHENFOLGE[id].join());
+  check('Szenenreihenfolge = Bühnenfassung 22.11.2026 (u. a. M5/M6 vor M7, M10/M11 vor M8, N3 → N5 → N4)', !abw.length,
+    abw.length ? abw.map((id) => `${id}: ${ist[id].join(' → ')}`).join(' · ') : `Mobilität: ${ist.mobilitaet.join(' → ')}`);
+  const res = [...d1.querySelectorAll('.reserve-block .clip')].map(kenn);
+  check('Reserveaufnahmen bleiben erhalten (eigener, einklappbarer Bereich)', RESERVE.every((r) => res.includes(r)) && res.length === RESERVE.length && [...d1.querySelectorAll('.reserve-block')].every((d) => d.tagName === 'DETAILS'),
+    res.join(', '));
+  const ids = zeilen.map((z) => z.dataset.id), doppelt = ids.filter((x, i) => ids.indexOf(x) !== i);
+  const textDoppelt = zeilen.map((z) => z.querySelector('.text').textContent).filter((t, i, a) => a.indexOf(t) !== i);
+  check('Keine Clips doppelt aktiv (keine ID, kein Text zweimal)', !doppelt.length && !textDoppelt.length, doppelt.concat(textDoppelt).join(', ') || `${ids.length} verschiedene Clips`);
+  const vertauscht = zeilen.filter((z) => (kenn(z).startsWith('KI')) !== (z.dataset.stimme === 'ki'));
+  check('KI und SMARTy nicht vertauscht (KI1–KI3 = Zeitmaschinen-KI, sonst SMARTy)', !vertauscht.length, vertauscht.map(kenn).join(', ') || 'alle Sprecher passen zur Kennung');
+  const wl = Object.entries(WORTLAUT).filter(([k, t]) => { const z = zeilen.find((x) => kenn(x) === k); return !z || z.querySelector('.text').textContent !== t; });
+  check('Neue, reaktivierte und geänderte Clips mit Drehbuch-Wortlaut', !wl.length, wl.length ? 'abweichend: ' + wl.map(([k]) => k).join(', ') : Object.keys(WORTLAUT).join(', '));
+  const norm = (x) => x.replace(/\[(Pause|Ton)[^\]]*\]/g, ' ').replace(/zweitausendfünfzig/g, '2050').replace(/Zukunftskru/g, 'Zukunftscrew').replace(/Smarty/g, 'SMARTy').replace(/[\s–\-…,.!?:]/g, '').toLowerCase();
+  const satz = new Map(cfg.saetze.map((x) => [x.id, x]));
+  const audioAbw = [];
+  let teileGeprueft = 0;
+  for (const z of zeilen) {
+    const x = satz.get(z.dataset.id), sp = x.sprechen || x.text;
+    if (norm(sp) !== norm(z.querySelector('.text').textContent)) { audioAbw.push(kenn(z) + ' (Text)'); continue; }
+    const teile = (man[x.id] || {}).teile;
+    const erw = sp.replace(/\[Ton[^\]]*\]/g, '').split(/\[Pause [\d.]+\]/).filter((t) => t.trim()).length;
+    if (teile) { teileGeprueft++; if (teile.length !== erw) audioAbw.push(`${kenn(z)} (${teile.length} statt ${erw} Satzteile)`); }
+  }
+  check('Wortlaut der Audiodatei = angezeigter Text (Sprachvorlage und Satzteile)', !audioAbw.length,
+    audioAbw.length ? audioAbw.join(', ') : `alle ${zeilen.length} Vorlagen gleich, Satzteile bei ${teileGeprueft} Dateien gezählt · keine Spracherkennung, vor der Show anhören`);
+  const tasten = zeilen.map((z) => z.querySelector('.nr kbd')?.textContent || '');
+  check('Jeder Clip hat eine eigene Taste', tasten.every(Boolean) && new Set(tasten).size === tasten.length, `${new Set(tasten.filter(Boolean)).size} Tasten für ${zeilen.length} Clips`);
+  check('Mission und Szene je Clip angezeigt', zeilen.every((z) => z.querySelector('.szene b')?.textContent && z.querySelector('.szene').textContent.length > 8), '');
   check('Zeitmaschinen-KI: nicht pauschal in jeder Mission', ki.length === 3 && ki.every((z) => z.closest('#m-eroeffnung')), `${ki.length} KI-Clips, alle in der Eröffnung: ${ki.every((z) => z.closest('#m-eroeffnung'))}`);
   check('Soundboard: Lautstärke und globaler Stopp vorhanden', d1.getElementById('lautstaerke') && d1.getElementById('stoppAlles'), '');
 

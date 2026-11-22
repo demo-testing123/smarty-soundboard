@@ -95,7 +95,7 @@
           <svg class="ico pfeil"><use href="#i-pfeil"/></svg>
         </button>
         <div class="tabelle" id="t-${m.id}" role="table" aria-label="${esc(m.name)}">
-          <div class="zeile kopfzeile" role="row"><span role="columnheader">Nr. · Taste</span><span role="columnheader">Sprecher</span><span role="columnheader">Szene · gesprochener Text</span><span role="columnheader" style="text-align:right">Dauer</span><span role="columnheader">Status</span><span role="columnheader" class="sr">Play/Stopp</span></div>
+          <div class="zeile kopfzeile" role="row"><span role="columnheader">Nr. · Taste</span><span role="columnheader">Sprecher</span><span role="columnheader">Mission · Szene · gesprochener Text</span><span role="columnheader" style="text-align:right">Dauer</span><span role="columnheader">Status</span><span role="columnheader" class="sr">Play/Stopp</span></div>
         </div>`;
       const tab = sec.querySelector('.tabelle');
       for (const e of m.eintraege) {
@@ -140,7 +140,7 @@
     el.innerHTML = `
       <div class="nr" role="cell"><b>${esc(c.nr)}</b>${taste ? `<kbd title="Taste">${esc(taste)}</kbd>` : ''}</div>
       <div class="sprecher" role="cell"><svg class="ico" aria-hidden="true"><use href="#i-${sp.icon}"/></svg><span>${esc(sp.name)}</span></div>
-      <div class="inhalt" role="cell"><div class="szene">${esc(c.szene)}</div><p class="text">${esc(c.text)}</p></div>
+      <div class="inhalt" role="cell"><div class="szene"><b>${esc(c.mission.name)}</b> · ${esc(c.szene)}</div><p class="text">${esc(c.text)}</p></div>
       <div class="dauer" role="cell">${c.dauer ? sek(c.dauer) : '–'}</div>
       <div class="status" role="cell"></div>
       <div role="cell"><button type="button" class="play" aria-label="${esc(c.nr)} abspielen"><svg class="ico"><use href="#i-play"/></svg></button></div>`;

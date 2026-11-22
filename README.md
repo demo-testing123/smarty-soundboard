@@ -117,7 +117,26 @@ Die Töne liegen etwa 8–10 dB unter der Sprache. Jede Ansage lässt sich einze
 
 ## SMARTy nach Szenen
 
-Die vollständige Zuordnung Szene → Clip → Datei steht in **[SMARTy_Zuordnung.md](SMARTy_Zuordnung.md)**. Die Anzeige im Soundboard folgt `sounds.json` → `"missionen"`. Noch offen sind M10/M11 (selbstfahrende Autos); der Text fehlt.
+Die vollständige Zuordnung Mission → Szene → Clip → Datei steht in **[SMARTy_Zuordnung.md](SMARTy_Zuordnung.md)**. Sie wird mit `python tools/zuordnung.py` aus `sounds.json` erzeugt. Die Anzeige im Soundboard folgt `sounds.json` → `"missionen"`.
+
+Stand 22.11.2026 (Drehbuch „humorvoll aktualisiert“ und Änderungsauftrag vom 22.11.2026):
+
+| Mission | Reihenfolge im Soundboard |
+|---|---|
+| Eröffnung | KI1 → KI2 → KI3 → O1 (Systemcheck) → O9 |
+| Natur | N1 → N2 → N3 → N5 → N4 |
+| Technik | T1 → T2 → T3 → T4 → T5 → T6 (optional) |
+| Mobilität | M1 → M2 → M3 → M9 → M4 → M5 → M6 (Verkehrssimulation) → M7 (mBot) → M10 → M11 → M8 |
+| Wohnen | W1 → W2 → W3 → W4 → W5 |
+| Kurze Wege | K1 → K3 → K2 |
+| Bildung | B1 → B4 → B2 → B3 |
+| Finale | F3 → F4 → F5a → F5b → Abschlussfilm (Show-Zentrale) |
+
+- **Wieder im Drehbuch** (vorhandene Aufnahmen, Wortlaut geprüft): O9 „Ich habe mich mitgeschmuggelt …“, N3 „Wetterwarnung! …“, N4 „Neue Erkenntnis gespeichert …“.
+- **Neu vertont:** M10 (Taste `-`), M11 (Taste `Q`). Die Tasten waren frei, weil die Erzähler-Pads nicht mehr im Soundboard sind.
+- **Neuer Wortlaut, neu vertont:** B4 „… Das spart möglicherweise Baumaterial und Platz.“, F3 „Digitale Stadtplanung abgeschlossen. …“, F4 „Computer können rechnen, messen und simulieren. Aber eine lebenswerte Stadt braucht Menschen, die mitdenken.“ (F3 und F4 nach Festlegung am 22.11.2026). Von F3 und F4 gibt es keine zweite Fassung mehr.
+- Die Kennungen der Eröffnung heißen jetzt O1, O9 usw. wie im Drehbuch. IDs, Dateien und Tasten bleiben gleich. O7 (Soundcheck, „Alle vier Beine vorhanden …“) bleibt Reserve, weil er nicht der Intro-Systemcheck ist.
+- Die älteren Finale-Clips F5–F7 aus dem Quell-Drehbuch werden nicht zusätzlich gespielt.
 
 ## Verkehrssimulation „Die schlaue Ampel“ (`verkehr/`)
 
