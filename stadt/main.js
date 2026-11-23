@@ -3,7 +3,7 @@
 import { webglMoeglich, Ansicht } from './ansicht3d.js';
 import { MISSIONEN, KAMERAS, TAFELN, BUCHSTABEN_FARBE, RUNDGANG, beschlussText } from './daten.js';
 import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
-import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN } from './stadtmodell.js';
+import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN, ENERGIE_ORTE } from './stadtmodell.js';
 import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, START, REGIERAUM } from './minecraft-ausgabe.js';
 import { pruefeExport } from './weltleser.js';
 
@@ -33,6 +33,7 @@ let pos = { mission: 0, schritt: 0 };
 let vorschau = {};                       // Bereich → Variante (nur Ansicht, kein Beschluss)
 let vorherAn = false, nacht = false, regenAn = false, regenModus = 'gruen', wegeGemessen = false;
 let rundgang = { station: -1, timer: null };
+let energieStufe = 0;                    // Energiecheck: Zustand 0–3 (angezeigt als 1–4); nur Licht und eingeblendete Modelle
 let resetBereit = null;
 let exportStand = null;                  // letzte erzeugte Minecraft-Welt: { name, datei, groesse, pruefung, beschluesse } oder { fehler }
 const bilder = new Map(), wegeCache = new Map(), alleWegeCache = new Map();
@@ -43,6 +44,10 @@ for (const v of ['A', 'B', 'C']) {
   LAEDEN[v].forEach((l, i) => { TAFELN_ALLE[`laden${v}${i}`] = { text: v, pos: l.tafel, buchstabe: v, ziel: true, titel: l.name }; });
 }
 const ladenTafeln = (v) => LAEDEN[v].map((_, i) => `laden${v}${i}`);
+// Energiecheck-Tafeln an den eingeblendeten Modellen
+for (const [k, text] of [['solar', 'Solardach'], ['windrad', 'Windrad'], ['speicher', 'Batteriespeicher'], ['netz', 'Stromnetz']]) TAFELN_ALLE['e_' + k] = { text, pos: ENERGIE_ORTE.tafeln[k] };
+// Vorschaubilder der Auswahlkarten: nur den Teil der Fläche zeigen, um den es geht
+const BILD_AUSSCHNITT = { 'zukunft:A': [55, -18, 80, -1], 'zukunft:B': [80, -21, 95, -13] };
 
 const mission = () => MISSIONEN[pos.mission];
 const schritt = () => mission().schritte[pos.schritt];
@@ -90,10 +95,11 @@ function kameraZeigen(key, sofort = false) {
 function verlassen() {
   vorschau = {}; vorherAn = false;
   if (regenAn) { regenAn = false; ansicht.setzeRegen(null); }
+  if (ansicht.energie) ansicht.setzeEnergie(null);       // Energiecheck verlassen: Licht und Stadt wie vorher
   rundgangStopp();
   rundgang.station = -1;
 }
-function gehe(m, s = 0, { kamera = true } = {}) {
+function gehe(m, s = 0, { kamera = true, vonHinten = false } = {}) {
   m = Math.max(0, Math.min(MISSIONEN.length - 1, m));
   s = Math.max(0, Math.min(MISSIONEN[m].schritte.length - 1, s));
   const missionWechsel = m !== pos.mission;
@@ -105,18 +111,34 @@ function gehe(m, s = 0, { kamera = true } = {}) {
   if (st.art === 'loesung') vorschau = { [st.bereich]: st.variante };
   if (st.art === 'regen') regenVorschau();
   if (!st.tagNacht && nacht) nachtSetzen(false);
+  if (st.art === 'energie') { energieStufe = vonHinten ? st.stufen.length - 1 : 0; ansicht.setzeEnergie(energieStufe + 1); }
   anzeigen();
   if (kamera) kameraZeigen(st.kamera);       // nach anzeigen(): Bedienfelder stehen, Versatz ist gesetzt
 }
 function weiter() {
   if (schritt().art === 'finale' && rundgang.station >= 0 && rundgang.station < RUNDGANG.length - 1) return station(rundgang.station + 1);
+  if (schritt().art === 'energie' && energieStufe < schritt().stufen.length - 1) return energieSetzen(energieStufe + 1);
   if (pos.schritt < mission().schritte.length - 1) gehe(pos.mission, pos.schritt + 1);
   else if (pos.mission < MISSIONEN.length - 1) gehe(pos.mission + 1, 0);
 }
 function zurueck() {
   if (schritt().art === 'finale' && rundgang.station > 0) return station(rundgang.station - 1);
-  if (pos.schritt > 0) gehe(pos.mission, pos.schritt - 1);
-  else if (pos.mission > 0) gehe(pos.mission - 1, MISSIONEN[pos.mission - 1].schritte.length - 1);
+  if (schritt().art === 'energie' && energieStufe > 0) return energieSetzen(energieStufe - 1);
+  if (pos.schritt > 0) gehe(pos.mission, pos.schritt - 1, { vonHinten: true });
+  else if (pos.mission > 0) gehe(pos.mission - 1, MISSIONEN[pos.mission - 1].schritte.length - 1, { vonHinten: true });
+}
+// Energiecheck: Zustand direkt setzen (Weiter/Zurück, Kacheln). Verändert keine Beschlüsse und nichts im Speicher.
+function energieSetzen(i) {
+  const st = schritt();
+  if (st.art !== 'energie') return;
+  energieStufe = Math.max(0, Math.min(st.stufen.length - 1, i));
+  ansicht.setzeEnergie(energieStufe + 1);
+  anzeigen();
+}
+// Kompakte Auswahl (Schwebebahn/Flugtaxi): ein Klick wählt und speichert
+function auswahlSetzen(b, v) {
+  if (Z.beschluesse[b] === v) { melden(`Schon gewählt: ${beschlussText(b, v) || v}`); return; }
+  uebernehmen(b, v);
 }
 
 /* ---------- Aktionen ---------- */
@@ -185,7 +207,7 @@ function neuBeginnen() {
 /* ---------- Vorschaubilder für Karten ---------- */
 function bildFuer(b, v) {
   const k = `${b}:${v}`;
-  if (!bilder.has(k)) { try { bilder.set(k, ansicht.vorschaubild(b, v)); } catch { bilder.set(k, ''); } }
+  if (!bilder.has(k)) { try { bilder.set(k, ansicht.vorschaubild(b, v, 520, 300, BILD_AUSSCHNITT[k] || null)); } catch { bilder.set(k, ''); } }
   return bilder.get(k);
 }
 const SVG_LATERNE = (sonne, an1, an2) => `<svg viewBox="0 0 220 120" xmlns="http://www.w3.org/2000/svg">
@@ -248,10 +270,12 @@ function anzeigen() {
   // Kopfzone: Kicker, Titel (Leitfrage), eine Unterzeile, Beschluss-Marken
   const hero = $('#hero');
   hero.classList.toggle('loesung', s.art === 'loesung');
-  $('#kicker').textContent = s.kicker || m.titel;
-  $('#titel').textContent = s.titel;
-  $('#intro').textContent = s.text || '';
-  $('#intro').hidden = !s.text;
+  const es = s.art === 'energie' ? s.stufen[energieStufe] : null;
+  $('#kicker').textContent = es ? `${s.kicker} · ${energieStufe + 1}/${s.stufen.length}` : (s.kicker || m.titel);
+  $('#titel').textContent = es ? es.titel : s.titel;
+  const unterzeile = es ? es.text : s.text;
+  $('#intro').textContent = unterzeile || '';
+  $('#intro').hidden = !unterzeile;
   $('#marken').replaceChildren(...(['finale', 'export'].includes(s.art) ? [] : markenFuer(m)));
   // Fußleiste: Hinweise
   const fn = $('#fussnote');
@@ -270,6 +294,41 @@ function anzeigen() {
   const tafelKeys = [...(s.tafeln || [])];
 
   if (s.art === 'bild' && s.punkte) { seite.append(...seiteListe(s.seiteTitel || 'Stichpunkte', s.punkte)); seite.hidden = false; }
+
+  if (s.auswahl) {
+    // kompakter Auswahlbereich: zwei Karten, ein Klick wählt und speichert (Priorisierung – das andere bleibt eine Idee)
+    const a = s.auswahl, b = a.bereich, gewaehlt = Z.beschluesse[b];
+    const karten = h('div', { class: 'karten zwei auswahl', style: '--n:2' });
+    for (const o of a.optionen) {
+      const ist = gewaehlt === o.v;
+      karten.append(h('button', {
+        type: 'button', class: `karte ${ist ? 'beschluss' : ''}`, 'aria-pressed': String(ist), style: `--farbe:${BUCHSTABEN_FARBE[o.b]}`,
+        title: `${o.titel} wählen (Taste ${o.b})`, onclick: () => auswahlSetzen(b, o.v),
+      },
+      kartenBild(b, o.v),
+      h('span', { class: 'buchstabe' }, o.b),
+      h('span', { class: 'stempel beschluss' }, '✓ Unsere Wahl'),
+      h('div', { class: 'text' }, h('h2', {}, o.titel), h('p', { class: 'kurztext' }, o.text))));
+    }
+    panel.append(h('div', { class: 'auswahl-kopf' }, h('b', {}, a.frage), h('span', {}, gewaehlt ? a.hinweis : 'Ein Klick auf eine Karte wählt.')), karten);
+    panel.hidden = false;
+    const t = a.optionen.find((o) => o.v === Z.variante(b));
+    if (t && t.tafel) tafelKeys.push(t.tafel);
+  }
+
+  if (s.art === 'energie') {
+    const i = energieStufe, n = s.stufen.length;
+    panel.append(h('div', { class: 'energie-stufen', style: `--n:${n}` }, ...s.stufen.map((st, k) => h('button', {
+      type: 'button', class: `stufe-kachel s${k + 1}`, 'aria-pressed': String(k === i), 'aria-current': k === i ? 'step' : null, title: `Zustand ${k + 1}: ${st.kurz}`, onclick: () => energieSetzen(k),
+    }, h('span', { class: 'n' }, String(k + 1)), h('span', { class: 'kurz' }, st.kurz)))));
+    reihe.append(
+      h('button', { type: 'button', disabled: i === 0 || null, onclick: () => zurueck() }, '← Zurück'),
+      h('span', { class: 'hinweis' }, `Zustand ${i + 1} von ${n} · vereinfachte Animation`),
+      h('button', { type: 'button', class: 'haupt gross', onclick: () => weiter() }, i < n - 1 ? `Weiter: ${s.stufen[i + 1].kurz} →` : 'Weiter zur Mobilität →'));
+    panel.append(reihe); panel.hidden = false;
+    if (i >= 1) tafelKeys.push('e_solar', 'e_windrad');
+    if (i >= 2) tafelKeys.push('e_speicher', 'e_netz');
+  }
 
   if (s.art === 'wahl') {
     const b = s.bereich;
@@ -394,7 +453,7 @@ function anzeigen() {
   // Tafeln, Wege, Hervorhebung
   tafelnSetzen(tafelKeys);
   ansicht.setzeWege(wege);
-  const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : [];
+  const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : s.auswahl ? [s.auswahl.bereich] : [];
   ansicht.setzeMarkierung(markiert);
   ansicht.setzeVersatz(0);
   // Seitenleiste ein/aus (nur wenn es eine gibt)
@@ -529,7 +588,7 @@ function regieZeichnen() {
       h('button', { type: 'button', onclick: () => resetMission() }, 'Mission zurücksetzen'),
       h('button', { type: 'button', onclick: () => $('#neu').showModal() }, 'Neu beginnen …')),
     h('h3', {}, 'Tasten'),
-    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt'], ['A B C', 'Vorschau'], ['Enter', 'In Stadt übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
+    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt / Energiecheck-Zustand'], ['A B C', 'Vorschau / Auswahl'], ['Enter', 'In Stadt übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
     h('h3', {}, 'Verlauf'), h('ul', {}, ...Z.verlauf.slice(-8).reverse().map(([t, x]) => h('li', {}, `${t} ${x}`))),
   );
 }
@@ -567,6 +626,7 @@ function bauauftragOeffnen() {
           befehlZeile('Bauen', bf.bauen), befehlZeile('Prüfen', bf.pruefen)));
       }
       if (b === 'spielplatz') liste.append(h('p', {}, 'Die Diskussionsbilder A und B gibt es nur im Browser – in Minecraft wird nur die gemeinsame Lösung gebaut.'));
+      if (BEREICHE[b].mcFest) liste.append(h('p', {}, 'In der Minecraft-Welt stehen immer Schwebebahn UND Flugtaxi – unabhängig von der Abstimmung im Konfigurator.'));
       box.append(liste);
       return box;
     }),
@@ -575,7 +635,7 @@ function bauauftragOeffnen() {
   $('#bauStatus').textContent = '';
   $('#bauauftrag').showModal();
 }
-const KAMERA_ZU_BEREICH = { spielplatz: 'platz', laternen: 'laternen', parken: 'wohnstrasse', kreuzung: 'kreuzung', wohnen: 'wohnen', aufstocken: 'aufstocken', einkaufen: 'einkaufen', bildung: 'bildung' };
+const KAMERA_ZU_BEREICH = { spielplatz: 'platz', laternen: 'laternen', parken: 'wohnstrasse', kreuzung: 'kreuzung', zukunft: 'zukunft', wohnen: 'wohnen', aufstocken: 'aufstocken', einkaufen: 'einkaufen', bildung: 'bildung' };
 function herunterladen(daten, name, typ) {
   const url = URL.createObjectURL(new Blob([daten], { type: typ }));
   const a = h('a', { href: url, download: name });
@@ -605,6 +665,7 @@ function tasten(e) {
   const lk = k.length === 1 ? k.toLowerCase() : k;
   if (map[lk]) { aktion(map[lk]); e.preventDefault(); return; }
   if (s.art === 'wahl' && /^[abc]$/i.test(k)) { const o = s.optionen.find((x) => x.b === k.toUpperCase()); if (o) vorschauSetzen(s.bereich, o.v); e.preventDefault(); return; }
+  if (s.auswahl && /^[ab]$/i.test(k)) { const o = s.auswahl.optionen.find((x) => x.b === k.toUpperCase()); if (o) auswahlSetzen(s.auswahl.bereich, o.v); e.preventDefault(); return; }
   if (k === 'Enter') {
     if (s.art === 'wahl' && !s.denkimpuls && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
     else if (s.art === 'loesung') uebernehmen(s.bereich, s.variante);
@@ -654,10 +715,13 @@ async function start() {
   setTimeout(() => ($('#laden').hidden = true), 450);
   // Vorschaubilder im Leerlauf vorbereiten (Karten erscheinen dann sofort)
   const vorbereiten = [];
-  for (const m of MISSIONEN) for (const s of m.schritte) if (s.art === 'wahl' && s.bereich !== 'laternen') for (const o of s.optionen) vorbereiten.push([s.bereich, o.v]);
+  for (const m of MISSIONEN) for (const s of m.schritte) {
+    if (s.art === 'wahl' && s.bereich !== 'laternen') for (const o of s.optionen) vorbereiten.push([s.bereich, o.v]);
+    if (s.auswahl) for (const o of s.auswahl.optionen) vorbereiten.unshift([s.auswahl.bereich, o.v]);
+  }
   const naechstes = () => { const x = vorbereiten.shift(); if (!x) return; bildFuer(...x); setTimeout(naechstes, 60); };
   setTimeout(naechstes, 800);
-  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent), weltErstellen, exportStand: () => exportStand, sollStand, kameraKey: () => kameraKey };
+  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent), weltErstellen, exportStand: () => exportStand, sollStand, kameraKey: () => kameraKey, energieSetzen, energieStufe: () => energieStufe, auswahlSetzen };
   window.__stadtOk = true;
 }
 start().catch((e) => {

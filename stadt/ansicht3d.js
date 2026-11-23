@@ -7,7 +7,7 @@
  */
 import * as THREE from '../lib/three.module.min.js';
 import { Welt, NAMEN, BLOECKE, ID, GRUEN_TEILE } from '../minecraft/welt.js';
-import { BEREICH_3D, BEREICHE, BEREICH_IDS, boxVon, groesseVon, S, BODEN, STADT, vorlage } from './stadtmodell.js';
+import { BEREICH_3D, BEREICHE, BEREICH_IDS, boxVon, groesseVon, S, BODEN, STADT, vorlage, ENERGIE_ORTE } from './stadtmodell.js';
 
 export function webglMoeglich() {
   try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch { return false; }
@@ -193,6 +193,21 @@ export function vernetze(welt, region) {
   return { geo, lampen };
 }
 
+/* ---------- Energiecheck: Lichtstimmungen je Zustand (1 Strom aus · 2 Sonne + Wind · 3 Abend + Speicher · 4 Stadt leuchtet) ----------
+ * Nur Licht und Materialfarben – die Blöcke der Stadt bleiben unverändert. leucht = Farbe für immer leuchtende Blöcke
+ * (Laternen „immer an“, Lampen am Spielplatz): beim Stromausfall dunkel. */
+const ENERGIE_LICHT = {
+  1: { klasse: 'stromaus', hemi: [0.62, '#8b9cc4'], sonne: [0.32, '#93a9da'], glas: '#000000', lampe: '#000000', leucht: '#3b3d45', kreise: false },
+  2: { klasse: 'tag', hemi: [1.55, '#ffffff'], sonne: [2.3, '#fff4e2'], glas: '#000000', lampe: '#000000', leucht: '#ffffff', kreise: false },
+  3: { klasse: 'abend', hemi: [0.95, '#ffd6b0'], sonne: [1.25, '#ff9c55'], glas: '#000000', lampe: '#000000', leucht: '#ffffff', kreise: false },
+  4: { klasse: 'nacht', hemi: [0.42, '#9fb3d9'], sonne: [0.35, '#9db4e8'], glas: '#5a4520', lampe: '#ffd986', leucht: '#ffffff', kreise: true },
+};
+const MAT_SOLAR = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: new THREE.Color('#000000') });
+const MAT_ENERGIE = new THREE.MeshLambertMaterial({ vertexColors: true });
+const MAT_PUNKT = new THREE.MeshBasicMaterial({ color: '#ffd23f' });
+const MAT_LADUNG = new THREE.MeshBasicMaterial({ color: '#5fd16b' });
+const MAT_KABEL = new THREE.LineBasicMaterial({ color: '#2b3336' });
+
 /* ---------- Szene ---------- */
 const SONNE = new THREE.Vector3(-0.45, 1, 0.55).normalize();
 export const KAMERA_START = { ziel: [16, 64, 16], zoom: 92, azimut: 45, hoehe: 36 };
@@ -228,6 +243,8 @@ export class Ansicht {
     this.welt = null;
     this.nacht = false;
     this.regen = null;
+    this.energie = null;              // Energiecheck: null oder Zustand 1–4 (nur Licht und eingeblendete Modelle)
+    this.energieModell = null;
     this.statistik = { bilder: 0, schatten: 0, netzbau: 0 };
 
     this.kam = { ...KAMERA_START, ziel: [...KAMERA_START.ziel] };
@@ -308,13 +325,23 @@ export class Ansicht {
   /* --- Tag und Nacht --- */
   setzeNacht(an) {
     this.nacht = !!an;
-    this.container.classList.toggle('nacht', this.nacht);
-    this.hemi.intensity = an ? 0.42 : 1.55;
-    this.hemi.color.set(an ? '#9fb3d9' : '#ffffff');
-    this.sonne.intensity = an ? 0.35 : 2.3;
-    this.sonne.color.set(an ? '#9db4e8' : '#fff4e2');
-    MAT.glas.emissive.set(an ? '#5a4520' : '#000000');
-    MAT.lampe.emissive.set(an ? '#ffd986' : '#000000');
+    this._licht();
+  }
+  // Licht aus Tag/Nacht – oder, solange der Energiecheck läuft, aus dessen Zustand (Tag/Nacht bleibt gemerkt)
+  _licht() {
+    const e = this.energie ? ENERGIE_LICHT[this.energie] : null, an = this.nacht;
+    const c = this.container.classList;
+    c.toggle('nacht', e ? e.klasse === 'nacht' : an);
+    c.toggle('stromaus', !!e && e.klasse === 'stromaus');
+    c.toggle('abend', !!e && e.klasse === 'abend');
+    this.hemi.intensity = e ? e.hemi[0] : an ? 0.42 : 1.55;
+    this.hemi.color.set(e ? e.hemi[1] : an ? '#9fb3d9' : '#ffffff');
+    this.sonne.intensity = e ? e.sonne[0] : an ? 0.35 : 2.3;
+    this.sonne.color.set(e ? e.sonne[1] : an ? '#9db4e8' : '#fff4e2');
+    MAT.glas.emissive.set(e ? e.glas : an ? '#5a4520' : '#000000');
+    MAT.lampe.emissive.set(e ? e.lampe : an ? '#ffd986' : '#000000');
+    MAT.leucht.color.set(e ? e.leucht : '#ffffff');
+    if (this.regen && !e) { this.hemi.intensity = 1.05; this.sonne.intensity = 0.9; }
     this._lichtkreiseNeu();
     this.schattenNeu = true;
     this.anfordern();
@@ -333,7 +360,7 @@ export class Ansicht {
   }
   _lichtkreiseNeu() {
     const pos = [];
-    if (this.nacht) for (const [, n] of this.netze) pos.push(...n.lampen.immer, ...n.lampen.nacht);
+    if (this.energie ? ENERGIE_LICHT[this.energie].kreise : this.nacht) for (const [, n] of this.netze) pos.push(...n.lampen.immer, ...n.lampen.nacht);
     const m = new THREE.Matrix4();
     const k = Math.min(pos.length, 400);
     for (let i = 0; i < k; i++) { m.makeTranslation(pos[i][0], S + 0.04, pos[i][1]); this.kreise.setMatrixAt(i, m); }
@@ -398,6 +425,152 @@ export class Ansicht {
     } else {
       W.pfuetzen.forEach((me, k) => { me.visible = true; const g = 0.3 + 0.7 * Math.min(1, t * (1.4 - k * 0.1)); me.scale.set(g, 0.06, g); });
     }
+    return true;
+  }
+
+  /* --- Energiecheck (Mission Technik): eingeblendete Modelle und Licht, die Stadt selbst bleibt unverändert --- */
+  setzeEnergie(stufe) {
+    stufe = stufe ? Math.max(1, Math.min(4, Math.round(stufe))) : null;
+    if (stufe && !this.energieModell) this._energieBauen();
+    const m = this.energieModell;
+    this.energie = stufe;
+    if (m) {
+      m.gruppe.visible = !!stufe;
+      m.solar.visible = m.windrad.visible = stufe >= 2;
+      m.speicher.visible = m.netz.visible = stufe >= 3;
+      MAT_SOLAR.emissive.set(stufe === 2 ? '#24467e' : '#000000');
+      if (stufe === 3) m.ladung = 0.9;                              // Speicher tagsüber geladen, gibt jetzt ab
+      if (stufe === 4) m.ladung = Math.min(m.ladung, 0.62);
+      this._ladungZeigen();
+      this._punkteSetzen(0);
+    }
+    this._licht();
+  }
+  _energieBauen() {
+    const E = ENERGIE_ORTE, gruppe = new THREE.Group(), y0 = S + 0.7;
+    const mesh = (puf, mat = MAT_ENERGIE) => { const g = puf.geometrie(); return g ? new THREE.Mesh(g, mat) : new THREE.Group(); };
+    const C = (h) => new THREE.Color(h);
+    // Solardächer: Reihen aus Modulen (blaue Zellen in hellem Rahmen) auf flachen Dächern
+    const ps = new Puffer();
+    for (const [x1, z1, x2, z2, y] of E.daecher) {
+      for (let z = z1 + 1; z + 2 <= z2; z += 3) {
+        ps.box(x1 + 1, y, z, x2, y + 0.22, z + 2, C('#cfd6da'));
+        for (let x = x1 + 1; x < x2; x++) for (const dz of [0, 1]) ps.box(x + 0.07, y + 0.22, z + dz + 0.07, x + 0.93, y + 0.36, z + dz + 0.93, C((x + dz) % 2 ? '#2a58a3' : '#244c8e'));
+      }
+    }
+    const solar = mesh(ps, MAT_SOLAR);
+    // Windrad am Stadtrand: Mast, Gondel, drehender Rotor (Blickrichtung zur Energie-Kamera)
+    const W = E.windrad, pw = new Puffer();
+    pw.box(W.x - 1.4, S, W.z - 1.4, W.x + 2.4, S + 0.6, W.z + 2.4, C('#9aa1a6'));
+    pw.box(W.x - 0.3, S, W.z - 0.3, W.x + 1.3, S + W.hoehe, W.z + 1.3, C('#eef1f2'));
+    const windrad = new THREE.Group();
+    windrad.add(mesh(pw));
+    const kopf = new THREE.Group();
+    kopf.position.set(W.x + 0.5, S + W.hoehe + 0.6, W.z + 0.5);
+    const pk = new Puffer();
+    pk.box(-1, -0.9, -2.6, 1, 0.9, 1.2, C('#e6eaec'));
+    pk.box(-0.55, -0.55, 1.2, 0.55, 0.55, 2.0, C('#d8dde0'));
+    kopf.add(mesh(pk));
+    const rotor = new THREE.Group();
+    rotor.position.z = 1.7;
+    for (let k = 0; k < 3; k++) {
+      const pf = new Puffer();
+      pf.box(-0.45, 0.4, -0.18, 0.45, W.fluegel - 2.2, 0.18, C('#f4f6f7'));
+      pf.box(-0.32, W.fluegel - 2.2, -0.15, 0.32, W.fluegel, 0.15, C('#e2846b'));
+      const f = mesh(pf); f.rotation.z = (k * 2 * Math.PI) / 3; rotor.add(f);
+    }
+    kopf.add(rotor);
+    windrad.add(kopf);
+    // Batteriespeicher: zwei Container, darüber ein großes Batteriesymbol mit Ladestand
+    const B = E.speicher, pb = new Puffer(), xm = Math.floor((B.x1 + B.x2) / 2);
+    for (const [a, b] of [[B.x1, xm - 1], [xm + 1, B.x2]]) {
+      pb.box(a, S, B.z1, b + 1, S + 4, B.z2 + 1, C('#1a96a0'));
+      for (let x = a + 1; x <= b; x += 2) pb.box(x, S + 0.3, B.z1 - 0.06, x + 0.3, S + 3.7, B.z2 + 1.06, C('#147980'));
+      pb.box(a, S + 4, B.z1, b + 1, S + 4.15, B.z2 + 1, C('#e6eef0'));
+    }
+    const speicher = new THREE.Group();
+    speicher.add(mesh(pb));
+    const symbol = new THREE.Group();
+    symbol.position.set((B.x1 + B.x2 + 1) / 2, S + 4.2, (B.z1 + B.z2 + 1) / 2);
+    symbol.scale.setScalar(1.5);
+    const py = new Puffer();
+    py.box(-1.6, 0, -0.35, 1.6, 6, 0.35, C('#183f48'));
+    py.box(-0.7, 6, -0.35, 0.7, 6.7, 0.35, C('#183f48'));
+    symbol.add(mesh(py));
+    const fuell = new THREE.Mesh(new THREE.BoxGeometry(2.5, 5.2, 0.8).translate(0, 2.6, 0), MAT_LADUNG);
+    fuell.position.y = 0.4;
+    symbol.add(fuell);
+    speicher.add(symbol);
+    // Anschluss ans Stromnetz: Mast mit Querträgern, Leitungen von außerhalb der Stadt und zum Speicher
+    const N = E.netz, pn = new Puffer(), yt = S + N.hoehe;
+    pn.box(N.x + 0.1, S, N.z + 0.1, N.x + 0.9, yt + 0.6, N.z + 0.9, C('#5b6266'));
+    for (const y of [yt - 2.6, yt]) pn.box(N.x + 0.2, y, N.z - 2.5, N.x + 0.8, y + 0.45, N.z + 3.5, C('#5b6266'));
+    for (const dz of [-2.2, 3.2]) for (const y of [yt - 2.6, yt]) pn.box(N.x + 0.25, y - 0.7, N.z + dz - 0.12, N.x + 0.75, y, N.z + dz + 0.12, C('#d9e2e6'));
+    const netz = new THREE.Group();
+    netz.add(mesh(pn));
+    const pl = new Puffer();
+    for (const dz of [-2.2, 3.2]) for (const y of [yt - 2.6, yt]) pl.box(N.x + 0.5, y - 0.85, N.z + dz - 0.12, N.aussen, y - 0.6, N.z + dz + 0.12, C('#2b3336'));
+    netz.add(mesh(pl));
+    netz.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(N.x + 0.5, yt - 3.3, N.z + 0.5), new THREE.Vector3(B.x2 + 1, S + 3.6, (B.z1 + B.z2 + 1) / 2)]), MAT_KABEL));
+    // Stromfluss: gelbe Punkte auf festen Wegen. Jede Quelle führt zur Hauptstraße (Laternen) – nördlich und südlich.
+    const d = E.daecher, zn = 48.4, xs = 47.5, nord = [[xs, y0, zn], [xs, y0, 3]], sued = [[xs, y0, zn], [xs, y0, 84]];
+    const wege = [
+      { stufen: [2], tempo: 9, abstand: 2.6, p: [[60, d[0][4] + 0.6, 41], [60, d[0][4] + 0.6, zn], [60, y0, zn], ...nord] },
+      { stufen: [2], tempo: 9, abstand: 2.6, p: [[84, d[1][4] + 0.6, 38], [84, d[1][4] + 0.6, 46.4], [84, y0, 46.4], [84, y0, zn], ...sued] },
+      { stufen: [2], tempo: 9, abstand: 2.6, p: [[84, d[2][4] + 0.6, 65], [84, d[2][4] + 0.6, 55.6], [84, y0, 55.6], [70, y0, 55.6], [70, y0, zn], ...nord] },
+      { stufen: [2, 3, 4], tempo: (st) => (st === 2 ? 9 : 4.5), abstand: (st) => (st === 2 ? 2.6 : 5.2), p: [[W.x + 0.5, y0, W.z + 0.5], [74.5, y0, W.z + 0.5], [74.5, y0, zn], ...sued] },
+      { stufen: [3, 4], tempo: 7, abstand: 2.6, p: [[(B.x1 + B.x2 + 1) / 2, S + 2, B.z1 - 0.4], [(B.x1 + B.x2 + 1) / 2, y0, zn], ...nord] },
+      { stufen: [3, 4], tempo: 7, abstand: 2.6, p: [[N.aussen, yt - 0.7, N.z + 3.2], [N.x + 0.5, yt - 0.7, N.z + 3.2], [N.x + 0.5, y0, N.z + 3.2], [N.x + 0.5, y0, zn], ...sued] },
+    ].map((w) => {
+      const pts = w.p.map((q) => new THREE.Vector3(...q)), lang = [0];
+      for (let k = 1; k < pts.length; k++) lang.push(lang[k - 1] + pts[k].distanceTo(pts[k - 1]));
+      return { ...w, pts, lang, summe: lang.at(-1) };
+    });
+    const punkte = new THREE.InstancedMesh(new THREE.BoxGeometry(0.75, 0.75, 0.75), MAT_PUNKT, 520);
+    punkte.count = 0; punkte.frustumCulled = false; punkte.renderOrder = 3;
+    gruppe.add(solar, windrad, speicher, netz, punkte);
+    for (const o of [solar, windrad, speicher, netz]) o.traverse((x) => { if (x.isMesh) { x.castShadow = false; x.receiveShadow = false; } });
+    gruppe.visible = false;
+    this.scene.add(gruppe);
+    this.energieModell = { gruppe, solar, windrad, kopf, rotor, speicher, symbol, fuell, netz, punkte, wege, ladung: 0.9, winkel: 0 };
+    this._energieAusrichten(322);
+  }
+  // Rotor und Batteriesymbol zur Kamera drehen (Azimut 0 = Blick von Süden)
+  _energieAusrichten(azimut) {
+    const m = this.energieModell, a = THREE.MathUtils.degToRad(azimut);
+    if (!m) return;
+    m.kopf.rotation.y = a; m.symbol.rotation.y = a;
+  }
+  _ladungZeigen() {
+    const m = this.energieModell;
+    m.fuell.scale.y = Math.max(0.04, m.ladung);
+    MAT_LADUNG.color.set(m.ladung > 0.35 ? '#5fd16b' : '#f2c14e');
+  }
+  _punkteSetzen(t) {
+    const m = this.energieModell, st = this.energie, mat = new THREE.Matrix4(), v = new THREE.Vector3();
+    let n = 0;
+    if (st) for (const w of m.wege) {
+      if (!w.stufen.includes(st)) continue;
+      const tempo = typeof w.tempo === 'function' ? w.tempo(st) : w.tempo, ab = typeof w.abstand === 'function' ? w.abstand(st) : w.abstand;
+      const versatz = (t * tempo) % ab;
+      for (let s = versatz; s < w.summe && n < m.punkte.instanceMatrix.count; s += ab) {
+        let k = 1; while (k < w.lang.length - 1 && w.lang[k] < s) k++;
+        const a = w.pts[k - 1], b = w.pts[k], f = (s - w.lang[k - 1]) / Math.max(1e-6, w.lang[k] - w.lang[k - 1]);
+        v.copy(a).lerp(b, Math.min(1, Math.max(0, f)));
+        m.punkte.setMatrixAt(n++, mat.makeTranslation(v.x, v.y, v.z));
+      }
+    }
+    m.punkte.count = n;
+    m.punkte.instanceMatrix.needsUpdate = true;
+  }
+  _energieBewegen(dt, jetzt) {
+    const m = this.energieModell, st = this.energie;
+    if (!st || !m) return false;
+    const t = jetzt / 1000;
+    if (st >= 2) m.rotor.rotation.z -= dt * (st === 2 ? 1.8 : 0.55);             // abends weniger Wind
+    if (st === 2) MAT_SOLAR.emissive.setRGB(0.12 + 0.05 * Math.sin(t * 2.2), 0.24 + 0.08 * Math.sin(t * 2.2), 0.47 + 0.1 * Math.sin(t * 2.2));
+    if (st >= 3) { m.ladung = Math.max(st === 3 ? 0.62 : 0.42, m.ladung - dt * 0.012); this._ladungZeigen(); }
+    this._punkteSetzen(t);
     return true;
   }
 
@@ -553,6 +726,7 @@ export class Ansicht {
     const dt = Math.min(0.05, (jetzt - this.zuletzt) / 1000); this.zuletzt = jetzt;
     let bewegt = this._flugBewegen(jetzt);
     bewegt = this._regenBewegen(dt, jetzt) || bewegt;
+    bewegt = this._energieBewegen(dt, jetzt) || bewegt;
     if (this.dirty || bewegt) {
       if (this.schattenNeu) { this.renderer.shadowMap.needsUpdate = true; this.schattenNeu = false; this.statistik.schatten++; }
       this.renderer.render(this.scene, this.camera);
@@ -565,7 +739,7 @@ export class Ansicht {
   }
 
   /* --- Vorschaubilder für die Abstimmungskarten (aus denselben Blöcken) --- */
-  vorschaubild(id, variante, breite = 520, hoehe = 300) {
+  vorschaubild(id, variante, breite = 520, hoehe = 300, ausschnitt = null) {
     const t = vorlage(id, variante), box = boxVon(id), [nx, ny, nz] = groesseVon(id);
     const w = new Welt({ x0: box[0], y0: box[1], z0: box[2], nx, ny, nz });
     w.daten.set(t.daten);
@@ -579,14 +753,16 @@ export class Ansicht {
     let oben = 0;
     for (let y = t.dy - 1; y >= 0 && !oben; y--) for (let k = y * t.dx * t.dz, e2 = k + t.dx * t.dz; k < e2; k++) if (t.daten[k]) { oben = y; break; }
     const y1 = box[1], y2 = box[1] + oben + 1;
-    const cx = (box[0] + box[3] + 1) / 2, cz = (box[2] + box[5] + 1) / 2, cy = (y1 + y2) / 2;
+    // ausschnitt = [x1, z1, x2, z2]: nur diesen Teil der Fläche einpassen (z. B. Schwebebahn oder Flugtaxi)
+    const [rx1, rz1, rx2, rz2] = ausschnitt || [box[0], box[2], box[3], box[5]];
+    const cx = (rx1 + rx2 + 1) / 2, cz = (rz1 + rz2 + 1) / 2, cy = (y1 + y2) / 2;
     const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -400, 800);
     const a = THREE.MathUtils.degToRad(45), e = THREE.MathUtils.degToRad(33);
     cam.position.set(cx + Math.sin(a) * Math.cos(e) * 200, cy + Math.sin(e) * 200, cz + Math.cos(a) * Math.cos(e) * 200);
     cam.lookAt(cx, cy, cz); cam.updateMatrixWorld();
     const inv = cam.matrixWorldInverse, v = new THREE.Vector3();
     let xa = Infinity, xb = -Infinity, ya = Infinity, yb = -Infinity;
-    for (const x of [box[0], box[3] + 1]) for (const y of [y1, y2]) for (const z of [box[2], box[5] + 1]) {
+    for (const x of [rx1, rx2 + 1]) for (const y of [y1, y2]) for (const z of [rz1, rz2 + 1]) {
       v.set(x, y, z).applyMatrix4(inv); xa = Math.min(xa, v.x); xb = Math.max(xb, v.x); ya = Math.min(ya, v.y); yb = Math.max(yb, v.y);
     }
     const asp = breite / hoehe, rand = 1.06;
@@ -613,6 +789,12 @@ export class Ansicht {
   info() {
     let dreiecke = 0, netze = 0;
     this.scene.traverse((o) => { if (o.isMesh && o.geometry.index) { dreiecke += o.geometry.index.count / 3; netze++; } });
-    return { ...this.statistik, aufrufe: this.renderer.info.render.calls, dreiecke: Math.round(dreiecke), netze, geometrien: this.renderer.info.memory.geometries, texturen: this.renderer.info.memory.textures, lampen: this.lampenZahl, nacht: this.nacht, zustand: { ...this.zustand } };
+    return { ...this.statistik, aufrufe: this.renderer.info.render.calls, dreiecke: Math.round(dreiecke), netze, geometrien: this.renderer.info.memory.geometries, texturen: this.renderer.info.memory.textures, lampen: this.lampenZahl, nacht: this.nacht, energie: this.energie, zustand: { ...this.zustand } };
+  }
+  // Licht- und Materialstand (Test: nach dem Energiecheck exakt wie vorher)
+  lichtStand() {
+    const hex = (c) => '#' + c.getHexString();
+    return { hemi: [this.hemi.intensity, hex(this.hemi.color)], sonne: [this.sonne.intensity, hex(this.sonne.color)], glas: hex(MAT.glas.emissive), lampe: hex(MAT.lampe.emissive),
+      leucht: hex(MAT.leucht.color), kreise: this.kreise.count, klassen: [...this.container.classList].sort().join(' '), energieSichtbar: !!(this.energieModell && this.energieModell.gruppe.visible) };
   }
 }

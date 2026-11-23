@@ -144,8 +144,25 @@ try {
     const eigen = kw.bereiche.join() === 'einkaufen' && MISSIONEN.filter((m) => m.bereiche.includes('einkaufen')).length === 1;
     const tech = MISSIONEN.find((m) => m.id === 'technik').schritte, mob = MISSIONEN.find((m) => m.id === 'mobilitaet').schritte;
     const iCall = tech.findIndex((x) => /Calliope/.test(x.titel)), iLat = tech.findIndex((x) => x.art === 'wahl');
-    const iBot = mob.findIndex((x) => /mBot/.test(x.titel)), iSim = mob.findIndex((x) => x.link && /verkehr/.test(x.link.href)), iAuto = mob.findIndex((x) => /von allein/.test(x.titel));
-    pruefe('Korrekturauftrag: Calliope vor der Laternenwahl, mBot vor der Verkehrssimulation, danach „Autos von allein?“ und zurück in die Stadt', iCall >= 0 && iCall < iLat && iBot >= 0 && iBot < iSim && iSim < iAuto && iAuto < mob.length - 1 && mob.at(-1).art === 'schalter', `Technik: Calliope ${iCall + 1}, Wahl ${iLat + 1} · Mobilität: mBot ${iBot + 1}, Simulation ${iSim + 1}, Ausblick ${iAuto + 1}`);
+    pruefe('Korrekturauftrag: Calliope vor der Laternenwahl', iCall >= 0 && iCall < iLat, `Technik: Calliope ${iCall + 1}, Wahl ${iLat + 1}`);
+    // Änderungsauftrag Bus/Ampel-Dopplung (23.11.2026): genau 5 Szenen, Szenen 1–2 unverändert, keine mBot- und keine Ampelvergleichs-Szene
+    const s12 = JSON.stringify(mob.slice(0, 2).map((x) => [x.art, x.titel, x.text, x.kamera, x.bereich || null, (x.optionen || []).map((o) => [o.v, o.titel, o.pro, o.contra])]));
+    const s12soll = JSON.stringify([['bild', 'Die Straße ist voll', 'Autos, Autos, Autos! Wo können hier Kinder sicher laufen?', 'wohnstrasse', null, []], ['wahl', 'Wo sollen die Autos parken?', 'Ihr seid jetzt unser Zukunftsstadtrat.', 'wohnstrasse', 'parken',
+      [['A', 'Parkplätze direkt vor den Häusern', 'Das Auto ist ganz nah', 'Die Straße bleibt voll'], ['B', 'Parkplätze nur in ausgewählten Straßen', 'Andere Straßen werden frei zum Spielen', 'Manche laufen weiter zum Auto'], ['C', 'Parkhaus am Rand des Wohnviertels', 'Platz für Gehwege, Grün und Spiel', 'Mit Einkäufen weiter laufen']]]]);
+    const ohneDopplung = !mob.some((x) => /mBot|Ampel/.test(x.titel) || x.art === 'extern' || (x.link && /verkehr/.test(x.link.href)));
+    const folge = mob.map((x) => x.titel);
+    pruefe('Bus/Ampel: genau 5 Mobilitätsszenen, 1–2 unverändert, Szene 3 „Der Bus wartet“ als Überleitung, kein mBot und kein Ampelvergleich im Konfigurator',
+      mob.length === 5 && s12 === s12soll && ohneDopplung && mob[2].titel === 'Der Bus wartet' && mob[2].art === 'bild' && /von allein/.test(mob[3].titel) && mob[4].art === 'schalter' && /Szene 4/.test(mob[3].kicker) && /Szene 5/.test(mob[4].kicker),
+      folge.map((t, i) => `${i + 1} ${t}`).join(' · '));
+    // Änderungsauftrag Energiecheck: letzter Schritt der Technikmission, vier Zustände, keine Abstimmung, keine neue Mission
+    const en = tech.at(-1);
+    pruefe('Energiecheck: kurzer Unterabschnitt nach der Technikmission – 4 Zustände, keine Abstimmung, keine neue Mission',
+      en.art === 'energie' && en.stufen.length === 4 && tech.filter((x) => x.art === 'wahl').length === 1 && MISSIONEN.length === 8 && en.stufen.every((x) => x.titel && x.text.length <= 100) && !/\d/.test(JSON.stringify(en.stufen)),
+      en.stufen.map((x) => x.kurz).join(' → '));
+    // Schwebebahn/Flugtaxi: kompakte Auswahl in der bestehenden Szene 4, keine neue Szene
+    const au = mob[3].auswahl;
+    pruefe('Zukunftsmobilität: A Schwebebahn / B Flugtaxi als kompakte Auswahl in „Fahren 2050 Autos von allein?“ (keine zusätzliche Szene)',
+      au && au.bereich === 'zukunft' && au.optionen.map((o) => o.b + ' ' + o.titel).join() === 'A Schwebebahn,B Flugtaxi' && au.optionen[0].text === 'Viele Menschen fahren gemeinsam über der Straße.' && au.optionen[1].text === 'Ein kleines Fluggerät startet und landet an festen Plätzen.' && MISSIONEN.find((m) => m.id === 'mobilitaet').bereiche.includes('zukunft'));
     const fin = MISSIONEN.at(-1).schritte;
     pruefe('Finale endet mit dem Schritt „Minecraft-Welt erstellen“', fin.at(-1).art === 'export' && fin[0].art === 'finale');
     const langeTexte = MISSIONEN.flatMap((m) => m.schritte).filter((x) => (x.text || '').length > 100).map((x) => x.titel);
@@ -167,6 +184,22 @@ try {
   pruefe('Keine Figur „Mika“ in Texten, Kameras und Bauaufträgen', !/mika/i.test(alleTexte));
   pruefe('Keine erfundenen Einheiten (°C, kWh, Tonnen, Liter, Prozent, km, Meter) in den Texten', !/(°C|kWh|Tonnen|Liter|\d\s*%|\bkm\b|\d\s*Meter)/.test(JSON.stringify(MISSIONEN)));
   pruefe('Natur: A/B sind nur Diskussionsbilder (keine Minecraft-Kammer, kein Beschluss)', !B.spielplatz.mc.includes('A') && !B.spielplatz.mc.includes('B') && MISSIONEN[1].schritte.find((s) => s.art === 'wahl').denkimpuls === true && MISSIONEN[1].schritte.some((s) => s.art === 'loesung' && s.variante === 'gruen'));
+  // Keine neuen SMARTy-Sätze: jeder SMARTy-Hinweis im Konfigurator verweist auf eine vorhandene Soundboard-Taste
+  {
+    const cfg = await (await fetch('../sounds.json', { cache: 'no-store' })).json();
+    const tasten = new Set(cfg.saetze.filter((x) => x.taste).map((x) => x.taste.toLowerCase()));
+    const fehlt = MISSIONEN.flatMap((m) => m.schritte.flatMap((x) => (x.smarty || []).filter(([, k]) => k !== '–' && !tasten.has(k.toLowerCase())).map(([t, k]) => `${t} (${k})`)));
+    pruefe('Keine neuen SMARTy-Clips: alle SMARTy-Hinweise im Konfigurator nutzen vorhandene Soundboard-Tasten', fehlt.length === 0, fehlt.join(' · ') || `${MISSIONEN.flatMap((m) => m.schritte.flatMap((x) => x.smarty || [])).length} Hinweise`);
+  }
+  // Zukunftsverkehr: Modelle in der Fläche, Schwebebahn hängt über der Straße, Flugtaxi auf dem Dach
+  {
+    const [a] = box3('zukunft'), t = (v) => M.vorlage('zukunft', v), at = (v, x, y, z) => W.NAMEN[t(v).hole(x - a[0], y - a[1], z - a[2])];
+    const bahnHaengt = at('A', 64, M.S + 10, -8) === 'schwarzstein' && at('A', 64, M.S + 9, -8) === 'kette' && at('A', 64, M.S + 7, -9) === 'glas' && [M.S, M.S + 3, M.S + 5].every((y) => at('A', 64, y, -8) === 'luft');
+    const taxi = at('B', 88, M.S + 6, -18) === 'cyanBeton' && at('B', 90, M.S + 7, -18) === 'betonWeiss' && at('B', 88, M.S + 8, -19) === 'gitter' && at('B', 90, M.S + 4, -15) !== 'luft';
+    const nichtsIm = (v, x1, z1, x2, z2) => { let n = 0; for (let y = M.S; y < M.S + 12; y++) for (let z = z1; z <= z2; z++) for (let x = x1; x <= x2; x++) if (at(v, x, y, z) !== at('keine', x, y, z)) n++; return n; };
+    pruefe('Zukunftsverkehr: A = hängende Schwebebahn über dem Ostweg (Wagen unter dem Fahrbalken, Straße darunter frei), B = Flugtaxi auf einem Dach-Landeplatz; beide = beides',
+      bahnHaengt && taxi && nichtsIm('A', 82, -20, 93, -15) === 0 && nichtsIm('B', 55, -13, 79, -2) === 0 && nichtsIm('beide', 82, -20, 93, -15) > 0 && nichtsIm('beide', 55, -13, 79, -2) > 0);
+  }
 
   /* ================= B: Minecraft-Welt ================= */
   abschnitt('B · Minecraft-Welt (Bauaufträge, Kammern, Datei)');
@@ -184,7 +217,7 @@ try {
   let kammerOk = [];
   for (const [id, v, kb] of kammern) if (!gleich(welt.ausschnitt(kb), M.vorlage(id, v))) kammerOk.push(`${id}:${v}`);
   pruefe('Jede Kammer enthält genau ihre Vorlage', kammerOk.length === 0, kammerOk.join(', ') || `${kammern.length} Kammern verglichen`);
-  pruefe('Bauflächen in der Welt im Ausgangszustand', IDS.every((id) => gleich(welt.ausschnitt(box3(id)), M.vorlage(id, B[id].grund))));
+  pruefe('Bauflächen in der Welt im Ausgangszustand (Zukunftsverkehr: immer Schwebebahn UND Flugtaxi)', IDS.every((id) => gleich(welt.ausschnitt(box3(id)), M.vorlage(id, M.mcGrund(id)))) && M.mcGrund('zukunft') === 'beide');
   const cmd = [...welt.entities.entries()].filter(([, e]) => e.art === 'befehl');
   const brauchte = kammern.map(([id, v]) => MC.befehle(id, v).bauen.slice(1));
   pruefe('Regieraum: ein Knopf je Variante mit dem richtigen /clone', brauchte.every((b) => cmd.some(([, e]) => e.befehl === b)), `${cmd.length} Befehlsblöcke, ${brauchte.length} Bauaufträge`);
@@ -206,7 +239,7 @@ try {
       const x = x0 + (k % nx), z = z0 + (Math.floor(k / nx) % nz), y = y0 + Math.floor(k / (nx * nz));
       if (!(x >= a[0] && x <= e[0] && y >= a[1] && y <= e[1] && z >= a[2] && z <= e[2])) { simOk = false; simInfo = `${id}: außerhalb geändert ${x} ${y} ${z}`; }
     }
-    welt.klonen(MC.kammer(id, B[id].grund), a);
+    welt.klonen(MC.kammer(id, M.mcGrund(id)), a);
     if (!welt.daten.every((v, k) => v === original[k])) { simOk = false; simInfo = `${id}: nach Zurücksetzen nicht wie am Anfang`; }
     if (!simOk) break;
   }
@@ -255,11 +288,20 @@ try {
   const satz1 = { spielplatz: 'gruen', laternen: 'sensor', parken: 'C', kreuzung: 'bus', wohnen: 'B', aufstocken: 'holz', einkaufen: 'C', bildung: 'A' };
   const satz2 = { spielplatz: 'gruen', parken: 'A', wohnen: 'C', einkaufen: 'B', bildung: 'C' };
   const ex1 = await MC.stadtMcworld(satz1), p1 = await pruefeExport(ex1.daten, satz1);
-  pruefe('Export mit allen Beschlüssen: Datei gelesen – Startpunkt draußen, jede der 8 Bauflächen Block für Block wie beschlossen', p1.ok, p1.punkte.filter((q) => !q[1]).map((q) => q[0] + ' ' + q[2]).join(' · ') || `${p1.punkte.length} Punkte, „${p1.name}“`);
+  pruefe(`Export mit allen Beschlüssen: Datei gelesen – Startpunkt draußen, jede der ${IDS.length} Bauflächen Block für Block wie beschlossen`, p1.ok, p1.punkte.filter((q) => !q[1]).map((q) => q[0] + ' ' + q[2]).join(' · ') || `${p1.punkte.length} Punkte, „${p1.name}“`);
   const ex2 = await MC.stadtMcworld(satz2), p2 = await pruefeExport(ex2.daten, satz2), kreuz = await pruefeExport(ex2.daten, satz1);
   pruefe('Wiederholung mit anderen Beschlüssen: neue Datei zeigt die neuen, nicht die alten (offene Flächen grau)', p2.ok && !kreuz.ok, p2.punkte.filter((q) => !q[1]).map((q) => q[0]).join(' · '));
   const ex0 = await MC.stadtMcworld({}), p0 = await pruefeExport(ex0.daten, {});
-  pruefe('Export ohne Beschlüsse = graue Ausgangsstadt', p0.ok);
+  pruefe('Export ohne Beschlüsse = graue Ausgangsstadt (plus Schwebebahn und Flugtaxi)', p0.ok);
+  // Schwebebahn/Flugtaxi: in Minecraft immer beide – egal ob A, B oder nichts gewählt (keine Übertragung der Abstimmung)
+  {
+    const zk = [];
+    for (const v of ['A', 'B', undefined]) {
+      const ex = MC.erzeugeStadtWelt(v ? { zukunft: v } : {});
+      zk.push(gleich(ex.ausschnitt(box3('zukunft')), M.vorlage('zukunft', 'beide')));
+    }
+    pruefe('Minecraft-Welt: Schwebebahn UND Flugtaxi stehen immer drin – bei Wahl A, Wahl B und ohne Wahl', zk.every(Boolean), zk.join(' · '));
+  }
 
   const endeB = erg.length;
   /* ================= C: Abnahmetests in der Oberfläche ================= */
@@ -346,11 +388,62 @@ try {
     const mob1 = A.angezeigt.spielplatz === A.Z.variante('spielplatz') && A.angezeigt.laternen === A.Z.variante('laternen') && ['parken', 'wohnen', 'aufstocken', 'einkaufen', 'bildung'].every((id) => A.angezeigt[id] === B[id].grund);
     pruefe('Grauer Ausgangszustand: Natur Szene 1 komplett grau, spätere Missionen erst ab ihrer Mission sichtbar; Vorschau speichert nichts', gespeichert >= 5 && natur1 && nurPlatz && mob1 && speicherVor === JSON.stringify(A.Z.beschluesse), `${gespeichert} Beschlüsse gespeichert`);
   }
+  // Energiecheck in der Oberfläche: vier Zustände sicher schaltbar; nach dem Verlassen Licht, Stadt und Speicher exakt wie vorher
+  {
+    A.gehe(2, 3); await warte(40);
+    const an = A.ansicht(), lichtVor = JSON.stringify(an.lichtStand()), weltVor = A.welt().daten.slice(), beschlVor = JSON.stringify(A.Z.beschluesse);
+    const speicherVor = JSON.stringify(JSON.parse(fr.contentWindow.localStorage.getItem('sis-stadtkonfigurator-v1-test') || '{}').beschluesse || {});
+    A.weiter(); await warte(30);
+    const stufen = [], titel = [];
+    for (let k = 0; k < 4; k++) { stufen.push([A.energieStufe(), an.energie, an.lichtStand().klassen]); titel.push(fr.contentWindow.document.querySelector('#titel').textContent); if (k < 3) A.weiter(); await warte(20); }
+    const L = (st) => { A.energieSetzen(st); return an.lichtStand(); };
+    const l1 = L(0), l2 = L(1), l3 = L(2), l4 = L(3);
+    const zustaendeOk = stufen.map((x) => x[0]).join() === '0,1,2,3' && stufen.map((x) => x[1]).join() === '1,2,3,4'
+      && l1.glas === '#000000' && l1.lampe === '#000000' && l1.leucht !== '#ffffff' && l1.kreise === 0 && /stromaus/.test(l1.klassen)
+      && l2.hemi[0] > 1 && /abend/.test(l3.klassen) && l4.glas !== '#000000' && l4.lampe !== '#000000' && l4.kreise > 0 && /nacht/.test(l4.klassen) && l4.energieSichtbar;
+    const m = an.energieModell, sichtbar = (st) => { A.energieSetzen(st); return [m.solar.visible, m.windrad.visible, m.speicher.visible, m.netz.visible].map(Number).join(''); };
+    const modelle = [0, 1, 2, 3].map(sichtbar);
+    A.energieSetzen(1); A.zurueck(); const zurueck1 = A.energieStufe() === 0 && A.pos().schritt === 4;
+    A.energieSetzen(3); A.weiter(); await warte(30);
+    const weiterZurMob = A.pos().mission === 3 && A.pos().schritt === 0;
+    const lichtNach = JSON.stringify(an.lichtStand());
+    A.zurueck(); await warte(20); const vonHinten = A.pos().mission === 2 && A.energieStufe() === 3;
+    A.gehe(2, 3); await warte(20);
+    const lichtWieder = JSON.stringify(an.lichtStand()) === lichtVor;
+    const weltGleich = A.welt().daten.every((v, k) => v === weltVor[k]);
+    const speicherNach = JSON.stringify(JSON.parse(fr.contentWindow.localStorage.getItem('sis-stadtkonfigurator-v1-test') || '{}').beschluesse || {});
+    pruefe('Energiecheck: Zustände 1–4 mit Weiter/Zurück schaltbar (Strom aus · Sonne + Wind · Abend + Speicher · Stadt leuchtet), danach weiter zur Mobilität',
+      zustaendeOk && zurueck1 && weiterZurMob && vonHinten && modelle.join() === '0000,1100,1111,1111', `${titel.join(' → ')} · Modelle ${modelle.join(' ')}`);
+    pruefe('Energiecheck: nach dem Verlassen Licht, Stadt, Beschlüsse und Speicher exakt wie vorher (nur Bühneneffekt)', lichtWieder && weltGleich && beschlVor === JSON.stringify(A.Z.beschluesse) && speicherVor === speicherNach && !an.energie && JSON.parse(lichtNach).energieSichtbar === false,
+      `Licht ${lichtWieder ? 'gleich' : 'anders'}, Stadt ${weltGleich ? 'gleich' : 'anders'}`);
+  }
+  // Schwebebahn/Flugtaxi in der Oberfläche: ein Klick wählt und speichert, bleibt beim Szenenwechsel, Reset setzt zurück
+  {
+    A.gehe(3, 3); await warte(40);
+    const doc = fr.contentWindow.document, vor = { ...A.Z.beschluesse };
+    const karten = doc.querySelectorAll('.karten.auswahl .karte');
+    karten[1].click(); await warte(30);
+    const b1 = A.Z.beschluesse.zukunft === 'B' && imBild('zukunft', 'B') && A.tafeln().includes('Flugtaxi') && doc.querySelectorAll('.karten.auswahl .karte.beschluss').length === 1;
+    karten[0].click(); await warte(30);
+    const a1 = A.Z.beschluesse.zukunft === 'A' && imBild('zukunft', 'A') && !imBild('zukunft', 'B') && A.tafeln().includes('Schwebebahn');
+    const andere = Object.keys(vor).every((k) => k === 'zukunft' || vor[k] === A.Z.beschluesse[k]);
+    A.gehe(4, 0); A.gehe(3, 4); A.gehe(3, 3); await warte(20);
+    const bleibt = A.Z.beschluesse.zukunft === 'A' && A.angezeigt.zukunft === 'A';
+    const gespeichert = JSON.parse(fr.contentWindow.localStorage.getItem('sis-stadtkonfigurator-v1-test') || '{}').beschluesse?.zukunft === 'A';
+    const imCheck = (A.gehe(7, 0), await warte(30), [...doc.querySelectorAll('.seite li')].some((li) => /Schwebebahn/.test(li.textContent)));
+    const parkenVor = A.Z.beschluesse.parken;
+    A.gehe(3, 3); A.resetMission(); A.resetMission(); await warte(20);
+    const reset = !A.Z.beschluesse.zukunft && A.angezeigt.zukunft === 'keine' && !A.Z.beschluesse.parken;
+    if (parkenVor) A.uebernehmen('parken', parkenVor);
+    A.gehe(3, 3); A.auswahlSetzen('zukunft', 'B'); await warte(20);
+    pruefe('Zukunftsmobilität: ein Klick wählt und speichert (A/B hervorgehoben, im 3D-Modell gebaut), andere Beschlüsse bleiben, Wahl bleibt beim Szenenwechsel, im Zukunftscheck sichtbar, Reset setzt zurück',
+      b1 && a1 && andere && bleibt && gespeichert && imCheck && reset && A.Z.beschluesse.zukunft === 'B', `B ${b1}, A ${a1}, andere ${andere}, bleibt ${bleibt}, Speicher ${gespeichert}, Zukunftscheck ${imCheck}, Reset ${reset}`);
+  }
   // Layout: Titel, Karten, Seitenleiste und Fußleiste liegen neben der 3D-Bühne, nicht darüber
   {
     const doc = fr.contentWindow.document, rect = (s) => { const e = doc.querySelector(s); if (!e || e.hidden || fr.contentWindow.getComputedStyle(e).display === 'none') return null; return e.getBoundingClientRect(); };
     const schnitt = (a, b) => a && b && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
-    const faelle = [[0, 1], [1, 1], [1, 3], [2, 2], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
+    const faelle = [[0, 1], [1, 1], [1, 3], [2, 2], [2, 4], [3, 3], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
     let kameraOk = true, kInfo = [];
     for (const [mm, ss] of faelle) {
       A.gehe(mm, ss); await warte(40);

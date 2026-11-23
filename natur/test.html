@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aus Grau wird Grün – Prüfung</title>
+<title>Sensorlabor Regenwasser – Prüfung</title>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; padding: 24px; background: #0b1220; color: #e8eefc; font: 16px/1.5 system-ui, "Segoe UI", sans-serif; }
   h1 { font-size: 1.4rem; margin: 0 0 4px; }
   p { color: #93a0bd; margin: 0 0 16px; }
-  table { border-collapse: collapse; width: 100%; max-width: 980px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1080px; }
   td, th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #26324d; vertical-align: top; }
   .ok { color: #4ade80; font-weight: 700; } .fail { color: #ff6b6b; font-weight: 700; }
   #summary { font-size: 1.2rem; margin: 16px 0; }
@@ -17,127 +17,132 @@
 </style>
 </head>
 <body>
-<h1>Aus Grau wird Grün · Abnahmetests</h1>
-<p>Prüft Modell (Blöcke, Wärme, Wasser, Verwandlung), Texte nach Drehbuch und – in der eingebetteten App – zehnmaliges Wechseln aller Abschnitte.</p>
+<h1>Sensorlabor Regenwasser · Abnahmetests</h1>
+<p>Prüft die Regel der Steuerung (auch Grenzfälle), die vier Schritte (wiederholbar, Werte und Verlauf), Texte und Kennzeichnung
+  sowie in der eingebetteten App: genau vier Schrittflächen, genau zwei Sensoranzeigen, Bewässerung nur bei trockenem Boden UND Wasser, zehnmaliges Wechseln.</p>
 <div id="summary">Prüfe …</div>
 <table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Details</th></tr></thead><tbody id="rows"></tbody></table>
-<iframe id="app" src="index.html" title="App für den Wechseltest"></iframe>
+<iframe id="app" src="index.html" title="App für den Bedientest"></iframe>
 <script type="module">
 import { CONFIG as C } from './config.js';
-import { VORLAGEN, sichtbareBloecke, waerme, waermeAnteile, imSchatten, bodenHoehe, Wasser, aufbau, schichtWuchs, GROESSE, ID } from './model.js';
-import { vorlageGrau, vorlageGruen } from '../minecraft/welt.js';
+import { VORLAGE, sichtbareBloecke, rasenFelder, Sensorlabor, darfStarten, mussStoppen, bodenStatus, GROESSE } from './model.js';
+import { vorlageGruen } from '../minecraft/welt.js';
 
 const rows = [];
 const check = (name, ok, detail = '') => rows.push({ name, ok: !!ok, detail });
+const r = C.regel;
+// Modell bis zum Ende eines Schritts laufen lassen (feste Schrittweite → reproduzierbar)
+const laufe = (lab, maxSek = 120, dt = 0.05) => { let t = 0; const verlauf = []; while (!lab.fertig && t < maxSek) { lab.schritt(dt); t += dt; verlauf.push([lab.wasser, lab.feuchte, lab.bewaesserung, lab.phase]); } return { t, verlauf }; };
 
-// Gleiche Gestaltung wie die Minecraft-Testwelt
+/* ---------- 3D-Welt wiederverwendet ---------- */
 const gleich = (a, b) => a.daten.length === b.daten.length && a.daten.every((v, k) => v === b.daten[k]);
-check('Gleiche Vorlagen wie die Minecraft-Testwelt (grau und grün)', gleich(VORLAGEN.grau, vorlageGrau()) && gleich(VORLAGEN.gruen, vorlageGruen()), `${GROESSE.dx} × ${GROESSE.dy} × ${GROESSE.dz} Blöcke`);
+check('Bestehende 3D-Spielplatzwelt wiederverwendet (gleiche Vorlage wie Minecraft-Testwelt und Stadt-Konfigurator)', gleich(VORLAGE, vorlageGruen()), `${GROESSE.dx} × ${GROESSE.dy} × ${GROESSE.dz} Blöcke`);
+const sn = sichtbareBloecke(VORLAGE);
+check('Sichtbare Blöcke: Bäume, Pflanzen und Glasdeckel der Zisterne; Wasser kommt als Füllstand', sn.filter((b) => b.laub).length > 100 && sn.filter((b) => b.form === 'pflanze').length > 50 && sn.some((b) => b.form === 'glas') && sn.every((b) => b.form !== 'wasser'), `${sn.length} Blöcke`);
+check('Rasenflächen für die Feuchte-Anzeige gefunden', rasenFelder().length > 300, `${rasenFelder().length} Felder`);
 
-// Sichtbare Blöcke
-const sg = sichtbareBloecke(VORLAGEN.grau), sn = sichtbareBloecke(VORLAGEN.gruen);
-check('Sichtbare Blöcke: ohne Wasser und Schilder (Wasser kommt als Füllstand)', [...sg, ...sn].every((b) => b.form !== 'wasser' && b.form !== 'keine'), `grau ${sg.length}, grün ${sn.length}`);
-check('Grau: keine Pflanzen, kein Laub', sg.every((b) => b.form !== 'pflanze' && !b.laub));
-check('Grün: Bäume (Laub), Pflanzen und Glasdeckel der Zisterne sichtbar', sn.filter((b) => b.laub).length > 100 && sn.filter((b) => b.form === 'pflanze').length > 50 && sn.some((b) => b.form === 'glas'));
-const schnitt = (l) => l.filter((b) => b.y < 4 && (b.x === GROESSE.dx - 1 || b.z === GROESSE.dz - 1)).length;
-check('Bodenschnitt vorne sichtbar (Süd- und Ostkante, 4 Schichten)', schnitt(sg) === 4 * 63 && schnitt(sn) === 4 * 63, `${schnitt(sg)} / ${schnitt(sn)} Blöcke`);
+/* ---------- Regel der Steuerung ---------- */
+const faelle = [[18, 85, true], [29.9, 85, true], [30, 85, false], [45, 85, false], [92, 85, false], [18, r.minWasser, true], [18, r.minWasser - 0.1, false], [18, 0, false], [0, 0, false]];
+const falsch = faelle.filter(([f, w, soll]) => darfStarten(f, w) !== soll);
+check(`Regel: EIN nur, wenn Boden trocken (unter ${r.trocken} %) UND genug Wasser (mindestens ${r.minWasser} %)`, falsch.length === 0, faelle.map(([f, w, s]) => `${f}/${w} → ${s ? 'EIN' : 'aus'}`).join(' · '));
+let leerStart = 0;
+for (let f = 0; f <= 100; f += 0.5) for (const w of [0, 0.5, 5, r.minWasser - 0.01]) if (darfStarten(f, w)) leerStart++;
+check('Regel: startet nie bei leerer oder fast leerer Zisterne (alle Feuchtewerte 0–100 geprüft)', leerStart === 0);
+check('Regel: AUS bei ausreichender Feuchte ODER zu wenig Wasser', mussStoppen(r.feuchtGenug, 50) && mussStoppen(40, r.minWasser - 1) && !mussStoppen(40, 50));
+check('Sensor-Status: trocken / feucht / nass', bodenStatus(18) === 'trocken' && bodenStatus(45) === 'feucht' && bodenStatus(92) === 'nass');
 
-// Wärme
-const wg = waermeAnteile(VORLAGEN.grau), wn = waermeAnteile(VORLAGEN.gruen);
-check('Wärme grau: fast alles „heiß“ (Stein in der Sonne)', wg.heiss / 1024 > 0.85, JSON.stringify(wg));
-check('Wärme grün: nichts „heiß“, deutlich mehr Schatten als grau', wn.heiss === 0 && wn.kuehl > wg.kuehl + 60, JSON.stringify(wn));
-const baum = [4, 27];
-const schattenUnterBaum = waerme(VORLAGEN.gruen).filter((f) => Math.abs(f.x - baum[0]) <= 3 && Math.abs(f.z - baum[1]) <= 4 && f.art === 'kuehl').length;
-check('Unter dem Baum vorne links ist es schattig', schattenUnterBaum >= 6, `${schattenUnterBaum} schattige Felder`);
-check('Wärme ohne Zahlen (Legende und Hinweis)', C.sommer.waerme.legende.every(([, t]) => !/\d/.test(t)) && /keine Messwerte/.test(C.sommer.waerme.hinweis));
+/* ---------- Vier Schritte ---------- */
+check('Genau vier Schritte: Starkregen, Speichern, Trockenheit, Bewässern', C.schritte.map((s) => s.kurz).join() === 'Starkregen,Speichern,Trockenheit,Bewässern');
+const lab = new Sensorlabor(C), dauer = [];
+lab.setzeSchritt(0); const s1a = [lab.wasser, lab.feuchte]; let e = laufe(lab); dauer.push(e.t);
+const s1 = { w: lab.wasser, f: lab.feuchte, mulde: lab.mulde, steigt: e.verlauf.every((v, k) => k === 0 || v[0] >= e.verlauf[k - 1][0]) };
+check('Schritt 1 Starkregen: Zisternenfüllstand steigt, Boden wird nass, Mulde füllt sich', s1.steigt && s1.w > s1a[0] && s1.w === 85 && bodenStatus(s1.f) === 'nass' && s1.mulde === 1 && C.schritte[0].regen && C.schritte[0].zufluss, `${s1a[0]} → ${s1.w} %, Boden ${s1.f} %`);
+lab.setzeSchritt(1); e = laufe(lab); dauer.push(e.t);
+check('Schritt 2 Wasser speichern: Regen vorbei, Wasser bleibt in der Zisterne', !C.schritte[1].regen && lab.wasser === 85 && lab.mulde === 0 && /trockene Tage/.test(C.schritte[1].text), `Zisterne ${lab.wasser} %, Boden ${lab.feuchte} %`);
+lab.setzeSchritt(2); e = laufe(lab); dauer.push(e.t);
+check('Schritt 3 Trockenheit: Bodenfeuchte sinkt, Sensor meldet „Boden trocken“, Wasser noch in der Zisterne', C.schritte[2].sonne && lab.status === 'trocken' && lab.wasser === 85 && lab.feuchte === 18, `Zisterne ${lab.wasser} %, Boden ${lab.feuchte} % (wie in der Vorgabe 85 % / 18 %)`);
+lab.setzeSchritt(3);
+let vorPruef = true; for (let t = 0; t < C.pruefDauer - 0.1; t += 0.05) { lab.schritt(0.05); vorPruef = vorPruef && !lab.bewaesserung && lab.feuchte === 18 && lab.wasser === 85; }
+e = laufe(lab); dauer.push(e.t + C.pruefDauer);
+const ein = e.verlauf.filter((v) => v[2]);
+check('Schritt 4 Bewässern: erst sichtbare Prüfung, dann EIN – Feuchte steigt, Zisterne sinkt – danach AUS', vorPruef && ein.length > 10 && ein.every((v, k) => k === 0 || (v[1] >= ein[k - 1][1] && v[0] <= ein[k - 1][0])) && lab.phase === 'aus' && lab.grund === 'feucht' && !lab.bewaesserung && lab.feuchte >= r.feuchtGenug && lab.wasser < 85,
+  `nach der Prüfung EIN, AUS bei Boden ${Math.round(lab.feuchte)} %, Zisterne ${Math.round(lab.wasser)} %`);
+// Grenzfälle in Schritt 4
+const fall = (wasser, feuchte) => { const l = new Sensorlabor(C).setzeSchritt(3).setzeWerte({ wasser, feuchte }); const v = laufe(l).verlauf; return { an: v.some((x) => x[2]), grund: l.grund, wasser: l.wasser }; };
+const leer = fall(0, 18), wenig = fall(r.minWasser - 5, 18), nass = fall(85, 50), knapp = fall(25, 18);
+check('Schritt 4 Grenzfälle: leere Zisterne → nie EIN; zu wenig Wasser → nie EIN; Boden nicht trocken → AUS; Wasser geht aus → schaltet AUS',
+  !leer.an && leer.grund === 'leer' && !wenig.an && wenig.grund === 'leer' && !nass.an && nass.grund === 'nass' && knapp.an && knapp.grund === 'leer' && knapp.wasser < r.minWasser && knapp.wasser > 0,
+  `leer: ${leer.grund}, wenig: ${wenig.grund}, nass: ${nass.grund}, knapp: EIN, dann AUS bei ${knapp.wasser.toFixed(1)} %`);
+// Wiederholbar
+const wiederhole = () => [0, 1, 2, 3].map((i) => { const l = new Sensorlabor(C).setzeSchritt(i); laufe(l); return [l.wasser.toFixed(3), l.feuchte.toFixed(3), l.phase].join('/'); }).join(' | ');
+const w1 = wiederhole(), w2 = wiederhole();
+const starts = C.schritte.map((s, i) => { const l = new Sensorlabor(C); l.setzeSchritt(3); laufe(l); l.setzeSchritt(i); return l.wasser === s.start.wasser && l.feuchte === s.start.feuchte && !l.bewaesserung; });
+check('Alle vier Zustände reproduzierbar: jeder Schritt setzt beim Betreten seine Startwerte, gleicher Verlauf bei jeder Wiederholung', w1 === w2 && starts.every(Boolean), w1);
+const sek = dauer.reduce((a, b) => a + b, 0);
+check('Vorführdauer: Animationen zusammen deutlich unter 2–3 Minuten (Rest ist Gespräch auf der Bühne)', sek < 60, dauer.map((t) => `${t.toFixed(1)} s`).join(' + ') + ` = ${sek.toFixed(0)} s`);
 
-// Wasser
-const w = new Wasser(C.dauer);
-w.reset('grau'); w.regen = true; for (let k = 0; k < 200; k++) w.schritt(0.1);
-check('Starkregen grau: Wasser fließt ab, nichts versickert oder wird gesammelt', w.abfluss > 0.99 && w.mulde === 0 && w.tief === 0 && w.zisterne === 0 && w.versickern === 0, `Abfluss ${w.abfluss.toFixed(2)}`);
-w.reset('gruen', 0.3); w.regen = true;
-let gesperrtWaehrend = false; for (let k = 0; k < 200; k++) { w.schritt(0.1); gesperrtWaehrend ||= w.gesperrt; }
-check('Starkregen grün: versickert, Mulde und tiefer Bereich füllen sich, Zisterne sammelt', w.versickern > 0.99 && w.mulde > 0.99 && w.tief > 0.99 && w.zisterne > 0.99 && w.abfluss === 0 && gesperrtWaehrend, `Mulde ${w.mulde.toFixed(2)}, tief ${w.tief.toFixed(2)}, Zisterne ${w.zisterne.toFixed(2)}`);
-w.regen = false; for (let k = 0; k < 300; k++) w.schritt(0.1);
-check('Regen vorbei: Mulde und tiefer Bereich leer (wieder bespielbar), Zisterne bleibt voll', w.mulde === 0 && w.tief === 0 && !w.gesperrt && w.zisterne > 0.99, `Zisterne ${w.zisterne.toFixed(2)}`);
-w.giessen = true; for (let k = 0; k < 100; k++) w.schritt(0.1);
-check('Gießen: Zisterne gibt Wasser ab, bleibt aber nicht leer', w.gegossen === 1 && w.zisterne < 0.99 && w.zisterne >= 0.25, `Zisterne ${w.zisterne.toFixed(2)}`);
-check('Wassertexte ohne Mengenangaben', Object.values(C.regen.labels).concat(C.regen.versiegelt, C.regen.offen).every((t) => !/\d|Liter|%/.test(t)));
+/* ---------- Texte ---------- */
+const texte = JSON.stringify(C);
+check('Dauerhafte Kennzeichnung „Vereinfachte Simulation · keine echten Messwerte“', C.kennzeichnung === 'Vereinfachte Simulation · keine echten Messwerte');
+check('Begriffe sichtbar: Wasserstandsensor, Bodenfeuchtesensor, Zisterne, Bewässerung', ['Wasserstandsensor', 'Bodenfeuchtesensor', 'Zisterne', 'Bewässerung'].every((t) => Object.values(C.labels).includes(t)));
+check('Keine KI behauptet (regelbasierte Steuerung), kein Quiz, keine Figur Mika', !/\bKI\b|künstlich|intelligen|Quiz|mika/i.test(texte) && /Regel/.test(C.regelText.titel));
 
-// Verwandlung
-const D = C.dauer.verwandeln;
-const pkte = Array.from({ length: 50 }, (_, k) => aufbau(k * D / 49, D));
-check('Verwandlung: beginnt grau, endet vollständig grün, Schicht für Schicht', pkte[0] === 0 && pkte.at(-1) === GROESSE.dy + 1 && pkte.every((v, k) => k === 0 || v >= pkte[k - 1]) && schichtWuchs(0, 0) === 0 && schichtWuchs(GROESSE.dy + 1, GROESSE.dy - 1) === 1, `${D} s, ${GROESSE.dy} Schichten`);
-
-// Texte nach Drehbuch
-check('Drehbuch-Fragen wörtlich', C.grau.fragen[0] === 'Würdet ihr hier nachmittags gerne spielen?' && C.abstimmung.frage === 'Müssen wir uns wirklich zwischen Spielen und Natur entscheiden?' && C.sommer.frage.startsWith('Wo würdet ihr euch an einem heißen Sommertag lieber aufhalten'));
-check('Abstimmung genau wie im Drehbuch: A Abenteuerspielplatz, B grüner Abenteuerpark', C.abstimmung.karten.map((k) => k.id + ' ' + k.titel).join(' | ') === 'A Großer Abenteuerspielplatz | B Grüner Abenteuerpark');
-check('Endbild: vier Punkte aus dem Drehbuch', C.ende.punkte.join(', ') === 'Schatten im Sommer, Platz für Tiere, Spielen mit Freunden, Hilfe bei Starkregen');
-check('Keine Figur „Mika“', !JSON.stringify(C).includes('Mika'));
-
-function zeigen() {
-  const bad = rows.filter((r) => !r.ok).length;
-  document.getElementById('summary').innerHTML = bad ? `<span class="fail">✗ ${bad} von ${rows.length} Prüfungen fehlgeschlagen</span>` : `<span class="ok">✓ Alle ${rows.length} Prüfungen bestanden</span>`;
-  document.getElementById('rows').innerHTML = rows.map((r) => `<tr><td>${r.name}</td><td class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'}</td><td>${r.detail}</td></tr>`).join('');
-  window.__testErgebnis = { bestanden: rows.length - bad, gesamt: rows.length, fertig: rows.some((r) => r.name.startsWith('…')) };
+/* ---------- Oberfläche ---------- */
+const fr = document.getElementById('app');
+const warte = (ms) => new Promise((res) => setTimeout(res, ms));
+for (let k = 0; k < 120 && !(fr.contentWindow && fr.contentWindow.__naturOk); k++) await warte(100);
+const N = fr.contentWindow.__natur, doc = fr.contentWindow.document;
+check('App startet (3D-Szene geladen)', !!N);
+if (N) {
+  const kacheln = doc.querySelectorAll('.kachel'), knoepfe = [...doc.querySelectorAll('button')].filter((b) => b.offsetParent !== null);
+  check('Eine einzige Schrittsteuerung: vier große Flächen plus Zurück/Weiter, keine zweite Navigationsleiste, kein Info-Menü', kacheln.length === 4 && knoepfe.length === 7 && !doc.querySelector('#haupt, #sub, #info, #startbild'), `${knoepfe.length} Knöpfe (4 Schritte, Zurück, Weiter, Vollbild)`);
+  check('Genau zwei Sensoranzeigen (Zisterne: Wasserstand, Bodenfeuchte) und die Kennzeichnung sichtbar', doc.querySelectorAll('.anzeige').length === 2 && doc.querySelector('#titelWasser').textContent === 'Zisterne: Wasserstand' && doc.querySelector('#titelFeuchte').textContent === 'Bodenfeuchte' && /keine echten Messwerte/.test(doc.querySelector('#kennzeichnung').textContent));
+  // Jeder Schritt mit einem Klick
+  const klick = [];
+  for (let i = 0; i < 4; i++) { kacheln[i].click(); await warte(20); klick.push(N.lab.i === i && kacheln[i].getAttribute('aria-current') === 'step' && doc.querySelectorAll('.kachel[aria-current]').length === 1); }
+  check('Jeder Schritt mit einem Klick abrufbar, aktiver Schritt eindeutig markiert', klick.every(Boolean));
+  // Schritt 3 → Anzeige wie Vorgabe
+  kacheln[2].click(); N.lauf(30);
+  const a3 = [doc.querySelector('#wertWasser').textContent, doc.querySelector('#wertFeuchte').textContent, doc.querySelector('#statusFeuchte').textContent, doc.querySelector('#anzeigeFeuchte').dataset.status];
+  check('Schritt 3 in der App: Zisterne 85 %, Bodenfeuchte 18 %, „Boden trocken“ (gelb)', a3.join('|') === '85|18|Boden trocken|trocken', a3.join(' · '));
+  // Schritt 4 → Regel sichtbar geprüft
+  kacheln[3].click(); N.lauf(0.5);
+  const vor = [doc.querySelector('#regel').hidden, doc.querySelector('#ergebnis').textContent, N.welt().info().leitungAn];
+  N.lauf(C.pruefDauer);
+  const waehrend = [doc.querySelector('#ergebnis').textContent, doc.querySelector('#bed1').classList.contains('ja'), doc.querySelector('#bed2').classList.contains('ja'), N.welt().info().leitungAn, N.welt().info().tropfen > 0];
+  N.lauf(40);
+  const nach = [doc.querySelector('#ergebnis').textContent, doc.querySelector('#bed1').classList.contains('nein'), N.welt().info().leitungAn, doc.querySelector('#statusFeuchte').textContent];
+  check('Schritt 4 in der App: Regel wird sichtbar geprüft → „Bewässerung EIN“ mit blauen Leitungen → danach „Bewässerung AUS“',
+    !vor[0] && /…/.test(vor[1]) && !vor[2] && /EIN/.test(waehrend[0]) && waehrend[1] && waehrend[2] && waehrend[3] && waehrend[4] && /AUS/.test(nach[0]) && nach[1] && !nach[2] && nach[3] === 'Boden feucht',
+    `vorher ${vor[1]}, dann ${waehrend[0]}, dann ${nach[0]}`);
+  // Regel in anderen Schritten nicht sichtbar, Zurück/Weiter
+  kacheln[0].click(); await warte(10);
+  const regelWeg = doc.querySelector('#regel').hidden && doc.querySelector('#zurueck').disabled;
+  doc.querySelector('#weiter').click(); doc.querySelector('#weiter').click(); await warte(10);
+  check('Zurück/Weiter schalten Schritt für Schritt; Regel nur im Schritt „Bewässern“', regelWeg && N.lab.i === 2);
+  // 10 × alle Schritte: keine zusätzlichen Objekte, Geometrien oder Texturen
+  kacheln[0].click(); N.lauf(1); N.bild();
+  const i0 = N.welt().info();
+  for (let n = 0; n < 10; n++) for (let i = 0; i < 4; i++) { kacheln[i].click(); N.lauf(0.6); }
+  N.bild();
+  const i1 = N.welt().info();
+  check('10 × alle Schritte gewechselt: keine zusätzlichen Objekte, Geometrien oder Texturen', i0.objekte === i1.objekte && i0.geometrien === i1.geometrien && i0.texturen === i1.texturen, `${i1.objekte} Objekte, ${i1.geometrien} Geometrien, ${i1.texturen} Texturen, ${i1.aufrufe} Zeichenaufrufe`);
+  const fremd = fr.contentWindow.performance.getEntriesByType('resource').map((x) => x.name).filter((n) => !n.startsWith(location.origin) && !n.startsWith('data:') && !n.startsWith('blob:'));
+  check('Keine externen Ressourcen, keine Datenübertragung (läuft offline)', fremd.length === 0, fremd.slice(0, 3).join(' · '));
 }
-zeigen();
 
-// Wechseltest in der eingebetteten App
-const frame = document.getElementById('app');
-frame.addEventListener('load', async () => {
-  const fw = frame.contentWindow;
-  for (let i = 0; i < 100 && !fw.__naturOk; i++) await new Promise((r) => setTimeout(r, 100));
-  if (!fw.__naturOk) { check('… App geladen', false, 'App nicht geladen'); return zeigen(); }
-  const api = fw.__natur, welt = api.welt();
-  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  // Erstes Umschalten ohne Ruckler (alles wurde beim Laden vorgewärmt): erstes Bild kaum langsamer als das zweite
-  const zeit = () => { const t = fw.performance.now(); welt._neu(); welt.render(fw.performance.now()); return fw.performance.now() - t; };
-  const erst = {};
-  for (const [name, f] of [['Regen grün', () => { api.modus('regen'); api.schritt(1); }], ['Wärme', () => { api.modus('sommer'); api.schritt(1); api.waermeUmschalten(); }], ['Endbild', () => api.modus('ende')]]) {
-    f(); const a = zeit(), b = zeit(); erst[name] = [a, b];
-  }
-  check('… erstes Umschalten ohne Ruckler (Regen, Wärme, Endbild)', Object.values(erst).every(([a, b]) => a <= 2 * b + 8), Object.entries(erst).map(([n, [a, b]]) => `${n}: ${a.toFixed(1)} ms / danach ${b.toFixed(1)} ms`).join(' · '));
-
-  // Ruhige Ansicht: kein Dauer-Zeichnen, keine Schattenberechnung; lebendige Ansicht: läuft flüssig
-  api.modus('grau'); await pause(600);
-  let i0 = welt.info(); await pause(1000); let i1 = welt.info();
-  check('… ruhige Ansicht (grauer Platz) zeichnet nicht ständig neu', i1.bilder - i0.bilder <= 1 && i1.schatten === i0.schatten, `${i1.bilder - i0.bilder} Bilder, ${i1.schatten - i0.schatten} Schattenberechnungen in 1 s`);
-  welt._neu(); welt.render(fw.performance.now());
-  check('… wenige Zeichenaufrufe (Straßenplatte und Hochhäuser zusammengefasst)', welt.info().aufrufe <= 25, `${welt.info().aufrufe} Aufrufe für den grauen Platz`);
-  api.modus('ende'); await pause(600);
-  i0 = welt.info(); await pause(1000); i1 = welt.info();
-  check('… lebendige Ansicht (Endbild mit Tieren) läuft weiter', i1.bilder - i0.bilder >= 20 && i1.schatten - i0.schatten <= 1, `${i1.bilder - i0.bilder} Bilder, ${i1.schatten - i0.schatten} Schattenberechnungen in 1 s`);
-  const runde = async (ms = 30) => {
-    api.modus('grau'); api.weiter(1); await pause(ms);
-    api.modus('abstimmung'); api.waehlen('A'); api.weiter(1); await pause(ms);
-    api.modus('beides'); api.weiter(1); await pause(ms);
-    api.modus('sommer'); api.weiter(1); api.waermeUmschalten(); api.weiter(1); await pause(ms);
-    api.modus('regen'); api.weiter(1); await pause(ms); api.weiter(1); api.weiter(1); await pause(ms);
-    api.modus('ende'); await pause(ms);
-    api.modus('start'); await pause(ms);
-  };
-  await runde(400);                                  // Aufwärmen: alles einmal zeichnen
-  api.modus('ende'); await pause(1500);
-  const vorher = welt.info();
-  for (let i = 0; i < 10; i++) await runde();
-  api.modus('ende'); await pause(1500);
-  const nachher = welt.info();
-  check('… 10 × alle Abschnitte: keine zusätzlichen Objekte', nachher.objekte === vorher.objekte, `${vorher.objekte} → ${nachher.objekte}`);
-  check('… keine zusätzlichen Geometrien oder Texturen', nachher.geometrien === vorher.geometrien && nachher.texturen === vorher.texturen, `Geometrien ${vorher.geometrien} → ${nachher.geometrien}, Texturen ${vorher.texturen} → ${nachher.texturen}`);
-  check('… Endbild danach grün, kein Regen', nachher.zustand === 'gruen' && nachher.sichtbarGruen === GROESSE.dy && nachher.sichtbarGrau === 0 && !welt.regen.visible);
-  // Abbruch mitten in der Verwandlung darf keinen halben Platz hinterlassen
-  api.modus('beides'); api.weiter(1); await pause(1500);
-  const mitten = welt.info();
-  api.modus('grau'); await pause(200);
-  const danach = welt.info();
-  check('… Abbruch mitten in der Verwandlung: wieder ganz grau', mitten.verwandlung && !danach.verwandlung && danach.sichtbarGrau === GROESSE.dy && danach.sichtbarGruen === 0, `mitten: ${mitten.sichtbarGrau} grau / ${mitten.sichtbarGruen} grün`);
-  api.modus('beides'); api.weiter(1); await pause((C.dauer.verwandeln + 0.8) * 1000);
-  const fertig = welt.info();
-  check('… Verwandlung läuft vollständig durch', !fertig.verwandlung && fertig.zustand === 'gruen' && fertig.sichtbarGruen === GROESSE.dy && fertig.sichtbarGrau === 0);
-  zeigen();
-});
+/* ---------- Ausgabe ---------- */
+const tb = document.getElementById('rows');
+for (const x of rows) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td></td><td class="${x.ok ? 'ok' : 'fail'}">${x.ok ? '✓' : '✗'}</td><td></td>`;
+  tr.children[0].textContent = x.name; tr.children[2].textContent = x.detail;
+  tb.append(tr);
+}
+const n = rows.filter((x) => x.ok).length;
+document.getElementById('summary').textContent = `${n} von ${rows.length} Prüfungen bestanden`;
+document.title = `${n}/${rows.length} · Sensorlabor · Prüfung`;
+window.__ergebnis = { bestanden: n, gesamt: rows.length };
 </script>
 </body>
 </html>

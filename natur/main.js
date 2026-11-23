@@ -1,5 +1,8 @@
-/* Bedienung: Abschnitte nach Drehbuch, Teilschritte, Anzeigen, Tasten. Bilder aus scene3d.js, Werte aus model.js. */
+/* Bedienung des Sensorlabors: vier Schritte (Klick auf eine Fläche, Zurück/Weiter), zwei Sensoranzeigen, Regel in Schritt 4.
+ * Werte aus model.js (Sensorlabor), Bild aus scene3d.js. Jeder Schritt setzt beim Betreten seine Startwerte – wiederholbar
+ * vorführbar ohne Zurücksetzen. Keine Hardware, keine Datenübertragung, kein Ton. */
 import { CONFIG } from './config.js';
+import { Sensorlabor, bodenStatus } from './model.js';
 
 const C = CONFIG;
 const $ = (s) => document.querySelector(s);
@@ -16,221 +19,98 @@ const h = (tag, attrs = {}, ...kids) => {
 };
 
 let welt = null;
-const S = { modus: 'start', schritt: 0, wahl: null, waerme: false, info: false, beschriftung: true };
-const MODI = ['grau', 'abstimmung', 'beides', 'sommer', 'regen', 'ende'];
-const SCHRITTE = { grau: C.grau.schritte, abstimmung: C.abstimmung.schritte, beides: C.beides.schritte, sommer: C.sommer.schritte, regen: C.regen.schritte, ende: [] };
+const lab = new Sensorlabor(C);
 
-/* ---------- Abschnitt und Schritt ---------- */
-function modus(m) {
-  S.modus = m;
-  S.schritt = 0;
-  S.waerme = false;
-  if (m !== 'abstimmung') S.wahl = null;
-  anwenden(-1);
-  anzeigen();
-}
+/* ---------- Schritte ---------- */
 function schritt(i) {
-  const vorher = S.schritt;
-  S.schritt = i;
-  anwenden(vorher);
+  lab.setzeSchritt(i);
+  if (welt) { welt.setze(zustand()); welt.sofort(); }
+  anzeigeAlt = '';
   anzeigen();
 }
-function weiter(r) {
-  if (S.modus === 'start') { if (r > 0) modus('grau'); return; }
-  const n = SCHRITTE[S.modus].length;
-  if (!n) return;
-  const i = Math.max(0, Math.min(n - 1, S.schritt + r));
-  if (i !== S.schritt) schritt(i);
-}
-function zuruecksetzen() { if (S.modus !== 'start') modus(S.modus); }
+const zustand = () => ({ regen: !!lab.s.regen, sonne: !!lab.s.sonne, wasser: lab.wasser / 100, feuchte: lab.feuchte / 100, mulde: lab.mulde, bewaesserung: lab.bewaesserung, zufluss: !!lab.s.zufluss });
 
-// 3D-Zustand je Abschnitt/Schritt. vorher = vorheriger Schritt im selben Abschnitt (-1 = neu betreten)
-function anwenden(vorher) {
-  const m = S.modus, i = S.schritt;
-  welt.setzeWaerme(false);
-  welt.setzeTiere(false);
-  welt.setzeKinder(false);
-  const grau = () => { welt.setzeZustand('grau'); welt.wasserSetzen({ neu: true }); };
-  const gruen = (zisterne = 0.6) => { welt.setzeZustand('gruen'); welt.wasserSetzen({ neu: true, zisterne }); };
-
-  if (m === 'start' || m === 'grau' || m === 'abstimmung') grau();
-  else if (m === 'beides') {
-    if (i === 0) grau();
-    else if (vorher !== 1) { welt.wasserSetzen({ neu: true }); welt.verwandeln(); welt.wasserZiel({ zisterne: 0.6 }); }
-    welt.setzeTiere(true); welt.setzeKinder(true);
-  } else if (m === 'sommer') {
-    if (i === 0) grau(); else gruen();
-    welt.setzeKinder(i > 0);
-    welt.setzeTiere(i === 2);
-    welt.setzeWaerme(S.waerme);
-  } else if (m === 'regen') {
-    if (i === 0) { grau(); welt.wasserSetzen({ neu: true, regen: true }); }
-    else if (i === 1) { gruen(0.3); welt.wasserSetzen({ neu: true, regen: true, zisterne: 0.3 }); }
-    else {
-      if (welt.zustand !== 'gruen') welt.setzeZustand('gruen');
-      // direkt angesprungen: so tun, als hätte es gerade geregnet
-      if (vorher !== 1 && vorher !== 2 && vorher !== 3) welt.wasserZiel({ mulde: i === 2 ? 1 : 0, tief: i === 2 ? 1 : 0, zisterne: 0.95 });
-      welt.wasserSetzen({ regen: false, giessen: i === 3 });
-      welt.setzeKinder(true);
-    }
-  } else if (m === 'ende') {
-    gruen(0.8);
-    welt.wasserZiel({ mulde: 0, tief: 0, zisterne: 0.8 });
-    welt.setzeTiere(true); welt.setzeKinder(true);
-  }
-}
-
-/* ---------- Anzeigen ---------- */
-function knopf(text, aktion, aktiv = false, taste = null, extra = '') {
-  return h('button', { type: 'button', class: 'sub ' + extra, 'aria-pressed': String(aktiv), onclick: (e) => { e.currentTarget.blur(); aktion(); } }, text, taste ? h('kbd', {}, taste) : null);
-}
-
+/* ---------- Anzeigen (nur bei Änderung neu schreiben) ---------- */
+let anzeigeAlt = '';
 function anzeigen() {
-  const m = S.modus, i = S.schritt;
-  document.body.dataset.modus = m;
-  document.querySelectorAll('#haupt [data-modus]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.modus === m)));
-  $('#btnInfo').setAttribute('aria-pressed', String(S.info));
-  $('#startbild').hidden = m !== 'start';
-
-  // Titel und Frage
-  const titel = { grau: C.grau.titel, abstimmung: C.abstimmung.titel, beides: C.beides.titel, sommer: C.sommer.titel, regen: C.regen.titel, ende: C.ende.titel }[m];
-  $('#kopf').hidden = !titel;
-  $('#titel').textContent = titel || '';
-  const frage = m === 'grau' ? C.grau.fragen[i] : m === 'abstimmung' && i === 1 ? C.abstimmung.frage : m === 'sommer' ? C.sommer.frage : m === 'regen' && i === 0 ? C.regen.frage : '';
-  $('#frage').hidden = !frage;
-  $('#frage').textContent = frage;
-
-  // Schrittleiste
-  const sub = $('#sub');
-  sub.innerHTML = '';
-  (SCHRITTE[m] || []).forEach((name, k) => sub.append(knopf(name, () => schritt(k), k === i, null, k === i + 1 ? 'wichtig' : '')));
-  if (m === 'sommer') sub.append(knopf(C.sommer.waerme.knopf, waermeUmschalten, S.waerme, 'W'));
-  if (m === 'regen' || m === 'ende') sub.append(knopf('Beschriftungen', beschriftungUmschalten, S.beschriftung, 'L'));
-  sub.hidden = !sub.children.length;
-
-  // Tafel rechts
-  const panel = $('#panel');
-  panel.innerHTML = '';
-  if (m === 'abstimmung') {
-    panel.append(h('div', { class: 'abst' }, C.abstimmung.karten.map((k) =>
-      h('button', { type: 'button', class: k.id, 'aria-pressed': String(S.wahl === k.id), onclick: (e) => { e.currentTarget.blur(); waehlen(k.id); } }, h('b', {}, k.id), h('span', {}, k.titel)))));
-    if (S.wahl) panel.append(h('p', { class: 'entschieden' }, C.abstimmung.entschieden));
-  } else if (m === 'beides') {
-    panel.append(h('p', { class: 'loesung' }, C.beides.titel.replace('Die Lösung: ', 'Die Lösung:\n').toUpperCase()));
-    if (i === 0) panel.append(h('button', { type: 'button', class: 'sub gross', onclick: (e) => { e.currentTarget.blur(); schritt(1); } }, '✨ ' + C.beides.knopf));
-  } else if (m === 'sommer' && S.waerme) {
-    panel.append(h('ul', { class: 'legende' }, C.sommer.waerme.legende.map(([k, t]) => h('li', {}, h('i', { class: k }), t))));
-  } else if (m === 'regen') {
-    panel.append(
-      h('p', { class: 'regenstatus' + (i <= 1 ? ' an' : '') }, h('i'), i <= 1 ? 'Es regnet stark' : 'Regen vorbei'),
-      h('div', { class: 'textkarte grau' + (i === 0 ? '' : ' blass') }, C.regen.versiegelt),
-      h('div', { class: 'textkarte offen' + (i === 0 ? ' blass' : '') }, C.regen.offen),
-    );
-  } else if (m === 'ende') {
-    panel.append(h('ul', { class: 'punkte' }, C.ende.punkte.map((t) => h('li', {}, t))), h('p', { class: 'satz' }, C.ende.satz));
+  const s = lab.s, a = lab.anzeige(), r = C.regel;
+  const schluessel = [lab.i, a.wasser, a.feuchte, lab.phase, lab.pruefStufe, lab.grund].join('|');
+  if (schluessel === anzeigeAlt) return;
+  anzeigeAlt = schluessel;
+  // Schrittflächen
+  document.querySelectorAll('.kachel').forEach((k, n) => { if (n === lab.i) k.setAttribute('aria-current', 'step'); else k.removeAttribute('aria-current'); });
+  $('#zurueck').disabled = lab.i === 0;
+  $('#weiter').disabled = lab.i === C.schritte.length - 1;
+  // Text zum Schritt
+  let text = s.text;
+  if (s.regelpruefung && lab.phase === 'ein') text = s.textEin;
+  if (s.regelpruefung && lab.phase === 'aus') text = lab.grund === 'feucht' ? s.textAus : `${C.regelText.aus}: ${lab.grund === 'leer' ? C.regelText.grundLeer : C.regelText.grundNass}.`;
+  const st = $('#schrittText');
+  st.replaceChildren(h('b', {}, `${lab.i + 1} · ${s.titel}: `), text);
+  // Sensoranzeigen (genau zwei)
+  $('#wertWasser').textContent = a.wasser;
+  $('#balkenWasser').style.width = `${a.wasser}%`;
+  $('#statusWasser').textContent = lab.wasser >= r.minWasser ? C.status.wasserDa : C.status.wasserLeer;
+  $('#anzeigeWasser').dataset.status = lab.wasser >= r.minWasser ? 'da' : 'leer';
+  const bs = bodenStatus(lab.feuchte, r);
+  $('#wertFeuchte').textContent = a.feuchte;
+  $('#balkenFeuchte').style.width = `${a.feuchte}%`;
+  $('#statusFeuchte').textContent = C.status[bs];
+  $('#anzeigeFeuchte').dataset.status = bs;
+  // Regel der Steuerung: nur im Schritt „Bewässern“, sichtbar geprüft (erst Bedingung 1, dann 2, dann Ergebnis)
+  const regel = $('#regel');
+  regel.hidden = !s.regelpruefung;
+  if (s.regelpruefung) {
+    const ps = lab.pruefStufe;
+    const setzeBed = (el, sichtbar, ok) => { el.classList.toggle('ja', sichtbar && ok); el.classList.toggle('nein', sichtbar && !ok); };
+    // während EIN: das Ergebnis der Prüfung beim Start; nach AUS: die Regel mit den aktuellen Werten (Boden jetzt feucht → nicht mehr trocken)
+    const start = lab.phase === 'ein';
+    setzeBed($('#bed1'), ps >= 1, start || lab.bedingung1);
+    setzeBed($('#bed2'), ps >= 2, start || lab.bedingung2);
+    const e = $('#ergebnis');
+    e.className = 'ergebnis' + (ps < 3 ? '' : lab.bewaesserung ? ' an' : ' aus');
+    e.textContent = ps < 3 ? '→ …' : lab.bewaesserung ? `→ ${C.regelText.ein}` : `→ ${C.regelText.aus}`;
   }
-  panel.hidden = !panel.children.length;
-
-  // Fußnote
-  const fuss = m === 'regen' ? C.regen.hinweis : m === 'sommer' && S.waerme ? C.sommer.waerme.hinweis : '';
-  $('#fussnote').hidden = !fuss;
-  $('#fussnote').textContent = fuss;
-
-  // Moderation
-  $('#info').hidden = !S.info;
-  $('#infoListe').innerHTML = '';
-  for (const n of C.moderation[m] || []) $('#infoListe').append(h('li', {}, n));
 }
-
-function waehlen(id) { S.wahl = S.wahl === id ? null : id; anzeigen(); }
-function beschriftungUmschalten() { S.beschriftung = !S.beschriftung; anzeigen(); }
-function waermeUmschalten() { if (S.modus !== 'sommer') return; S.waerme = !S.waerme; welt.setzeWaerme(S.waerme); anzeigen(); }
 
 /* ---------- Beschriftungen an 3D-Punkten ---------- */
-const LABELS = [1, 2, 3, 4, 5].map((k) => $('#lbl' + k));
+const LABELS = [1, 2, 3].map((k) => $('#lbl' + k));
+const LABEL_STAND = LABELS.map(() => ({ text: '', sichtbar: false, w: 0, h: 0, x: NaN, y: NaN }));
+const KLASSE = { mulde: 'wasser', zisterne: 'wasser', wasserSensor: 'wasser', bodenSensor: 'boden', bewaesserung: 'wasser' };
 function beschriftungen() {
-  const m = S.modus, i = S.schritt, L = C.regen.labels, liste = [];
-  const fertigGruen = welt.zustand === 'gruen' && !welt.verwandlungLaeuft();
-  if (m === 'beides' && i === 1 && fertigGruen) {
-    const b = C.beides.labels;
-    liste.push(['turm', b.spielen, ''], ['baeume', b.baeume, 'gruen'], ['wiese', b.wiese, 'gruen'], ['wild', b.wild, 'gruen']);
-  } else if (m === 'sommer') {
-    const b = C.sommer.labels;
-    if (i === 0) liste.push(['stein', b.stein, 'warn']);
-    if (i >= 1) liste.push(['schatten', b.schatten, 'gruen']);
-    if (i === 2) liste.push(['tiere', b.tiere, 'gruen']);
-  } else if (m === 'regen') {
-    if (i === 0) liste.push(['abfluss', L.abfluss, 'wasser']);
-    if (i === 1) liste.push(['tief', L.tief, 'wasser'], ['mulde', L.mulde, 'wasser'], ['zisterne', L.zisterne, 'wasser']);
-    if (i === 2) liste.push(['tief', welt.wasser.gesperrt ? L.gesperrt : L.frei, welt.wasser.gesperrt ? 'warn' : 'gruen'], ['zisterne', L.zisterne, 'wasser']);
-    if (i === 3) liste.push(['giessen', L.giessen, 'wasser'], ['zisterne', L.zisterne, 'wasser']);
-  } else if (m === 'ende') {
-    const [a, b, c, d] = C.ende.punkte;
-    liste.push(['schatten', a, 'gruen'], ['tiere', b, 'gruen'], ['turm', c, ''], ['tief', d, 'wasser']);
-  }
-  if (S.beschriftung === false) liste.length = 0;                       // Schalter „Beschriftungen“ aus: Wasser ganz frei
-  // Starkregen und Endbild: Schilder als Randlegende links mit feiner Linie zum Punkt – nichts liegt über dem Wasser
-  const rand = m === 'regen' || m === 'ende';
-  if (rand) { randlegende(liste); return; }
-  linienSetzen([]);
-  // Nur ändern, was sich geändert hat (kein Neu-Layout in jedem Bild); überlappende Schilder weichen nach oben aus
-  const belegt = [];
+  const namen = lab.s.labels || [], belegt = [];
   LABELS.forEach((el, k) => {
-    const e = liste[k], pt = e && welt.bildpunkt(e[0]), st = LABEL_STAND[k];
+    const name = namen[k], pt = name && welt.bildpunkt(name), st = LABEL_STAND[k];
     if (!pt) { if (st.sichtbar) { el.hidden = true; st.sichtbar = false; } return; }
     if (!st.sichtbar) { el.hidden = false; st.sichtbar = true; st.w = 0; }
-    if (st.text !== e[1] || st.klasse !== e[2]) {
-      el.textContent = e[1]; el.className = 'label ' + e[2];
-      st.text = e[1]; st.klasse = e[2]; st.w = 0;
-    }
+    const text = C.labels[name];
+    if (st.text !== text) { el.textContent = text; el.className = 'label ' + (KLASSE[name] || ''); st.text = text; st.w = 0; }
     if (!st.w) { st.w = el.offsetWidth; st.h = el.offsetHeight; }
-    let y = Math.round(pt.y);
-    const x = Math.round(pt.x), rand = 6;
-    for (let n = 0; n < 8; n++) {
+    const x = Math.round(pt.x);
+    let y = Math.round(pt.y) - 8;
+    for (let n = 0; n < 6; n++) {                       // überlappende Schilder weichen nach oben aus
       const hit = belegt.find((b) => x - st.w / 2 < b.r && x + st.w / 2 > b.l && y - st.h < b.u && y > b.o);
       if (!hit) break;
-      y = Math.round(hit.o - rand);
+      y = Math.round(hit.o - 6);
     }
     belegt.push({ l: x - st.w / 2, r: x + st.w / 2, o: y - st.h, u: y });
     if (st.x !== x || st.y !== y) { el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`; st.x = x; st.y = y; }
   });
 }
-const LABEL_STAND = LABELS.map(() => ({ text: '', klasse: '', sichtbar: false, w: 0, h: 0, x: NaN, y: NaN }));
-let linienAlt = '';
-function linienSetzen(linien) {
-  const svg = $('#linien'), neu = JSON.stringify(linien);
-  if (neu === linienAlt) return;
-  linienAlt = neu;
-  svg.innerHTML = linien.map(([x1, y1, x2, y2, farbe]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${farbe}" stroke-width="2"/><circle cx="${x2}" cy="${y2}" r="5" fill="#fff" stroke="${farbe}" stroke-width="2.5"/>`).join('');
-}
-const FARBE = { wasser: '#1d4ed8', gruen: '#15803d', warn: '#b45309', '': '#0f172a' };
-function randlegende(liste) {
-  const W = $('#welt').clientWidth, H = $('#welt').clientHeight, rand = Math.round(H * 0.025), abstand = Math.round(H * 0.085);
-  const punkte = liste.map((e) => [e, welt.bildpunkt(e[0])]).filter(([, pt]) => pt).sort((a, b) => a[1].y - b[1].y);
-  const linien = [];
-  let y = Math.round(H * 0.3);
-  LABELS.forEach((el, k) => {
-    const st = LABEL_STAND[k], eintrag = punkte[k];
-    if (!eintrag) { if (st.sichtbar) { el.hidden = true; st.sichtbar = false; } return; }
-    const [e, pt] = eintrag;
-    if (!st.sichtbar) { el.hidden = false; st.sichtbar = true; st.w = 0; }
-    if (st.text !== e[1] || st.klasse !== 'rand ' + e[2]) { el.textContent = e[1]; el.className = 'label rand ' + e[2]; st.text = e[1]; st.klasse = 'rand ' + e[2]; st.w = 0; }
-    if (!st.w) { st.w = el.offsetWidth; st.h = el.offsetHeight; }
-    if (st.x !== rand || st.y !== y) { el.style.transform = `translate(${rand}px, ${y}px) translate(0, -50%)`; st.x = rand; st.y = y; }
-    linien.push([rand + st.w, y, Math.round(pt.x), Math.round(pt.y), FARBE[e[2]] || FARBE['']]);
-    y += abstand;
-  });
-  linienSetzen(linien);
-}
 
-/* ---------- Schleife ---------- */
-function frame(now) {
-  welt.render(now);
-  beschriftungen();
-  requestAnimationFrame(frame);
+/* ---------- Schleife: Modell laufen lassen, Bild und Anzeigen nachziehen ---------- */
+let letzte = performance.now();
+function takt(jetzt) {
+  const dt = Math.min(0.1, Math.max(0, (jetzt - letzte) / 1000));
+  letzte = jetzt;
+  if (!lab.fertig) lab.schritt(dt);
+  welt.setze(zustand());
+  if (welt.render(jetzt)) beschriftungen();
+  anzeigen();
 }
+function frame(jetzt) { takt(jetzt); requestAnimationFrame(frame); }
 
-/* ---------- Vollbild, Tasten ---------- */
+/* ---------- Vollbild, Tasten (nicht nötig, aber praktisch: ← → 1–4 F) ---------- */
 function vollbild() {
   if (!document.fullscreenElement) (document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen() : Promise.reject()).catch(() => {});
   else document.exitFullscreen();
@@ -241,37 +121,40 @@ document.addEventListener('mousemove', () => {
   clearTimeout(mausTimer);
   mausTimer = setTimeout(() => { if (document.fullscreenElement) document.body.classList.add('maus-weg'); }, 3000);
 });
-
-const aktionen = {
-  start: () => modus('start'), ...Object.fromEntries(MODI.map((m) => [m, () => modus(m)])),
-  reset: zuruecksetzen, info: () => { S.info = !S.info; anzeigen(); }, vollbild,
-};
-document.querySelectorAll('[data-aktion]').forEach((b) => b.addEventListener('click', (e) => { e.currentTarget.blur(); aktionen[b.dataset.aktion](); }));
-
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-  const map = { '0': 'start', 'Home': 'start', '1': 'grau', '2': 'abstimmung', '3': 'beides', '4': 'sommer', '5': 'regen', '6': 'ende', 'r': 'reset', 'i': 'info', 'f': 'vollbild' };
-  if (map[k]) { e.preventDefault(); aktionen[map[k]](); return; }
-  if ((k === 'a' || k === 'b') && S.modus === 'abstimmung') { e.preventDefault(); waehlen(k.toUpperCase()); return; }
-  if (k === 'w') { e.preventDefault(); waermeUmschalten(); return; }
-  if (k === 'l' && (S.modus === 'regen' || S.modus === 'ende')) { e.preventDefault(); beschriftungUmschalten(); return; }
-  if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); weiter(1); return; }
-  if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); weiter(-1); return; }
-  if (k === 'Escape' && S.info) { S.info = false; anzeigen(); }
+  if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); if (lab.i < C.schritte.length - 1) schritt(lab.i + 1); return; }
+  if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); if (lab.i > 0) schritt(lab.i - 1); return; }
+  if (/^[1-4]$/.test(k)) { e.preventDefault(); schritt(Number(k) - 1); return; }
+  if (k === 'f') { e.preventDefault(); vollbild(); }
 });
 
 /* ---------- Start ---------- */
 (async () => {
-  document.title = C.titel;
-  $('#startTitel').textContent = C.titel;
-  $('#startUntertitel').textContent = C.untertitel;
+  document.title = 'Sensorlabor Regenwasser';
+  $('#titel').textContent = C.titel;
+  $('#kennzeichnung').textContent = C.kennzeichnung;
+  $('#titelWasser').textContent = C.anzeigen.wasser.titel;
+  $('#titelFeuchte').textContent = C.anzeigen.feuchte.titel;
+  $('#regelTitel').textContent = C.regelText.titel;
+  $('#bed1 span').textContent = `${C.regelText.b1} (unter ${C.regel.trocken} %)`;
+  $('#bed2 span').textContent = `${C.regelText.b2} (mindestens ${C.regel.minWasser} %)`;
+  $('#kacheln').replaceChildren(...C.schritte.map((s, n) => h('button', { type: 'button', class: 'kachel', title: `${s.titel} (Taste ${n + 1})`, onclick: (ev) => { ev.currentTarget.blur(); schritt(n); } }, h('span', { class: 'n' }, String(n + 1)), h('span', {}, s.kurz))));
+  $('#zurueck').addEventListener('click', (ev) => { ev.currentTarget.blur(); if (lab.i > 0) schritt(lab.i - 1); });
+  $('#weiter').addEventListener('click', (ev) => { ev.currentTarget.blur(); if (lab.i < C.schritte.length - 1) schritt(lab.i + 1); });
+  $('#vollbild').addEventListener('click', (ev) => { ev.currentTarget.blur(); vollbild(); });
   const welt3d = await import('./scene3d.js');
   if (!welt3d.webglMoeglich()) throw Object.assign(new Error(C.keinWebGL), { anzeigen: true });
-  welt = new welt3d.Welt($('#welt'), C);
+  welt = new welt3d.Welt($('#welt'));
   new ResizeObserver(() => { welt.resize(); LABEL_STAND.forEach((s) => { s.w = 0; s.x = NaN; }); }).observe($('#welt'));
-  modus('start');
-  window.__natur = { S, welt: () => welt, modus, schritt, weiter, zuruecksetzen, waermeUmschalten, waehlen, beschriftungUmschalten, bild: (t) => { welt.render(t ?? performance.now()); beschriftungen(); } };
+  schritt(0);
+  // Prüfhilfe (test.html): Modell gezielt laufen lassen, auch wenn der Browser keine Bilder anfordert (ausgeblendeter Tab)
+  window.__natur = {
+    lab, C, welt: () => welt, schritt,
+    lauf(sekunden, dt = 0.05) { for (let t = 0; t < sekunden; t += dt) { if (!lab.fertig) lab.schritt(dt); } welt.setze(zustand()); welt.render(performance.now()); beschriftungen(); anzeigen(); return lab.anzeige(); },
+    bild() { welt.setze(zustand()); welt.dirty = true; welt.render(performance.now()); beschriftungen(); anzeigen(); },
+  };
   window.__naturOk = true;
   $('#laden').hidden = true;
   requestAnimationFrame(frame);

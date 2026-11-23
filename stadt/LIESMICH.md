@@ -8,6 +8,83 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 - In der Show-Zentrale (`show.html`): Kachel **3D-Stadtkonfigurator**
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
+> **Stand (23.11.2026):** Drei Änderungsaufträge umgesetzt (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
+> mBot- und Ampelvergleichs-Szene (jetzt 5 Szenen), Auswahl Schwebebahn/Flugtaxi in Mobilität Szene 4. Keine neuen SMARTy-Sätze,
+> Soundboard, Show-Zentrale, Verkehrstool und andere Missionen unverändert. `test.html`: 76 von 76. In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## 00. Änderungsaufträge vom 23.11.2026
+
+### 00.1 Bus-/Ampel-Dopplung entfernt (Mission Mobilität)
+
+| Bisher | Neu | Aktion |
+|---|---|---|
+| 1 – Die Straße ist voll | 1 | unverändert |
+| 2 – Wo sollen die Autos parken? (A/B/C) | 2 | unverändert (Inhalt, Abstimmung, 3D, Speicherung) |
+| 3 – Der Bus wartet | 3 | behalten als Überleitung, Unterzeile jetzt „Könnte eine schlaue Ampel unserem Bus helfen?“ |
+| 4 – Echte Robotik: der mBot als Bus | – | entfernt (läuft live auf der Bühne) |
+| 5 – 3D-Experiment: normale gegen schlaue Ampel | – | entfernt (nur noch im separaten Verkehrstool) |
+| 6 – Fahren 2050 Autos von allein? | 4 | behalten (+ Auswahl Schwebebahn/Flugtaxi, 00.2) |
+| 7 – Zurück in der Zukunftsstadt | 5 | behalten |
+
+- Fortschritt zeigt jetzt „Mobilität · 1/5 … 5/5“; Kicker „Szene 4 · Blick nach vorn“ und „Szene 5“.
+- Verwaiste Verweise bereinigt: kein Knopf „Verkehrssimulation öffnen“ mehr im Konfigurator, kein Live-Block mBot.
+- Die SMARTy-Hinweise der entfernten Szenen (M5, M6, M7) stehen jetzt als Regie-Stichwort bei Szene 3 („in der Verkehrssimulation“, „beim Live-mBot“). Tasten und Clips sind unverändert.
+- Verbindlicher Bühnenablauf (Regie-Bereich, Taste `I`): Szenen 1–2 → Szene 3 (Busproblem) → Show-Zentrale → Verkehrstool (normale Ampel / Busanmeldung) → Live-mBot (LED-Ampel von Hand, nicht mit dem mBot verbunden) → zurück, Szene 4 → Szene 5.
+- Geprüft: Navigation vor/zurück, Tastatur, Regieansicht, Speicherung und Reset der Szenen 1–2 sowie Anzeige im Finale.
+
+### 00.2 Zukunftsmobilität 2050: Schwebebahn oder Flugtaxi (ohne neue SMARTy-Sätze)
+
+**Im Konfigurator umgesetzt:**
+- In der bestehenden Szene 4 „Fahren 2050 Autos von allein?“ gibt es unten einen kompakten Auswahlbereich „Wie bewegen wir uns im Jahr 2050?“.
+  Er zeigt zwei Karten mit 3D-Bild:
+  - **A Schwebebahn:** „Viele Menschen fahren gemeinsam über der Straße.“
+  - **B Flugtaxi:** „Ein kleines Fluggerät startet und landet an festen Plätzen.“
+- **Ein Klick** (oder Taste `A`/`B`) wählt und speichert. Die gewählte Karte ist gold markiert. Es gibt keine Untermenüs und keine weitere Abstimmungslogik.
+- Die Wahl ist eine Priorisierung. Hinweis auf der Leinwand: „Beides sind Zukunftsideen. Unsere Wahl zeigt, was wir zuerst ausprobieren.“
+- Neue Baufläche **Zukunftsverkehr** am Ostweg (`52 62 −20 – 95 79 3`), statische Modelle, keine Fahr- oder Flugphysik:
+  - **A:** hängende Schwebebahn: türkise Portalstützen, Fahrbalken über der Straßenmitte, Wagen darunter, Station mit Bahnsteig, Glasdach und Aufzugsturm. Es ist ausdrücklich keine Magnetschwebebahn.
+  - **B:** kleines Gebäude mit Landeplatz auf dem Dach (H-Markierung) und einem kleinen Fluggerät mit vier Rotoren.
+- Die Kamera der Szene zeigt Kreuzung und Ostweg von Norden. Die gewählte Variante steht im 3D-Modell, mit Tafel und Goldrahmen.
+- Die Wahl wird wie alle Beschlüsse gespeichert, ist im Zukunftscheck des Finales sichtbar und bleibt beim Szenenwechsel erhalten. „Mission zurücksetzen“ und „Neu beginnen“ setzen sie zurück. Andere Beschlüsse und die Stadtgeometrie bleiben unverändert.
+- Bühnentext für Z1/Z2 und fachliche Hinweise stehen im Regie-Bereich. Es gibt keine neuen SMARTy-Texte oder Clips.
+
+**Minecraft:**
+- Umgesetzt: Die exportierte Welt enthält **immer Schwebebahn UND Flugtaxi**, unabhängig von der Abstimmung. Die Abstimmung wird nicht nach Minecraft übertragen, es gibt keine Synchronisierung. Die Prüfung im Finale erwartet das so.
+- Die Ersatzwelt `START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld` ist neu erzeugt: gleiche Beschlüsse wie vorher, plus beide Verkehrsmittel. Sie ist mit dem eigenen Leser Block für Block geprüft.
+- Von Hand (Regieraum, untere Reihe): Knopf „ZUKUNFT – BAHN + TAXI“, oder im Chat `/clone 52 40 -20 95 57 3 52 62 -20`. Ansichtspunkt „Zukunftsverkehr“ in der oberen Reihe.
+- **Noch offen:**
+  - Test in Minecraft Education selbst (wie 0.4).
+  - Die Amulet-Gegenprobe ist nicht wiederholt. Alle verwendeten Blöcke stammen aber aus der schon geprüften Palette.
+  - Die Minecraft-Spielplatz-Testwelt (`minecraft/`) ist unverändert. Sie enthält keine Verkehrsmittel.
+
+### 00.3 Energiecheck nach der Technikmission
+
+- Neuer letzter Schritt der Mission Technik (Technik · 5/5). Er ist keine siebte Mission, keine Abstimmung und kein eigenes Werkzeug. Die Schritte davor (Calliope, Laternen-Abstimmung) sind unverändert.
+- Vier Zustände, geschaltet mit „Weiter“ (auch `→`/Leertaste) und „Zurück“. Die Kacheln springen direkt:
+  1. **Strom aus:** Die Stadt wird dunkel, Fenster und Laternen sind aus. Die Stadt bleibt sichtbar und bedienbar.
+  2. **Sonne + Wind:** Tag, Solarmodule auf drei flachen Hochhausdächern, ein Windrad am südlichen Stadtrand, gelbe Strompunkte zur Hauptstraße.
+  3. **Abend + Speicher:** Abendlicht, die Solarmodule liefern nichts mehr, das Windrad dreht langsam. Ein Batteriespeicher (Ladestand sinkt) und ein Mast mit Leitung zum Stromnetz von außerhalb erscheinen.
+  4. **Stadt leuchtet:** Nacht, Fenster und Laternen leuchten wieder. Schluss: „Energie erzeugen, speichern und zuverlässig bereitstellen.“
+- Keine Zahlen, keine Pop-ups, keine Regler. Fußnote: „Vereinfachte Animation, keine echte Stromnetz-Simulation. Ein Speicher erzeugt keinen Strom …“
+- Die Effekte liegen nur **über** der Stadt (Licht, eingeblendete Modelle). Die gespeicherte Stadt, die Beschlüsse und die Minecraft-Welt bleiben unberührt. Nach dem Verlassen sind Licht und Stadt exakt wie vorher (Test).
+- SMARTy T6 „Verkehrsproblem“ ist als Regie-Stichwort an das Ende des Energiechecks gewandert (Drehbuch: T6 leitet zur Mobilität über). Taste und Clip sind unverändert.
+- Bühnentext Z1/Z2 steht im Regie-Bereich. Vorführdauer etwa 90–120 Sekunden.
+- **Noch offen:** Wirkung des dunklen Zustands am echten Beamer (Helligkeit) und Lesbarkeit der Tafeln im Saal.
+
+### 00.4 Geprüft
+
+- `test.html`: **76 von 76**. Neu dabei:
+  - genau 5 Mobilitätsszenen, Szenen 1–2 unverändert, kein mBot und kein Ampelvergleich;
+  - Energiecheck: 4 Zustände, keine Abstimmung, Licht und Modelle je Zustand, Weiter/Zurück, danach exakt wie vorher;
+  - Schwebebahn/Flugtaxi: ein Klick speichert, bleibt beim Szenenwechsel, Zukunftscheck, Reset;
+  - Minecraft-Welt bei Wahl A, B und ohne Wahl immer mit beiden Verkehrsmitteln;
+  - alle SMARTy-Hinweise nutzen vorhandene Soundboard-Tasten.
+- Einzeldatei neu gebaut und gestartet.
+
+---
+
 > **Stand (19.11.2026):**
 > - Die Browser-Anwendung ist vollständig, alle Missionen sind enthalten.
 > - Die exportierte Welt enthält jetzt die Beschlüsse und startet draußen am Platz (Ursache und Behebung: Abschnitt 0).
@@ -97,8 +174,8 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 |---|---|---|---|---|
 | `0` | Szene 0 – graue Stadt | Stadt 2050 · Mission aktiviert | – | ANSICHT Gesamt |
 | `1` | Natur | grauer Platz · Abstimmung A/B (Diskussionsbilder) · **Lösung: Beides gemeinsam** (Übernehmen) · Starkregen grau/grün · Mission geschafft | Spielplatz | SPIELPLATZ GRAU / GRUEN |
-| `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope live** · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
-| `3` | Mobilität | volle Straße · Parken A/B/C · Bus wartet · **mBot live** · Verkehrssimulation (eigene Seite) · „Autos von allein?“ · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS |
+| `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope live** · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht · **Energiecheck** (4 Zustände, nur Bühneneffekt) | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
+| `3` | Mobilität (5 Szenen) | volle Straße · Parken A/B/C · Bus wartet (danach außerhalb: Verkehrstool, Live-mBot) · „Autos von allein?“ mit Auswahl **Schwebebahn/Flugtaxi** · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung; Zukunftsverkehr (Ostweg) | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS, ZUKUNFT BAHN + TAXI (immer beide) |
 | `4` | Wohnen | sechs Familien (Wohnsimulator, eigene Seite) · Wohnformen A/B/C · Aufstocken + 2 Holzgeschosse | Wohngrundstück; Bestandshaus | WOHNEN GRAU/A/B/C, AUFSTOCKEN BESTAND/+2 HOLZ |
 | `5` | Kurze Wege | „Wo sind die Brötchen am nächsten?“: drei Wege von „Hier wohnen wir“ schätzen und messen · Laden A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |
 | `6` | Bildung | ein Raum, zwei Nutzungen · Orte A/B/C mit Teilhabe-Fragen | Südviertel | BILDUNG GRAU/A/B/C |
@@ -172,6 +249,7 @@ Der Test „Drehbuch: Reihenfolge …“ prüft genau diese Folge und die Buchst
 | Straßenbeleuchtung Hauptstraße | 32 62 0 – 45 71 95 | 14 × 10 × 96 | immer: y 48…57, sensor: y 34…43 |
 | Wohnstraße und Parken | −64 62 −44 – 31 79 −25 | 96 × 18 × 20 | grau 40…57, A 18…35, B −4…13, C −26…−9 |
 | Kreuzung mit Bus | 32 62 −26 – 51 73 −1 | 20 × 12 × 26 | normal 46…57, bus 30…41 |
+| Zukunftsverkehr (Ostweg) | 52 62 −20 – 95 79 3 | 44 × 18 × 24 | beide 40…57 (in der Welt immer „beide“; A/B nur im Konfigurator) |
 | Wohngrundstück | 52 62 −60 – 91 85 −21 | 40 × 24 × 40 | grau 34…57, A 6…29, B −22…1, C −50…−27 |
 | Bestandshaus | 52 62 6 – 71 85 25 | 20 × 24 × 20 | bestand 34…57, holz 6…29 |
 | Westviertel (Läden, Wege) | −64 62 −24 – −17 81 31 | 48 × 20 × 56 | grau 38…57, A 14…33, B −10…9, C −34…−15 |

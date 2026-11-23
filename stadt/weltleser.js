@@ -118,10 +118,10 @@ export async function pruefeExport(zipDaten, beschluesse = {}) {
   ok('Startpunkt draußen: freier Platz, fester Boden, offener Himmel', sx === START.stand[0] && sy === START.stand[1] && sz === START.stand[2] && himmel && fest(L.hole(sx, sy - 1, sz)), `${sx} ${sy} ${sz}`);
   ok('Kreativmodus (Fliegen), Befehle an', lv.GameType === 1 && lv.commandsEnabled === 1 && lv.commandblocksenabled === 1);
   for (const id of BEREICH_IDS) {
-    const v = beschluesse[id] || BEREICHE[id].grund, t = vorlage(id, v), [a, , c] = boxVon(id), y1 = boxVon(id)[1];
+    const fest = BEREICHE[id].mcFest, v = fest || beschluesse[id] || BEREICHE[id].grund, t = vorlage(id, v), [a, , c] = boxVon(id), y1 = boxVon(id)[1];
     let abw = 0;
     for (let y = 0; y < t.dy; y++) for (let z = 0; z < t.dz; z++) for (let x = 0; x < t.dx; x++) if (L.hole(a + x, y1 + y, c + z) !== t.hole(x, y, z)) abw++;
-    ok(`${BEREICHE[id].titel}: ${v === BEREICHE[id].grund ? 'Ausgangszustand' : 'wie beschlossen'}`, abw === 0, abw ? `${abw} Blöcke weichen ab` : v);
+    ok(`${BEREICHE[id].titel}: ${fest ? 'immer beide (unabhängig von der Abstimmung)' : v === BEREICHE[id].grund ? 'Ausgangszustand' : 'wie beschlossen'}`, abw === 0, abw ? `${abw} Blöcke weichen ab` : v);
   }
   return { ok: punkte.every((p) => p[1]), punkte, name: lv.LevelName };
 }

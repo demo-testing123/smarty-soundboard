@@ -197,17 +197,23 @@ export function strassen(p) {
 
 /* ---------- Bauflächen (Missionen) ----------
  * box = [x1, y1, z1, x2, y2, z2]. grund = Ausgangszustand der grauen Stadt. mc = Varianten mit Minecraft-Kammer. */
+// nurBild = Varianten, die nur als Diskussionsbild im Browser vorkommen (nie Beschluss, keine Kammer).
+// mcFest = In der Minecraft-Welt steht IMMER diese Variante, egal was im Konfigurator gewählt wurde (Zukunftsverkehr:
+// Schwebebahn UND Flugtaxi, Änderungsauftrag „Zukunftsmobilität 2050“). Der Konfigurator zeigt die gewählte Variante.
 export const BEREICHE = {
-  spielplatz: { titel: 'Spielplatz', mission: 'natur', box: [0, 59, 0, 31, 74, 31], grund: 'grau', varianten: ['grau', 'A', 'B', 'gruen'], mc: ['grau', 'gruen'] },
+  spielplatz: { titel: 'Spielplatz', mission: 'natur', box: [0, 59, 0, 31, 74, 31], grund: 'grau', varianten: ['grau', 'A', 'B', 'gruen'], mc: ['grau', 'gruen'], nurBild: ['A', 'B'] },
   laternen: { titel: 'Straßenbeleuchtung Hauptstraße', mission: 'technik', box: [32, 62, 0, 45, 71, 95], grund: 'immer', varianten: ['immer', 'sensor'], mc: ['immer', 'sensor'] },
   parken: { titel: 'Wohnstraße und Parken', mission: 'mobilitaet', box: [-64, 62, -44, 31, 79, -25], grund: 'grau', varianten: ['grau', 'A', 'B', 'C'], mc: ['grau', 'A', 'B', 'C'] },
   kreuzung: { titel: 'Kreuzung mit Bus', mission: 'mobilitaet', box: [32, 62, -26, 51, 73, -1], grund: 'normal', varianten: ['normal', 'bus'], mc: ['normal', 'bus'] },
+  zukunft: { titel: 'Zukunftsverkehr: Schwebebahn und Flugtaxi', mission: 'mobilitaet', box: [52, 62, -20, 95, 79, 3], grund: 'keine', varianten: ['keine', 'A', 'B', 'beide'], mc: ['beide'], mcFest: 'beide' },
   wohnen: { titel: 'Wohngrundstück', mission: 'wohnen', box: [52, 62, -60, 91, 85, -21], grund: 'grau', varianten: ['grau', 'A', 'B', 'C'], mc: ['grau', 'A', 'B', 'C'] },
   aufstocken: { titel: 'Bestandshaus', mission: 'wohnen', box: [52, 62, 6, 71, 85, 25], grund: 'bestand', varianten: ['bestand', 'holz'], mc: ['bestand', 'holz'] },
   einkaufen: { titel: 'Westviertel: Läden und Wege', mission: 'einkaufen', box: [-64, 62, -24, -17, 81, 31], grund: 'grau', varianten: ['grau', 'A', 'B', 'C'], mc: ['grau', 'A', 'B', 'C'] },
   bildung: { titel: 'Südviertel: Schule und Bahnhof', mission: 'bildung', box: [-64, 62, 46, 31, 83, 95], grund: 'grau', varianten: ['grau', 'A', 'B', 'C'], mc: ['grau', 'A', 'B', 'C'] },
 };
 export const BEREICH_IDS = Object.keys(BEREICHE);
+// Ausgangszustand einer Fläche in der Minecraft-Welt (Zukunftsverkehr: immer beide Verkehrsmittel)
+export const mcGrund = (id) => BEREICHE[id].mcFest || BEREICHE[id].grund;
 export const boxVon = (id) => BEREICHE[id].box;
 export const ursprungVon = (id) => BEREICHE[id].box.slice(0, 3);
 export function groesseVon(id) { const [a, b, c, d, e, f] = BEREICHE[id].box; return [d - a + 1, e - b + 1, f - c + 1]; }
@@ -249,6 +255,17 @@ export const VIERTEL_HAEUSER = [
   { name: 'Gasse Südwest', tuer: [-46, 21] },
   { name: 'Gasse Südost', tuer: [-38, 21] },
 ];
+
+/* ---------- Energiecheck (Mission Technik): NUR Bühnenbild im Browser, nicht in der Minecraft-Welt ----------
+ * Eingeblendete Modelle über der grauen Stadt. Alle Orte liegen außerhalb der Bauflächen (kein Beschluss verdeckt sie).
+ * daecher: [x1, z1, x2, z2, Oberkante Dach] – flache Dächer der Hochhäuser im Südosten (Solardächer). */
+export const ENERGIE_ORTE = {
+  daecher: [[52, 34, 67, 47, 89], [76, 30, 91, 45, 97], [78, 56, 91, 75, 80]],
+  windrad: { x: 89, z: 81, hoehe: 40, fluegel: 13 },               // am Stadtrand (Süden, vor der alten Bahnstrecke)
+  speicher: { x1: 54, z1: 49, x2: 66, z2: 54 },                     // Batteriespeicher zwischen Hochhaus und Parkplatz
+  netz: { x: 71, z: 51, hoehe: 21, aussen: 104 },                   // Mast; die Leitung kommt von außerhalb der Stadt (Osten)
+  tafeln: { solar: [60, 94, 38], windrad: [90, 120, 81], speicher: [56, 77, 51], netz: [72, 90, 51] },
+};
 
 /* ---------- graue Grundstadt (alles, was sich nie ändert) ---------- */
 const HAEUSER = [
@@ -344,6 +361,51 @@ function bahnhof(p, offen) {
   if (!offen) { p.setze(14, S, 66, 'fichteBretter'); p.setze(15, S, 66, 'fichteBretter'); p.setze(14, S + 1, 66, 'fichteBretter'); p.setze(15, S + 1, 66, 'fichteBretter'); }
 }
 
+/* ---------- Zukunftsverkehr (statische Modelle, keine Fahr- oder Flugphysik) ----------
+ * Ostweg: Fahrbahn z −11 … −4, Bordsteine z −12 und −3, Gehwege z −14 … −13 und −2 … −1.
+ * Schwebebahn = hängende Bahn (Wagen unter dem Fahrbalken), KEINE Magnetschwebebahn. */
+function schwebebahn(p) {
+  const oben = S + 10;                                                  // Fahrbalken; Querträger eine Ebene darüber
+  for (const x of [55, 67, 79, 91]) {                                   // Portalstützen auf beiden Gehwegen
+    p.quader(x, S, -13, x, oben + 1, -13, 'cyanBeton');
+    p.quader(x, S, -2, x, oben + 1, -2, 'cyanBeton');
+    p.quader(x, oben + 1, -13, x, oben + 1, -2, 'cyanBeton');
+  }
+  p.quader(52, oben, -8, 95, oben, -8, 'schwarzstein');                 // Fahrbalken über der Straßenmitte
+  // Wagen (hängt am Fahrbalken): Boden S+6, Fensterband S+7, Dach S+8
+  const [xa, xb] = [61, 74];
+  p.quader(xa, S + 6, -9, xb, S + 8, -7, 'betonWeiss');
+  p.quader(xa, S + 6, -9, xb, S + 6, -7, 'cyanBeton');
+  p.quader(xa + 1, S + 7, -9, xb - 1, S + 7, -9, 'glas'); p.quader(xa + 1, S + 7, -7, xb - 1, S + 7, -7, 'glas');
+  p.quader(xa, S + 7, -9, xa, S + 7, -7, 'glas'); p.quader(xb, S + 7, -9, xb, S + 7, -7, 'glas');
+  for (const x of [64, 71]) p.setze(x, S + 9, -8, 'kette');             // Aufhängung
+  // Station: Bahnsteig in Wagenhöhe am Nordrand der Fahrbahn, Glasdach, Aufzugsturm am Nordgehweg
+  p.quader(60, S + 6, -12, 77, S + 6, -10, 'glattstein');
+  for (const x of [60, 70]) p.quader(x, S, -12, x, S + 5, -12, 'cyanBeton');      // Stützen auf dem Bordstein
+  for (let x = 60; x <= 75; x++) p.setze(x, S + 7, -12, 'gitter');                 // Geländer
+  for (const x of [60, 77]) p.quader(x, S + 7, -12, x, S + 9, -12, 'cyanBeton');
+  p.quader(60, S + 10, -12, 77, S + 10, -10, 'glas');
+  p.quader(76, S + 6, -14, 77, S + 6, -13, 'glattstein');                         // Steg zum Turm
+  p.quader(75, S, -17, 78, S + 10, -15, 'glas');
+  for (const [x, z] of [[75, -17], [78, -17], [75, -15], [78, -15]]) p.quader(x, S, z, x, S + 10, z, 'cyanBeton');
+  p.quader(75, S + 11, -17, 78, S + 11, -15, 'cyanBeton');
+  p.quader(76, S, -16, 77, S + 9, -16, 'luft');
+  p.quader(76, S, -15, 77, S + 1, -15, 'luft'); p.quader(76, S + 7, -15, 77, S + 8, -15, 'luft');   // Türen unten und am Steg
+  p.schild(74, S + 2, -14, 'Sued', ['Schwebebahn', 'Station Ostweg', 'Aufzug']);
+  p.setze(74, S + 2, -15, 'cyanBeton'); p.quader(74, S, -15, 74, S + 1, -15, 'cyanBeton');
+}
+function flugtaxi(p) {
+  // kleines Gebäude am Ostweg, Landeplatz auf dem Dach, darauf ein kleines elektrisches Fluggerät mit vier Rotoren
+  haus(p, { x1: 82, z1: -20, x2: 93, z2: -15, g: 2, gh: 3, wand: 'betonWeiss', fenster: 'fenster', dach: 'gelb', tueren: [[87, -15], [88, -15]] });
+  const y = S + 6;
+  p.quader(83, y, -19, 92, y, -16, 'cyanBeton');                        // Landefläche (gelber Rand = Dachkante)
+  p.quader(84, y, -19, 84, y, -16, 'betonWeiss'); p.quader(87, y, -19, 87, y, -16, 'betonWeiss'); p.quader(85, y, -18, 86, y, -18, 'betonWeiss');   // „H“
+  p.quader(89, y + 1, -18, 91, y + 1, -17, 'betonWeiss');               // Rumpf
+  p.quader(89, y + 2, -18, 90, y + 2, -17, 'betonWeiss'); p.quader(91, y + 2, -18, 91, y + 2, -17, 'glas');   // Dach, Kanzel
+  for (const [x, z] of [[88, -19], [92, -19], [88, -16], [92, -16]]) { p.setze(x, y + 1, z, 'schwarzstein'); p.setze(x, y + 2, z, 'gitter'); }   // Rotoren
+  p.schild(86, S + 2, -14, 'Sued', ['Flugtaxi', 'Landeplatz', 'auf dem Dach']);
+}
+
 /* ---------- Varianten je Baufläche ----------
  * Jede Funktion bekommt den Stift (begrenzt auf die Baufläche) mit der grauen Grundstadt darin und baut ihre Variante.
  * Alles außerhalb der Baufläche ist für sie unerreichbar. */
@@ -356,6 +418,12 @@ const BAUE = {
 
   laternen(p, v) {
     for (let z = 4; z <= 74; z += 10) { laterne(p, 33, z, v); laterne(p, 44, z + 5, v); }
+  },
+
+  // Zukunftsverkehr am Ostweg: A = Schwebebahn, B = Flugtaxi, beide = beides (so steht es immer in der Minecraft-Welt)
+  zukunft(p, v) {
+    if (v === 'A' || v === 'beide') schwebebahn(p);
+    if (v === 'B' || v === 'beide') flugtaxi(p);
   },
 
   kreuzung(p, v) {

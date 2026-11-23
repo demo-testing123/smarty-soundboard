@@ -1,6 +1,9 @@
 /* START IT SMART – Stadt-Konfigurator: INHALT (Texte, Missionen, Schritte, Kameras).
  * Quelle: Drehbuch-Arbeitsfassung vom 16.11.2026, Entwicklungsauftrag und Ergänzung „Kurze Wege“ vom 17.11.2026,
- * Korrekturauftrag vom 19.11.2026 (Calliope vor der Laternenwahl, mBot vor der Verkehrssimulation, Export-Schritt im Finale).
+ * Korrekturauftrag vom 19.11.2026 (Calliope vor der Laternenwahl, Export-Schritt im Finale).
+ * Änderungsaufträge vom 23.11.2026: Energiecheck nach der Technikmission (4 Zustände, keine Abstimmung); Mobilität ohne
+ * mBot- und Ampelvergleichs-Szene (beides läuft außerhalb: Live-mBot, separates Verkehrstool) → 5 Szenen; Szene 4
+ * „Fahren 2050 Autos von allein?“ mit kompakter A/B-Auswahl Schwebebahn/Flugtaxi. Keine neuen SMARTy-Sätze.
  * Die Figur „Mika“ ist überholt und kommt nicht vor. Sätze der Zeitreisenden stehen hier nur als Regie-Stichwort;
  * auf der Leinwand stehen ein kurzer Titel (Leitfrage) und höchstens eine Unterzeile. Längeres steht im Regie-Bereich (Taste I).
  * Keine erfundenen Zahlen: Messwerte (Wege, bebaute Fläche) rechnet das Stadtmodell aus und kennzeichnet sie als Modellwerte.
@@ -20,6 +23,8 @@ export const KAMERAS = {
   wohnstrasse: { titel: 'Wohnstraße', ziel: [-20, 64, -44], zoom: 46, azimut: 8, hoehe: 62, rahmen: [-64, 63, -46, 31, 70, -24] },
   parkhaus: { titel: 'Quartiersrand', ziel: [-50, 66, -40], zoom: 24, azimut: 20, hoehe: 50, rahmen: [-64, 63, -46, -38, 76, -24] },
   kreuzung: { titel: 'Kreuzung', ziel: [40, 64, -22], zoom: 22, azimut: 30, hoehe: 46, rahmen: [30, 63, -28, 53, 72, 1] },
+  zukunft: { titel: 'Zukunftsverkehr', ziel: [62, 66, -10], zoom: 30, azimut: 200, hoehe: 36, rahmen: [32, 63, -26, 95, 76, 3] },
+  energie: { titel: 'Energie der Stadt', ziel: [62, 72, 58], zoom: 40, azimut: 322, hoehe: 33, rahmen: [32, 63, 30, 95, 104, 90] },
   wohnen: { titel: 'Wohngrundstück', ziel: [71, 66, -40], zoom: 27, azimut: 38, hoehe: 38, rahmen: [52, 63, -60, 91, 76, -21] },
   aufstocken: { titel: 'Bestandshaus', ziel: [64, 75, 14], zoom: 22, azimut: 292, hoehe: 26, rahmen: [52, 63, 6, 71, 85, 25] },
   einkaufen: { titel: 'Westviertel', ziel: [-40, 64, 4], zoom: 38, azimut: 270, hoehe: 55, rahmen: [-63, 63, -23, -18, 79, 31] },
@@ -47,6 +52,9 @@ export const TAFELN = {
   mulde: { text: 'Regenmulde', pos: [5, 67, 17] },
   tief: { text: 'tieferer Spielbereich', pos: [16, 67, 17] },
   zisterne: { text: 'Zisterne', pos: [25, 67, 15] },
+  schwebebahn: { text: 'Schwebebahn', pos: [67, 82, -8] },
+  flugtaxi: { text: 'Flugtaxi', pos: [90, 75, -18] },
+  // Energiecheck-Tafeln (solar, windrad, speicher, netz) kommen aus ENERGIE_ORTE im Stadtmodell (eine Quelle für Modell und Tafel)
 };
 
 // Farben für A/B/C (Karten, Wege, Tafeln)
@@ -157,13 +165,33 @@ export const MISSIONEN = [
         text: 'Tagsüber aus – bei Dunkelheit an.',
         vorher: 'immer', nachher: 'sensor', vorherText: 'Immer an', nachherText: 'Nur bei Dunkelheit',
         fussnote: 'Keine Energiezahlen im Modell.',
-        regie: ['Erst Tag zeigen, dann „Nacht“.', 'Gespart wird nur, solange es hell ist und die Lampen sonst brennen würden.', 'Minecraft von Hand: LATERNEN SENSOR, dann ZEIT NACHT.'],
-        smarty: [['T5 · Mission abgeschlossen', 'I'], ['T6 · Verkehrsproblem', 'O']],
+        regie: ['Erst Tag zeigen, dann „Nacht“.', 'Gespart wird nur, solange es hell ist und die Lampen sonst brennen würden.', 'Minecraft von Hand: LATERNEN SENSOR, dann ZEIT NACHT.', 'Danach: kurzer Energiecheck (Weiter).'],
+        smarty: [['T5 · Mission abgeschlossen', 'I']],
+      },
+      {
+        // Kurzer Unterabschnitt, KEINE Mission und KEINE Abstimmung: vier Zustände nacheinander mit „Weiter“ (auch → / Leertaste).
+        // Die Effekte liegen nur über der Stadt (Licht, eingeblendete Modelle) – Beschlüsse und gespeicherte Stadt bleiben unverändert.
+        art: 'energie', kicker: 'Mission Technik · Energiecheck', titel: 'Woher bekommt unsere Stadt Strom?', kamera: 'energie',
+        stufen: [
+          { kurz: 'Strom aus', titel: 'Der Strom ist weg!', text: 'Fenster und Laternen bleiben dunkel.' },
+          { kurz: 'Sonne + Wind', titel: 'Strom aus Sonne und Wind', text: 'Solardächer und ein Windrad können Strom liefern.' },
+          { kurz: 'Abend + Speicher', titel: 'Es wird Abend', text: 'Nachts liefert die Sonne keinen Strom. Speicher und Stromnetz helfen aus.' },
+          { kurz: 'Stadt leuchtet', titel: 'Unsere Stadt leuchtet wieder', text: 'Energie erzeugen, speichern und zuverlässig bereitstellen.' },
+        ],
+        fussnote: 'Vereinfachte Animation, keine echte Stromnetz-Simulation. Ein Speicher erzeugt keinen Strom: Er gibt vorher gespeicherte Energie wieder ab.',
+        regie: ['Etwa 90–120 Sekunden. „Weiter“ (oder → / Leertaste) schaltet Zustand 1 → 2 → 3 → 4; „Zurück“ geht einen Zustand zurück. Die Kacheln springen direkt.',
+          'Z2: „Unsere Straßenlaternen sind jetzt schlau. Aber was passiert eigentlich, wenn der Strom weg ist?“ [1 Strom aus]',
+          'Z1: „Dann hilft uns auch die schlauste Laterne nicht. Schauen wir, woher unsere Stadt Strom bekommt.“ → [2 Sonne + Wind]',
+          'Z2: „Und wenn die Sonne untergeht? Müssen wir dann alle ins Bett?“ → [3 Abend + Speicher]',
+          'Z1: „Nein. Gespeicherter Strom und das Stromnetz können helfen, wenn gerade wenig Sonne und Wind da sind.“ → [4 Stadt leuchtet]',
+          'Z2: „Gut! Dann können wir unsere Zukunftsstadt weiterbauen.“ – Weiter führt zur Mission Mobilität.',
+          'Bewusst vereinfacht: Die Dunkelheit ist ein Bühneneffekt; nicht alle Geräte reagieren bei einem Stromausfall gleich. Keine Zahlen.'],
+        smarty: [['T6 · Verkehrsproblem (Übergang zur Mobilität, nach dem Energiecheck)', 'O']],
       },
     ],
   },
   {
-    id: 'mobilitaet', nr: 3, kurz: 'Mobilität', titel: 'Mission Mobilität – Platz für alle und eine Ampel, die mitdenkt', typ: 'A/B/C, mBot, Verkehrssimulation', bereiche: ['parken', 'kreuzung'],
+    id: 'mobilitaet', nr: 3, kurz: 'Mobilität', titel: 'Mission Mobilität – Platz für alle und eine Ampel, die mitdenkt', typ: 'A/B/C Parken, Busproblem (danach Verkehrstool und Live-mBot außerhalb), Ausblick 2050 mit A/B Schwebebahn/Flugtaxi', bereiche: ['parken', 'kreuzung', 'zukunft'],
     kamera: 'wohnstrasse',
     schritte: [
       {
@@ -185,37 +213,39 @@ export const MISSIONEN = [
         smarty: [['M2 · Jeder Parkplatz braucht Fläche', 'X'], ['M3 · Vorschlag', 'C'], ['M9 · Simulation erkannt', '.']],
       },
       {
+        // Überleitung: nur das Busproblem zeigen – KEINE Ampelsteuerung, Simulation oder mBot-Funktion im Konfigurator
         art: 'bild', kicker: 'Mission Mobilität · Szene 3', titel: 'Der Bus wartet', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
-        text: 'Passen in einen Bus mehr Menschen als in ein Auto?',
+        text: 'Könnte eine schlaue Ampel unserem Bus helfen?',
         tafeln: ['kreuzung'],
-        regie: ['Z2: „Könnte der Bus der Ampel sagen: Hallo, ich komme?“'],
-        smarty: [['M4 · Geduld nicht erkannt', 'V']],
+        regie: ['Z2: „Könnte der Bus der Ampel sagen: Hallo, ich komme?“',
+          'Danach verlässt die Regie den Konfigurator: Show-Zentrale → Verkehrssimulation (normale Ampel / Busanmeldung) → Live-mBot (LED-Ampel von Hand, NICHT mit dem mBot verbunden).',
+          'Anschließend zurück in den Konfigurator: Weiter → Szene 4 „Fahren 2050 Autos von allein?“.'],
+        smarty: [['M4 · Geduld nicht erkannt', 'V'], ['M5 · Funkverbindung – in der Verkehrssimulation', 'B'], ['M6 · Niemand gefährden – in der Verkehrssimulation', 'N'], ['M7 · Test erfolgreich – beim Live-mBot', 'M']],
       },
       {
-        art: 'extern', kicker: 'Mission Mobilität · Szene 4', titel: 'Echte Robotik: der mBot als Bus', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
-        text: 'Was soll der Bus bei Rot machen? Und bei Grün?',
-        live: 'Live-Kamera: mBot folgt der Linie, die LED-Ampel wird von Hand geschaltet',
-        regie: ['mBot und Ampel sind NICHT verbunden: Ampel von Hand, mBot per IR-Fernbedienung bzw. Linienverfolgung.', 'Bei Ausfall: mBot an die Haltelinie stellen und das Prinzip erklären.'],
-        smarty: [['M7 · Test erfolgreich', 'M']],
-      },
-      {
-        art: 'extern', kicker: 'Mission Mobilität · Szene 5', titel: '3D-Experiment: normale gegen schlaue Ampel', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
-        text: 'Gleiche Startbedingungen – eine Änderung: Der Bus meldet sich per Funk an.',
-        live: 'Eigene 3D-Verkehrssimulation (kein Minecraft)',
-        link: { text: 'Verkehrssimulation öffnen', href: '../verkehr/' },
-        regie: ['Wartezeiten nur aus der Simulation ablesen – keine Zahlen erfinden.', 'Querverkehr bekommt sicher Rot, erst dann Bus Grün.', 'Danach zurück in den Stadt-Konfigurator.'],
-        smarty: [['M5 · Funkverbindung', 'B'], ['M6 · Niemand gefährden', 'N']],
-      },
-      {
-        art: 'bild', kicker: 'Mission Mobilität · Szene 6 · Blick nach vorn', titel: 'Fahren 2050 Autos von allein?', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
+        art: 'bild', kicker: 'Mission Mobilität · Szene 4 · Blick nach vorn', titel: 'Fahren 2050 Autos von allein?', kamera: 'zukunft', zeige: 'vorher', bereich: 'kreuzung',
         text: 'Niemand weiß das heute sicher.',
         seiteTitel: 'Möglichkeiten und Grenzen',
         punkte: ['Sensoren und Kameras erkennen Straße, Ampeln und Menschen.', 'Ein Computer entscheidet: bremsen, warten, fahren.', 'Das könnte Menschen helfen, die nicht selbst fahren können.', 'Grenzen: Schnee, Baustellen, unklare Lagen – Menschen müssen eingreifen können.', 'Ein Auto ohne Fahrer ist trotzdem ein Auto: weniger Verkehr gibt es nur mit Bus, Rad und Fußwegen.'],
-        regie: ['Kurzer Ausblick, etwa eine Minute: Möglichkeiten und Grenzen, keine Vorhersage.', 'Frage ans Publikum: „Was müsste so ein Auto alles erkennen?“'],
+        // Kompakte A/B-Auswahl: ein Klick wählt und speichert (Priorisierung, kein Ausschluss). Keine Untermenüs, keine weitere Abstimmungslogik.
+        auswahl: {
+          bereich: 'zukunft', frage: 'Wie bewegen wir uns im Jahr 2050?',
+          optionen: [
+            { v: 'A', b: 'A', titel: 'Schwebebahn', text: 'Viele Menschen fahren gemeinsam über der Straße.', tafel: 'schwebebahn' },
+            { v: 'B', b: 'B', titel: 'Flugtaxi', text: 'Ein kleines Fluggerät startet und landet an festen Plätzen.', tafel: 'flugtaxi' },
+          ],
+          hinweis: 'Beides sind Zukunftsideen. Unsere Wahl zeigt, was wir zuerst ausprobieren.',
+        },
+        regie: ['Kurzer Ausblick, etwa eine Minute: Möglichkeiten und Grenzen, keine Vorhersage.', 'Frage ans Publikum: „Was müsste so ein Auto alles erkennen?“',
+          'Z2: „Wir kommen aus dem Jahr 2050. Und jetzt mal ehrlich: Ich dachte, da fliegen längst alle Autos!“',
+          'Z1: „Vielleicht gibt es Flugtaxis. Und es gibt Bahnen, die über den Straßen schweben. Aber was passt zu unserer Zukunftsstadt?“',
+          'Z2: „Was findet ihr spannender: eine Schwebebahn oder ein Flugtaxi?“ – Abstimmen lassen und die gewählte Karte anklicken (oder Taste A / B). Ein Klick speichert.',
+          'Fachlich: hängende Schwebebahn ≠ Magnetschwebebahn; ob es 2050 Flugtaxis gibt, ist ungewiss; ein Flugtaxi ist kein fliegendes Auto.',
+          'In der Minecraft-Welt stehen immer BEIDE (unabhängig von der Wahl).'],
         smarty: [['M10 · Zukunftsprognose: selbstfahrende Autos', '-'], ['M11 · Auch schlaue Autos machen Fehler', 'Q']],
       },
       {
-        art: 'schalter', kicker: 'Mission Mobilität · Szene 7', titel: 'Zurück in der Zukunftsstadt', kamera: 'kreuzung', bereich: 'kreuzung',
+        art: 'schalter', kicker: 'Mission Mobilität · Szene 5', titel: 'Zurück in der Zukunftsstadt', kamera: 'kreuzung', bereich: 'kreuzung',
         text: 'Mehr Platz auf der Straße – und der Bus meldet sich an.',
         vorher: 'normal', nachher: 'bus', nachherText: 'Bus meldet sich an', vorherText: 'Normale Ampel',
         weitereKamera: 'wohnstrasse',
@@ -355,6 +385,7 @@ export function beschlussText(bereich, v) {
     laternen: { immer: 'Laternen leuchten immer (Tag und Nacht)', sensor: 'Laternen leuchten nur bei Dunkelheit' },
     parken: { A: 'Parken vor den Häusern, Gehwege frei', B: 'Parken nur in ausgewählten Straßen, Spielstraße', C: 'Parkhaus am Rand, Straße für Menschen' },
     kreuzung: { normal: 'Normale Ampel (ohne Busanmeldung)', bus: 'Bus meldet sich an der Ampel an' },
+    zukunft: { A: 'Zukunftsidee zuerst: Schwebebahn über der Straße', B: 'Zukunftsidee zuerst: Flugtaxi mit Landeplatz', beide: 'Schwebebahn und Flugtaxi' },
     wohnen: { A: 'Sechs Häuser mit eigenem Garten', B: 'Kompakte Häuser mit gemeinsamem Hof', C: 'Höheres Haus mit großem Park' },
     aufstocken: { bestand: 'Bestandshaus bleibt wie es ist', holz: 'Bestandshaus erhalten, zwei Holzgeschosse' },
     einkaufen: { A: 'Großer Supermarkt am Stadtrand', B: 'Markthalle in der Mitte', C: 'Kleine Läden im Wohnviertel: Bäckerei, Lebensmittel, Gemüse' },

@@ -247,3 +247,23 @@ button:disabled { opacity: .45; cursor: default; }
 .varianten { display: grid; gap: 6px; margin-top: 6px; }
 .variante-zeile { border-top: 1px dashed #d2dfdc; padding-top: 6px; }
 .variante-zeile.aktiv { background: #fff7e0; border-radius: 6px; padding: 6px; border-top: 0; }
+
+/* ---------- Energiecheck (Mission Technik): Hintergrund je Zustand, vier Zustandskacheln ---------- */
+.welt.stromaus { background: radial-gradient(ellipse at 50% 55%, #1d2434 0%, #111722 70%, #0a0e15 100%); }
+.welt.abend { background: radial-gradient(ellipse at 50% 55%, #ffe0b8 0%, #eaa877 62%, #9a6a78 100%); }
+.energie-stufen { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 1cqh; }
+.stufe-kachel { display: flex; align-items: center; justify-content: center; gap: 1.2cqh; min-height: 7.5cqh; font-size: 2.5cqh; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 1.1cqh; border: 1px solid #b8d1ce; color: var(--ink); }
+.stufe-kachel .n { width: 4cqh; height: 4cqh; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1px solid #9fb6b3; font: 500 2.2cqh Plex, monospace; }
+.stufe-kachel.s1 { background: #e1e6ef; } .stufe-kachel.s2 { background: #e3f2e6; } .stufe-kachel.s3 { background: #fff0d2; } .stufe-kachel.s4 { background: #daf2ef; }
+.stufe-kachel[aria-pressed='true'] { outline: .55cqh solid var(--gold-dunkel); outline-offset: -.55cqh; box-shadow: 0 .4cqh 0 #bd8f3d; }
+.stufe-kachel[aria-pressed='true'] .n { background: var(--gold); border-color: var(--gold-dunkel); }
+.knopfreihe button.gross { font-size: 2.5cqh; min-height: 6cqh; padding: .8cqh 2.6cqh; }
+
+/* ---------- Kompakte Auswahl (Mobilität Szene 4: Schwebebahn oder Flugtaxi) ---------- */
+.auswahl-kopf { display: flex; align-items: baseline; gap: 1.4cqh; flex-wrap: wrap; }
+.auswahl-kopf b { font-size: 2.6cqh; letter-spacing: -.02em; }
+.auswahl-kopf span { font-size: 1.8cqh; color: var(--muted); }
+.karten.auswahl .karte { grid-template-columns: 30cqh 1fr; min-height: 13cqh; }
+.karten.auswahl .karte .kurztext { margin: 0; font-size: 2.15cqh; line-height: 1.25; }
+.karten.auswahl .karte.beschluss { outline: .55cqh solid var(--gold-dunkel); outline-offset: -.55cqh; background: #fff8e6; }
+.karten.auswahl .karte.beschluss .buchstabe { background: var(--gold); color: #1f434b; }

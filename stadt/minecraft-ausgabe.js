@@ -7,10 +7,12 @@
  * /clone … replace auf die Baufläche – für Änderungen live in der geöffneten Welt („manuelle Variante“).
  *
  * Keine direkte Verbindung Browser → Minecraft: Der Browser erzeugt eine Datei; geöffnet wird sie in Minecraft Education.
+ * Ausnahme mit Absicht: Zukunftsverkehr (mcFest) steht IMMER als Schwebebahn UND Flugtaxi in der Welt – die Abstimmung im
+ * Konfigurator ist nur eine Priorisierung und wird nicht nach Minecraft übertragen (Änderungsauftrag „Zukunftsmobilität 2050“).
  */
 import { Welt } from '../minecraft/welt.js';
 import { mcworld } from '../minecraft/mcworld.js';
-import { BEREICH_MC, BEREICHE, BEREICH_IDS, boxVon, groesseVon, ursprungVon, baueGrundstadt, stift, vorlage, einsetzen, STADT, S } from './stadtmodell.js';
+import { BEREICH_MC, BEREICHE, BEREICH_IDS, boxVon, groesseVon, ursprungVon, baueGrundstadt, stift, vorlage, einsetzen, mcGrund, STADT, S } from './stadtmodell.js';
 import { KAMERAS, MISSIONEN } from './daten.js';
 
 const p3 = (v) => v.join(' ');
@@ -27,11 +29,11 @@ export function dateiName(zeit = new Date()) { return `START-IT-SMART_Stadt-2050
 // Variantennamen auf Schildern (nur ASCII, wie im Spielplatz-Test)
 const KURZ = {
   spielplatz: { grau: 'GRAU', gruen: 'GRUEN' }, laternen: { immer: 'IMMER AN', sensor: 'SENSOR' },
-  parken: { grau: 'GRAU', A: 'A vor Haus', B: 'B Strassen', C: 'C Parkhaus' }, kreuzung: { normal: 'NORMAL', bus: 'BUS FUNK' },
+  parken: { grau: 'GRAU', A: 'A vor Haus', B: 'B Strassen', C: 'C Parkhaus' }, kreuzung: { normal: 'NORMAL', bus: 'BUS FUNK' }, zukunft: { beide: 'BAHN + TAXI' },
   wohnen: { grau: 'GRAU', A: 'A Gaerten', B: 'B Hof', C: 'C Park' }, aufstocken: { bestand: 'BESTAND', holz: '+2 HOLZ' },
   einkaufen: { grau: 'GRAU', A: 'A Stadtrand', B: 'B Mitte', C: 'C Laeden' }, bildung: { grau: 'GRAU', A: 'A Schule', B: 'B Bahnhof', C: 'C verteilt' },
 };
-const SCHILD_TITEL = { spielplatz: 'SPIELPLATZ', laternen: 'LATERNEN', parken: 'PARKEN', kreuzung: 'KREUZUNG', wohnen: 'WOHNEN', aufstocken: 'AUFSTOCKEN', einkaufen: 'EINKAUFEN', bildung: 'BILDUNG' };
+const SCHILD_TITEL = { spielplatz: 'SPIELPLATZ', laternen: 'LATERNEN', parken: 'PARKEN', kreuzung: 'KREUZUNG', zukunft: 'ZUKUNFT', wohnen: 'WOHNEN', aufstocken: 'AUFSTOCKEN', einkaufen: 'EINKAUFEN', bildung: 'BILDUNG' };
 
 /* ---------- Kammern ---------- */
 export function kammer(id, v) {
@@ -57,7 +59,7 @@ export function ansicht(key) {
   }
   return { stand: p, blick: k.ziel.map(Math.round), titel: k.titel };
 }
-export const ANSICHTEN = ['gesamt', 'platz', 'laternen', 'wohnstrasse', 'kreuzung', 'wohnen', 'aufstocken', 'einkaufen', 'wohnhaus', 'bildung'];
+export const ANSICHTEN = ['gesamt', 'platz', 'laternen', 'wohnstrasse', 'kreuzung', 'zukunft', 'wohnen', 'aufstocken', 'einkaufen', 'wohnhaus', 'bildung'];
 
 /* ---------- Befehle ---------- */
 export function befehle(id, v) {
@@ -66,7 +68,7 @@ export function befehle(id, v) {
   return {
     bauen: `/clone ${p3(kb[0])} ${p3(kb[1])} ${p3([x1, y1, z1])}`,
     pruefen: `/testforblocks ${p3(kb[0])} ${p3(kb[1])} ${p3([x1, y1, z1])} all`,
-    zuruecksetzen: `/clone ${p3(kammer(id, BEREICHE[id].grund)[0])} ${p3(kammer(id, BEREICHE[id].grund)[1])} ${p3([x1, y1, z1])}`,
+    zuruecksetzen: `/clone ${p3(kammer(id, mcGrund(id))[0])} ${p3(kammer(id, mcGrund(id))[1])} ${p3([x1, y1, z1])}`,
     flaeche: `${p3(box.slice(0, 3))} bis ${p3(box.slice(3))}`,
     kammer: `${p3(kb[0])} bis ${p3(kb[1])}`,
     bloecke: anzahlBloecke(id),
@@ -135,9 +137,10 @@ export function erzeugeStadtWelt(beschluesse = {}) {
     const dx = Math.sign(x - blick[0]), dz = Math.sign(z - blick[2]), bx = x + (Math.abs(x - blick[0]) > Math.abs(z - blick[2]) ? dx : 0), bz = z + (Math.abs(x - blick[0]) > Math.abs(z - blick[2]) ? 0 : dz);
     befehlsblock(p, bx, y - 1, bz, ALLGEMEIN.regieraum.replace('@s', '@p'), 'Zurueck', [bx, y, bz, 'knopf'], null);
   }
-  // Beschlüsse in die Stadt setzen: dieselben Vorlagen wie in den Kammern (wie /clone … replace)
+  // Beschlüsse in die Stadt setzen: dieselben Vorlagen wie in den Kammern (wie /clone … replace).
+  // Flächen mit mcFest (Zukunftsverkehr) stehen unabhängig von der Abstimmung immer in ihrer festen Minecraft-Fassung.
   for (const id of BEREICH_IDS) {
-    const v = beschluesse[id];
+    const v = BEREICHE[id].mcFest || beschluesse[id];
     if (v && v !== BEREICHE[id].grund && BEREICHE[id].mc.includes(v)) einsetzen(w, id, vorlage(id, v));
   }
   return w;
@@ -174,6 +177,7 @@ export function alleBauauftraege() {
   t.push('', 'ZEIT', `   Tag:   ${ALLGEMEIN.tag}`, `   Nacht: ${ALLGEMEIN.nacht}`, '');
   for (const m of MISSIONEN) for (const id of m.bereiche) {
     t.push(`==== ${m.titel} ====`);
+    if (BEREICHE[id].mcFest) t.push(`${BEREICHE[id].titel}: In der Welt stehen IMMER beide (Schwebebahn und Flugtaxi) – unabhängig von der Abstimmung.`);
     for (const v of BEREICHE[id].mc) t.push(bauauftrag(id, v), '');
   }
   return t.join('\n');

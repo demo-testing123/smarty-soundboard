@@ -1,80 +1,89 @@
-# Aus Grau wird Grün – Mission Natur
+# Sensorlabor Regenwasser – Mission Natur
 
-3D-Simulation in Blockgrafik für die Kinderuni **START IT SMART – Mission Zukunft** (Klassen 1–4, Großleinwand).
-Sie zeigt die Spielplatzszene des Drehbuchs (Abschnitt 3 „Mission Natur – Aus Grau wird Grün“) im Browser:
-den grauen Platz, die Abstimmung, die Verwandlung in den Natur-Abenteuerspielplatz, den heißen Sommertag und den Starkregen.
+3D-Simulation in Blockgrafik für die Kinderuni **START IT SMART – Mission Zukunft** (Klassen 1–4, 400–500 Kinder, Großleinwand).
+Sie erzählt nur noch die technische Geschichte des Regenwassers: Starkregen → Wasser speichern → Trockenheit → Bewässern.
+Grau → Grün und die Abstimmung finden im Stadt-Konfigurator statt (Mission Natur).
 
 **Start:** https://demo-testing123.github.io/smarty-soundboard/natur/
-oder im Soundboard oben auf **🌳 Natur** (öffnet ein neues Fenster für den Beamer).
+oder im Stadt-Konfigurator: Mission Natur → Szene 3 → „Natur-Simulation öffnen“.
 
-Die Seite läuft für sich, also auch dann, wenn Minecraft Education nicht verfügbar ist. Gestaltung und Maße des Spielplatzes stammen aus
-derselben Datei wie die Minecraft-Testwelt (`../minecraft/welt.js`). Leinwand und Minecraft zeigen deshalb denselben Platz.
-Die Grafik ist eigenständig: schlichte Blöcke in eigenen Farben, keine Texturen oder Figuren aus Spielen.
+Umgebaut nach dem Änderungsauftrag „Natursimulation → Sensorlabor Regenwasser“ vom 23.11.2026. Die frühere Fassung
+„Aus Grau wird Grün“ mit sechs Szenen steht in der Git-Geschichte (Stand bis Commit 9465f7a).
+
+## Was wiederverwendet und was entfernt wurde
+
+| Wiederverwendet | Entfernt |
+|---|---|
+| grüne 3D-Spielplatzwelt aus `../minecraft/welt.js` (dieselbe Vorlage wie Minecraft-Testwelt und Konfigurator), unverändert | grauer Platz, Verwandlung „Beides gemeinsam“ |
+| Kamera (isometrisch), Straßenplatte mit Bodenschnitt, graue Hochhäuser | Abstimmung A/B |
+| Regenanimation, Versickern im Bodenschnitt, Füllstände von Regenmulde und Zisterne | Sommertag mit Wärmeansicht, Tiere |
+| Kinder auf dem Spielplatz (bei Regen nicht draußen) | Endbild |
+| Beschriftungen an 3D-Punkten, Vollbild, Offline über den gemeinsamen Service Worker | Startbild, Hauptleiste, Unterleiste, Info für Moderation (Taste `I`), Taste `R` |
+| | Abfluss auf grauem Boden, tiefer Spielbereich mit Wasser, „Gießen“ als Teilschritt |
+
+**Neu:**
+- Wasserstandsensor an der Zisterne und Bodenfeuchtesensor im Rasen, beide als Modell.
+- Blauer Zulauf von der Regenmulde zur Zisterne.
+- Blaue Bewässerungsleitungen im Rasen und im Bodenschnitt, mit wandernden Tropfen.
+- Rasenfarbe nach Bodenfeuchte: gelblich bei trocken, dunkler bei nass.
+- Zwei Sensoranzeigen.
+- Die Regel der Steuerung, sichtbar geprüft.
+
+## Bedienung
+
+Eine einzige Schrittsteuerung: vier große Flächen unten, links „Zurück“, rechts „Weiter“. Tasten sind nicht nötig, gehen aber auch:
+`←` `→`, `1`–`4`, `F` für Vollbild. Jeder Schritt setzt beim Betreten seine Startwerte. Er lässt sich deshalb beliebig oft gleich vorführen, ohne etwas zurückzusetzen.
+Nichts schaltet von selbst in den nächsten Schritt. Es gibt keinen Ton; SMARTy kommt wie gewohnt aus dem Soundboard.
+
+| Schritt | Was passiert (Zeit gerafft) | Anzeigen am Ende |
+|---|---|---|
+| 1 Starkregen | Regen; über die Regenmulde fließt Wasser in die Zisterne (blauer Zulauf), Boden wird nass | Zisterne 85 %, Bodenfeuchte 92 % „Boden nass“ |
+| 2 Speichern | Regen vorbei, Mulde leert sich; „Wir heben Regenwasser für trockene Tage auf.“ | 85 %, 75 % „Boden feucht“ |
+| 3 Trockenheit | Sonne, die Erde trocknet aus (Rasen wird gelblich), der Sensor meldet „Boden trocken“ | 85 %, 18 % „Boden trocken“ (gelb) |
+| 4 Bewässern | Die Regel wird sichtbar geprüft. Boden trocken ✓, UND Wasser vorhanden ✓, dann **Bewässerung EIN**: blaue Leitungen, Feuchte steigt, Zisterne sinkt. Danach **Bewässerung AUS** | 64 %, 60 % „Boden feucht“ |
+
+Die Animationen dauern zusammen etwa 42 Sekunden. Mit dem Gespräch auf der Bühne dauert die Demo etwa 2–3 Minuten.
+
+**Bühnenablauf (Stichworte aus dem Auftrag):**
+1. Z2: „Und was machen wir mit dem ganzen Regenwasser? Einfach für schlechte Zeiten aufheben?“ → Schritt 1, dann 2.
+2. Z1: „Wir speichern es in einer Zisterne. Ein Sensor zeigt, wie viel Wasser darin ist.“
+3. Z2: „Jetzt ist die Erde trocken. Müssen wir mit 500 Gießkannen losrennen?“ → Schritt 3.
+4. SMARTy N5 (Soundboard): „Technikidee erkannt! …“
+5. Z1: „Ist der Boden trocken und Wasser gespeichert, kann die Steuerung die Bewässerung einschalten.“ → Schritt 4.
+6. Danach optional SMARTy N4 (Soundboard).
+
+## Regel der Steuerung (regelbasiert, keine KI)
+
+Die Werte sind Beispielwerte in `config.js` › `regel`:
+- **EIN** nur, wenn die Bodenfeuchte **unter 30 %** liegt **UND** mindestens **20 %** Wasser in der Zisterne sind.
+- **AUS**, sobald die Bodenfeuchte **60 %** erreicht **ODER** weniger als 20 % Wasser da sind.
+- Bei leerer oder fast leerer Zisterne startet die Bewässerung nie.
+
+Während der Bewässerung sinkt der Wasserstand und die Bodenfeuchte steigt.
+Die Anzeige zeigt ganze Prozent und dauerhaft „Vereinfachte Simulation · keine echten Messwerte“. Es gibt keine Hardware, kein Backend und keine Datenübertragung.
+
+Farben: Blau = Wasser, Gelb = trocken, Grün = feucht genug. Rahmen und Flächen in Türkis, warmem Gelb und dunklem Blau (START IT SMART).
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `index.html`, `style.css` | Bühne 16:9, Leisten, Tafeln; Größen relativ zur Bildhöhe |
-| `config.js` | **alle Texte (wörtlich aus dem Drehbuch), Schritte und Zeiten** – hier wird angepasst |
-| `model.js` | ohne Grafik: sichtbare Blöcke, Wärme (vereinfacht), Wasser bei Starkregen, Zeitplan der Verwandlung |
-| `scene3d.js` | 3D mit Three.js: Platz als Modell-Ausschnitt mit Bodenschnitt, Hochhäuser, Regen, Tiere, Kinder |
-| `main.js` | Bedienung: Abschnitte, Schritte, Tasten, Beschriftungen |
-| `test.html` | Abnahmetests (28 Prüfungen, inkl. 10 × alle Abschnitte wechseln und Leistung) |
-
-Es gibt keinen Build-Schritt. Offline geht es über den gemeinsamen Service Worker oder `start-lokal.bat`.
-
-## Bedienung
-
-Nichts schaltet von selbst weiter, es gibt keinen Ton. Die SMARTy-Sätze kommen wie gewohnt aus dem Soundboard.
-
-| Abschnitt | Taste | Schritte (→ / Leertaste) | Was zu sehen ist |
-|---|---|---|---|
-| Startbild | `0` | – | Titel und Knöpfe |
-| Grauer Platz | `1` | Frage 1 → Frage 2 | versiegelter, grauer Platz zwischen Hochhäusern; „Würdet ihr hier nachmittags gerne spielen?“ |
-| Abstimmung | `2` | Abstimmen → Frage | A „Großer Abenteuerspielplatz“, B „Grüner Abenteuerpark“. Das Ergebnis markiert man mit `A`/`B`; das ist optional, es wird nicht gezählt. |
-| Beides gemeinsam | `3` | Grau → Verwandeln | Der Platz verwandelt sich Schicht für Schicht in etwa 4,5 s. Danach: Abenteuer-Spielplatz, Bäume, Wiesen, wilde Ecke. |
-| Sommertag | `4` | Blanker Stein → Unter Bäumen → Tiere | Sonne und Schatten. `W` schaltet die vereinfachte Wärme-Ansicht ein: rot heiß, orange warm, blau kühler. |
-| Starkregen | `5` | Grauer Platz → Grüner Platz → Regen vorbei → Gießen | grau: Wasser fließt in die Abflüsse. grün: Wasser versickert (blaue Punkte im Bodenschnitt), Regenmulde und tiefer Bereich füllen sich, die Zisterne sammelt. Danach versickert das Wasser, die Zisterne gießt den Baum. |
-| Endbild | `6` | – | Schatten im Sommer · Platz für Tiere · Spielen mit Freunden · Hilfe bei Starkregen |
-
-Weitere Tasten: `←` zurück, `R` Abschnitt neu, `I` Info für Moderation (Drehbuchstellen, SMARTy-Tasten im Soundboard), `F` Vollbild.
-
-## Was das Modell bewusst vereinfacht
-
-- **Wärme:** Für jede Bodenstelle wird nur geprüft, ob sie in der Sonne oder im Schatten liegt (Blick durch das Blockgitter zur Sonne)
-  und ob sie aus Stein ist. Es gibt keine Temperaturen und keine Messwerte; ein Hinweis auf der Leinwand sagt das auch.
-- **Wasser:** Füllstände von 0 bis 1, keine Liter. Die Zeit ist gerafft: Mulde und tiefer Bereich leeren sich in etwa 20 Sekunden statt
-  in Stunden. Auch das steht auf der Leinwand. Wie im Drehbuch ist der tiefe Bereich „voll Wasser“ nicht bespielbar: Das Kind dort verschwindet,
-  und die Beschriftung sagt es.
-- **Abstimmung:** Laut Drehbuch folgt nach jeder Wahl „Beides gemeinsam!“. Deshalb gibt es keine eigenen A- oder B-Modelle.
-
-## Leistung (für schwache Schul-Laptops am Beamer)
-
-- **Kein Ruckler beim ersten Umschalten:** Beim Laden wird alles einmal unsichtbar vorbereitet (Grafikprogramme, Daten auf der Grafikkarte).
-  Das erste Bild nach dem Umschalten auf Starkregen braucht etwa 3 ms statt 40 ms.
-- **Gezeichnet wird nur, wenn sich etwas bewegt:** Ruhige Ansichten (grauer Platz, Abstimmung) zeichnen 0 statt 60 Bilder pro Sekunde.
-  Regen, Tiere und die Verwandlung laufen weiter flüssig.
-- **Schatten nur bei Änderungen:** Die Schattenkarte wird nur berechnet, wenn sich der Platz ändert (Verwandlung, Wechsel grau/grün),
-  nicht in jedem Bild.
-- **Wenige Zeichenaufrufe:** Die Straßenplatte, alle Hochhäuser und alle Fassaden sind zusammengefasst. Der graue Platz braucht 13 Aufrufe statt 93.
-- **Kein Wegwerf-Speicher pro Bild** (Regen, Tropfen, Tiere). Damit gibt es keine kurzen Hänger durch das Aufräumen des Browsers.
-- Die Bildschärfe ist auf das 1,5-Fache begrenzt. Am Beamer (Faktor 1) ändert das nichts, auf hochauflösenden Laptop-Bildschirmen spart es Rechenzeit.
-
-## Anpassen
-
-- **Texte:** `config.js`. Bitte wörtlich beim Drehbuch bleiben.
-- **Spielplatz-Gestaltung:** `../minecraft/welt.js` (Funktion `vorlageGruen`). Das ändert Leinwand **und** Minecraft-Testwelt zugleich.
-- **Zeiten:** `config.js` › `dauer`.
+| `index.html`, `style.css` | Bühne 16:9: Kopf, 3D-Welt, Sensoranzeigen, vier Schrittflächen; Größen relativ zur Bildhöhe |
+| `config.js` | **alle Texte, Schritte, Startwerte, Grenzwerte und Tempi** – hier wird angepasst |
+| `model.js` | ohne Grafik: sichtbare Blöcke, Rasenflächen, Regel (`darfStarten`, `mussStoppen`), Sensorlabor (Werte je Schritt) |
+| `scene3d.js` | 3D mit Three.js: Platz, Regen, Versickern, Füllstände, Sensoren, Leitungen, Rasenfarbe, Kinder |
+| `main.js` | Bedienung: Schritte, Anzeigen, Regelprüfung, Beschriftungen |
+| `test.html` | Abnahmetests (27 Prüfungen) |
 
 ## Prüfen
 
-`test.html` öffnen. Geprüft werden unter anderem:
-- gleiche Vorlagen wie in der Minecraft-Testwelt
-- Wärme: grau fast alles heiß, grün nichts heiß und mehr Schatten
-- Wasser: grau fließt ab, grün versickert und sammelt, danach leer, die Zisterne bleibt gefüllt, Gießen
-- Verwandlung vollständig und Abbruch mittendrin ohne halben Platz
-- Texte wörtlich, keine Mengenangaben, keine Figur Mika
-- 10 × alle Abschnitte ohne zusätzliche Objekte, Geometrien oder Texturen
+`test.html` öffnen: **27 von 27** (23.11.2026). Geprüft werden unter anderem:
+- Regel mit Grenzfällen, darunter alle Feuchtewerte 0–100 mit leerer oder fast leerer Zisterne: Die Bewässerung startet nie.
+- Die vier Schritte mit Werten und Verlauf, Wiederholbarkeit und Vorführdauer.
+- Kennzeichnung und Begriffe auf der Leinwand; keine Behauptung „KI“.
+- In der App: genau vier Schrittflächen plus Zurück/Weiter, keine zweite Leiste, genau zwei Anzeigen.
+- In der App: Schritt 3 zeigt 85 % / 18 %; Schritt 4 zeigt EIN, dann AUS.
+- 10 × alle Schritte, ohne dass Objekte, Geometrien oder Texturen dazukommen.
+- Keine externen Dateien.
 
-Geprüft bei 1366 × 768. Auf dem echten Beamer noch nicht angesehen.
+Am echten Beamer noch nicht angesehen: Lesbarkeit der Anzeigen aus mehreren Metern und Farbe des trockenen Rasens.

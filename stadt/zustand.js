@@ -37,7 +37,7 @@ export class Zustand {
     try { this.speicher.setItem(this.schluessel, JSON.stringify({ beschluesse: this.beschluesse, mehrheit: this.mehrheit, position: this.position, verlauf: this.verlauf, stand: new Date().toISOString() })); return true; } catch { return false; }
   }
   // Diskussionsbilder (Natur A/B) sind nie ein Beschluss
-  nurVorschau(bereich, v) { return BEREICHE[bereich].mc && !BEREICHE[bereich].mc.includes(v); }
+  nurVorschau(bereich, v) { return (BEREICHE[bereich].nurBild || []).includes(v); }
   variante(bereich) { return this.beschluesse[bereich] || BEREICHE[bereich].grund; }
   alle() { return Object.fromEntries(BEREICH_IDS.map((b) => [b, this.variante(b)])); }
   uebernehmen(bereich, v) {
