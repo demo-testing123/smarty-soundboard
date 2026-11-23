@@ -9,8 +9,38 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
 > **Stand (23.11.2026):** Drei Änderungsaufträge umgesetzt (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
-> mBot- und Ampelvergleichs-Szene (jetzt 5 Szenen), Auswahl Schwebebahn/Flugtaxi in Mobilität Szene 4. Keine neuen SMARTy-Sätze,
-> Soundboard, Show-Zentrale, Verkehrstool und andere Missionen unverändert. `test.html`: 76 von 76. In Minecraft Education weiterhin nicht getestet.
+> mBot- und Ampelvergleichs-Szene (jetzt 5 Szenen), Auswahl Schwebebahn/Flugtaxi in Mobilität Szene 4. Danach eine Korrektur
+> (Abschnitt 000): Szene 3 öffnet wieder das eigenständige Verkehrstool, Szene 5 zeigt das Ergebnis ohne Ampel-Umschalter.
+> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool und andere Missionen unverändert. `test.html`: 80 von 80.
+> In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## 000. Korrektur vom 23.11.2026: Verkehrssimulator wieder eingebunden (Mission Mobilität)
+
+Bei der Überarbeitung 00.1 war mit der doppelten Ampelszene auch der Knopf zum eigenständigen Verkehrstool verschwunden.
+Er stand früher in der Szene „3D-Experiment: normale gegen schlaue Ampel“ (`daten.js`, `link: { text: 'Verkehrssimulation öffnen', href: '../verkehr/' }`).
+Genau diese Verknüpfung ist jetzt in Szene 3 wiederhergestellt. Das Verkehrstool selbst (`../verkehr/`) ist nicht verändert, nicht kopiert und nicht nachgebaut.
+
+| Szene | Jetzt |
+|---|---|
+| 1 Die Straße ist voll · 2 Wo sollen die Autos parken? | unverändert |
+| 3 Der Bus wartet | 3D-Szene mit wartendem Bus wie bisher, dazu großer Knopf **„Verkehrssimulation öffnen ↗“**. Er öffnet das Verkehrstool in einem **neuen Tab**; der Konfigurator bleibt auf Szene 3 stehen. |
+| 4 Fahren 2050 Autos von allein? | unverändert: Erklärung, Auswahl Schwebebahn/Flugtaxi, Speicherung; keine Verkehrssimulation |
+| 5 Zurück in der Zukunftsstadt | Die Knöpfe „Normale Ampel“ / „Bus meldet sich an“ (Umschalter = zweiter Ampelvergleich) sind entfernt. Stattdessen eine Übersicht von der Wohnstraße bis zum Zukunftsverkehr mit drei Kacheln: **Parken** (Szene 2), **Ampel** (Busanmeldung, Ergebnis der Verkehrssimulation), **Zukunft 2050** (gewählte Option aus Szene 4, mit Tafel und Modell). Ein Klick auf eine Kachel fliegt dorthin, „Ganze Straße zeigen“ zurück. Die Busanmeldung wird mit **einem** Klick „Busanmeldung in Stadt übernehmen“ (oder Enter) übernommen. |
+
+- **Rückkehr aus dem Verkehrstool:** Tab des Verkehrstools schließen (`Strg + W`). Der Konfigurator steht noch auf Szene 3 (Vollbild wieder mit `F`), dann „Weiter“ → Szene 4. Ersatzweg wie bisher: Show-Zentrale → Kachel Verkehrssimulation.
+- **Sichtbarkeit Schwebebahn/Flugtaxi:** In den Szenen 1–3 ist die Baufläche Zukunftsverkehr immer leer, auch wenn aus einer Probe schon eine Wahl gespeichert ist. Auch die Beschluss-Marke oben erscheint erst ab Szene 4. Ab Szene 4 und in allen späteren Missionen ist die gewählte Option zu sehen.
+- In der Einzeldatei zeigt der Knopf (wie die anderen Simulationen) auf die Online-Fassung des Verkehrstools.
+- Neue Kamera „Wohnstraße bis Zukunftsverkehr“ nur für Szene 5. Minecraft-Welt, Ersatzwelt, Ansichtspunkte und Bauaufträge sind unverändert.
+- Unverändert: SMARTy-Soundboard (keine neuen Sätze), Show-Zentrale, Verkehrstool, andere Missionen, Szenen 1–2.
+- Geprüft (`test.html`, 80 von 80), neu dabei:
+  - genau 5 Szenen, Szenen 1–2 unverändert, der einzige Link der Mission ist `../verkehr/` in Szene 3, Szene 5 ohne Umschalter;
+  - `../verkehr/` ist erreichbar und ist die eigenständige Seite „Die schlaue Ampel · Verkehrssimulation“;
+  - Klick auf den Knopf öffnet `/verkehr/` in einem neuen Tab, der Konfigurator bleibt auf Szene 3, Weiter führt zu Szene 4 mit der Auswahl;
+  - Schwebebahn/Flugtaxi in den Szenen 1–3 nicht im Bild und ohne Marke, ab Szene 4 sichtbar;
+  - Szene 5: drei Kacheln, gewählte Option (A und B) im Bild und als Tafel, Busanmeldung per Klick übernommen, keine Knöpfe „Normale Ampel“ / „Bus meldet sich an“.
+- **Nicht geprüft:** Verhalten im echten Vollbild am Beamer-Laptop (neuer Tab verlässt das Vollbild; zurück mit `F`).
 
 ---
 
@@ -26,12 +56,12 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 | 4 – Echte Robotik: der mBot als Bus | – | entfernt (läuft live auf der Bühne) |
 | 5 – 3D-Experiment: normale gegen schlaue Ampel | – | entfernt (nur noch im separaten Verkehrstool) |
 | 6 – Fahren 2050 Autos von allein? | 4 | behalten (+ Auswahl Schwebebahn/Flugtaxi, 00.2) |
-| 7 – Zurück in der Zukunftsstadt | 5 | behalten |
+| 7 – Zurück in der Zukunftsstadt | 5 | behalten (seit 000 ohne Ampel-Umschalter, als Ergebnisübersicht) |
 
 - Fortschritt zeigt jetzt „Mobilität · 1/5 … 5/5“; Kicker „Szene 4 · Blick nach vorn“ und „Szene 5“.
-- Verwaiste Verweise bereinigt: kein Knopf „Verkehrssimulation öffnen“ mehr im Konfigurator, kein Live-Block mBot.
+- Verwaiste Verweise bereinigt: kein Live-Block mBot. (Der Knopf „Verkehrssimulation öffnen“ war hier versehentlich mit entfernt; er ist seit der Korrektur 000 in Szene 3 wieder da.)
 - Die SMARTy-Hinweise der entfernten Szenen (M5, M6, M7) stehen jetzt als Regie-Stichwort bei Szene 3 („in der Verkehrssimulation“, „beim Live-mBot“). Tasten und Clips sind unverändert.
-- Verbindlicher Bühnenablauf (Regie-Bereich, Taste `I`): Szenen 1–2 → Szene 3 (Busproblem) → Show-Zentrale → Verkehrstool (normale Ampel / Busanmeldung) → Live-mBot (LED-Ampel von Hand, nicht mit dem mBot verbunden) → zurück, Szene 4 → Szene 5.
+- Verbindlicher Bühnenablauf (Regie-Bereich, Taste `I`): Szenen 1–2 → Szene 3 (Busproblem) → Knopf „Verkehrssimulation öffnen ↗“ (seit 000; vorher über die Show-Zentrale) → Verkehrstool (normale Ampel / Busanmeldung) → Tab schließen → Live-mBot (LED-Ampel von Hand, nicht mit dem mBot verbunden) → Szene 4 → Szene 5.
 - Geprüft: Navigation vor/zurück, Tastatur, Regieansicht, Speicherung und Reset der Szenen 1–2 sowie Anzeige im Finale.
 
 ### 00.2 Zukunftsmobilität 2050: Schwebebahn oder Flugtaxi (ohne neue SMARTy-Sätze)
@@ -175,7 +205,7 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 | `0` | Szene 0 – graue Stadt | Stadt 2050 · Mission aktiviert | – | ANSICHT Gesamt |
 | `1` | Natur | grauer Platz · Abstimmung A/B (Diskussionsbilder) · **Lösung: Beides gemeinsam** (Übernehmen) · Starkregen grau/grün · Mission geschafft | Spielplatz | SPIELPLATZ GRAU / GRUEN |
 | `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope live** · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht · **Energiecheck** (4 Zustände, nur Bühneneffekt) | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
-| `3` | Mobilität (5 Szenen) | volle Straße · Parken A/B/C · Bus wartet (danach außerhalb: Verkehrstool, Live-mBot) · „Autos von allein?“ mit Auswahl **Schwebebahn/Flugtaxi** · Busanmeldung | Wohnstraße + Parkhausplatz; Kreuzung; Zukunftsverkehr (Ostweg) | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS, ZUKUNFT BAHN + TAXI (immer beide) |
+| `3` | Mobilität (5 Szenen) | volle Straße · Parken A/B/C · Bus wartet mit Knopf **Verkehrssimulation öffnen ↗** (danach Live-mBot außerhalb) · „Autos von allein?“ mit Auswahl **Schwebebahn/Flugtaxi** · Ergebnis: Parken, Busanmeldung, Zukunftsidee | Wohnstraße + Parkhausplatz; Kreuzung; Zukunftsverkehr (Ostweg) | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS, ZUKUNFT BAHN + TAXI (immer beide) |
 | `4` | Wohnen | sechs Familien (Wohnsimulator, eigene Seite) · Wohnformen A/B/C · Aufstocken + 2 Holzgeschosse | Wohngrundstück; Bestandshaus | WOHNEN GRAU/A/B/C, AUFSTOCKEN BESTAND/+2 HOLZ |
 | `5` | Kurze Wege | „Wo sind die Brötchen am nächsten?“: drei Wege von „Hier wohnen wir“ schätzen und messen · Laden A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |
 | `6` | Bildung | ein Raum, zwei Nutzungen · Orte A/B/C mit Teilhabe-Fragen | Südviertel | BILDUNG GRAU/A/B/C |

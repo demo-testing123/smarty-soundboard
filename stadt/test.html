@@ -149,11 +149,20 @@ try {
     const s12 = JSON.stringify(mob.slice(0, 2).map((x) => [x.art, x.titel, x.text, x.kamera, x.bereich || null, (x.optionen || []).map((o) => [o.v, o.titel, o.pro, o.contra])]));
     const s12soll = JSON.stringify([['bild', 'Die Straße ist voll', 'Autos, Autos, Autos! Wo können hier Kinder sicher laufen?', 'wohnstrasse', null, []], ['wahl', 'Wo sollen die Autos parken?', 'Ihr seid jetzt unser Zukunftsstadtrat.', 'wohnstrasse', 'parken',
       [['A', 'Parkplätze direkt vor den Häusern', 'Das Auto ist ganz nah', 'Die Straße bleibt voll'], ['B', 'Parkplätze nur in ausgewählten Straßen', 'Andere Straßen werden frei zum Spielen', 'Manche laufen weiter zum Auto'], ['C', 'Parkhaus am Rand des Wohnviertels', 'Platz für Gehwege, Grün und Spiel', 'Mit Einkäufen weiter laufen']]]]);
-    const ohneDopplung = !mob.some((x) => /mBot|Ampel/.test(x.titel) || x.art === 'extern' || (x.link && /verkehr/.test(x.link.href)));
+    // Korrektur (23.11.2026): kein Ampel-Umschalter und keine Ampelsimulation im Konfigurator – aber Szene 3 öffnet wieder das eigenständige Verkehrstool
+    const ohneDopplung = !mob.some((x) => /mBot|Ampel/.test(x.titel) || x.art === 'extern' || x.art === 'schalter' || x.vorher || x.nachher);
+    const links = mob.map((x, i) => (x.link ? `${i + 1}:${x.link.href}` : null)).filter(Boolean);
     const folge = mob.map((x) => x.titel);
-    pruefe('Bus/Ampel: genau 5 Mobilitätsszenen, 1–2 unverändert, Szene 3 „Der Bus wartet“ als Überleitung, kein mBot und kein Ampelvergleich im Konfigurator',
-      mob.length === 5 && s12 === s12soll && ohneDopplung && mob[2].titel === 'Der Bus wartet' && mob[2].art === 'bild' && /von allein/.test(mob[3].titel) && mob[4].art === 'schalter' && /Szene 4/.test(mob[3].kicker) && /Szene 5/.test(mob[4].kicker),
-      folge.map((t, i) => `${i + 1} ${t}`).join(' · '));
+    pruefe('Bus/Ampel: genau 5 Mobilitätsszenen, 1–2 unverändert, Szene 3 „Der Bus wartet“ mit Knopf zum Verkehrstool, Szene 5 Ergebnis ohne Ampel-Umschalter, kein mBot',
+      mob.length === 5 && s12 === s12soll && ohneDopplung && mob[2].titel === 'Der Bus wartet' && mob[2].art === 'bild' && /von allein/.test(mob[3].titel) && mob[4].art === 'bilanz' && /Szene 4/.test(mob[3].kicker) && /Szene 5/.test(mob[4].kicker)
+      && links.join() === '3:../verkehr/' && mob[2].link.text === 'Verkehrssimulation öffnen' && mob[4].ergebnis.map((e) => e.bereich).join() === 'parken,kreuzung,zukunft',
+      folge.map((t, i) => `${i + 1} ${t}`).join(' · ') + ` · Link: ${links.join()}`);
+    // Das Ziel des Knopfs ist das bestehende, eigenständige Verkehrstool (gleicher Pfad wie früher)
+    {
+      const r = await fetch('../verkehr/', { cache: 'no-store' }).catch(() => null), t = r && r.ok ? await r.text() : '';
+      const titel = (t.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+      pruefe('Verkehrstool: ../verkehr/ ist erreichbar und eigenständig (eigene Seite mit Ampel-Simulation)', !!r && r.ok && /verkehr|ampel/i.test(titel + t.slice(0, 4000)) && !/stadt-konfigurator/i.test(titel), titel || `Status ${r && r.status}`);
+    }
     // Änderungsauftrag Energiecheck: letzter Schritt der Technikmission, vier Zustände, keine Abstimmung, keine neue Mission
     const en = tech.at(-1);
     pruefe('Energiecheck: kurzer Unterabschnitt nach der Technikmission – 4 Zustände, keine Abstimmung, keine neue Mission',
@@ -439,11 +448,46 @@ try {
     pruefe('Zukunftsmobilität: ein Klick wählt und speichert (A/B hervorgehoben, im 3D-Modell gebaut), andere Beschlüsse bleiben, Wahl bleibt beim Szenenwechsel, im Zukunftscheck sichtbar, Reset setzt zurück',
       b1 && a1 && andere && bleibt && gespeichert && imCheck && reset && A.Z.beschluesse.zukunft === 'B', `B ${b1}, A ${a1}, andere ${andere}, bleibt ${bleibt}, Speicher ${gespeichert}, Zukunftscheck ${imCheck}, Reset ${reset}`);
   }
+  // Korrektur Mobilität: Szene 3 öffnet das Verkehrstool, danach weiter mit Szene 4; Szene 5 zeigt das Ergebnis ohne Ampel-Umschalter
+  {
+    const win = fr.contentWindow, doc = win.document, offen = [];
+    const origOpen = win.open; win.open = (url, ziel) => { offen.push([new URL(url, win.location.href).pathname, ziel]); return null; };
+    A.gehe(3, 2); await warte(40);
+    const knopf = [...doc.querySelectorAll('#panel button')].find((b) => /Verkehrssimulation öffnen ↗/.test(b.textContent));
+    if (knopf) knopf.click();
+    const blieb = A.pos().mission === 3 && A.pos().schritt === 2;
+    A.weiter(); await warte(30);
+    const weiter4 = A.pos().mission === 3 && A.pos().schritt === 3 && !!doc.querySelector('.karten.auswahl');
+    win.open = origOpen;
+    pruefe('Szene 3: „Verkehrssimulation öffnen ↗“ öffnet das bestehende Verkehrstool (neuer Tab), der Konfigurator bleibt auf Szene 3, Weiter → Szene 4',
+      !!knopf && knopf.classList.contains('haupt') && offen.length === 1 && /\/verkehr\/$/.test(offen[0][0]) && offen[0][1] === '_blank' && blieb && weiter4, offen.map((o) => o.join(' ')).join() || 'kein Aufruf');
+    // Schwebebahn/Flugtaxi erst ab Szene 4 (auch wenn aus einer Probe schon eine Wahl gespeichert ist)
+    A.auswahlSetzen('zukunft', 'A'); await warte(20);
+    const sicht = [];
+    for (let s = 0; s < 5; s++) { A.gehe(3, s); await warte(20); sicht.push(A.angezeigt.zukunft + (/Schwebebahn/.test(doc.querySelector('#marken').textContent) ? '+Marke' : '')); }
+    A.gehe(4, 0); await warte(20); sicht.push('W' + A.angezeigt.zukunft);
+    pruefe('Schwebebahn/Flugtaxi erst ab Szene 4 im Bild (Szenen 1–3 ohne Modell und ohne Beschluss-Marke), danach sichtbar',
+      sicht.join() === 'keine,keine,keine,A+Marke,A+Marke,WA', sicht.join(' · '));
+    // Szene 5: Ergebnis der Mission im Stadtbild, keine Knöpfe „Normale Ampel“ / „Bus meldet sich an“
+    A.Z.zuruecksetzenBereich('kreuzung');                // wie bei einer frischen Show: Busanmeldung noch nicht übernommen
+    A.gehe(3, 4); await warte(40);
+    const knoepfe = [...doc.querySelectorAll('#panel button')].map((b) => b.textContent);
+    const keinUmschalter = !knoepfe.some((t) => /^Normale Ampel$|^Bus meldet sich an$/.test(t.trim())) && !doc.querySelector('#panel .gruppe');
+    const kacheln = [...doc.querySelectorAll('.bilanz-kachel')].map((k) => k.textContent);
+    const bild = imBild('zukunft', 'A') && imBild('parken', A.Z.variante('parken')) && A.tafeln().includes('Schwebebahn') && A.kameraKey() === 'mobilitaet';
+    const uebern = [...doc.querySelectorAll('#panel button')].find((b) => /Busanmeldung in Stadt übernehmen/.test(b.textContent));
+    if (uebern) uebern.click(); await warte(20);
+    const bus = A.Z.beschluesse.kreuzung === 'bus' && imBild('kreuzung', 'bus') && /✓ Übernommen/.test(doc.querySelector('#panel').textContent);
+    A.auswahlSetzen('zukunft', 'B'); await warte(20);
+    const taxi = imBild('zukunft', 'B') && A.tafeln().includes('Flugtaxi') && [...doc.querySelectorAll('.bilanz-kachel')].some((k) => /Flugtaxi/.test(k.textContent));
+    pruefe('Szene 5: Parken, Busanmeldung und Zukunftsidee zusammen im Stadtbild (gewählte Option sichtbar), ohne Ampel-Umschalter und ohne zweite Busdemonstration',
+      keinUmschalter && kacheln.length === 3 && /Schwebebahn/.test(kacheln[2]) && bild && !!uebern && bus && taxi, `Knöpfe: ${knoepfe.join(' | ')}`);
+  }
   // Layout: Titel, Karten, Seitenleiste und Fußleiste liegen neben der 3D-Bühne, nicht darüber
   {
     const doc = fr.contentWindow.document, rect = (s) => { const e = doc.querySelector(s); if (!e || e.hidden || fr.contentWindow.getComputedStyle(e).display === 'none') return null; return e.getBoundingClientRect(); };
     const schnitt = (a, b) => a && b && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
-    const faelle = [[0, 1], [1, 1], [1, 3], [2, 2], [2, 4], [3, 3], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
+    const faelle = [[0, 1], [1, 1], [1, 3], [2, 2], [2, 4], [3, 2], [3, 3], [3, 4], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
     let kameraOk = true, kInfo = [];
     for (const [mm, ss] of faelle) {
       A.gehe(mm, ss); await warte(40);

@@ -1,6 +1,6 @@
 /* Offline-Speicher: beide Dashboards (Regie-Soundboard, Show-Zentrale), alle Sprachclips und die Filme bleiben
  * nach dem ersten Besuch im Browser, damit die Show in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v24';
+const CACHE = 'smarty-v25';
 const FILM_CACHE = 'smarty-filme';
 const CORE = ['./', 'index.html', 'regie.js', 'show.html', 'show.js', 'show.json', 'dashboard.css', 'symbole.js', 'qr.js',
   'sounds.json', 'audio/manifest.json', 'bilder/start-it-smart-logo.png', 'bilder/intro.jpg', 'bilder/abschluss.jpg',

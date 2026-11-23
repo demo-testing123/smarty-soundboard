@@ -56,9 +56,14 @@ const grund = (b) => BEREICHE[b].grund;
 const MISSION_VON = Object.fromEntries(BEREICH_IDS.map((b) => [b, MISSIONEN.findIndex((m) => m.bereiche.includes(b))]));
 
 /* ---------- Stand der Stadt ---------- */
+// Bereiche mit einer Auswahl-Szene (Schwebebahn/Flugtaxi) erscheinen in ihrer Mission erst ab dieser Szene – die Wahl
+// wird nicht vorweggenommen, auch nicht nach einer Probe mit gespeichertem Stand.
+const AUSWAHL_AB = {};
+MISSIONEN.forEach((mm, mi) => mm.schritte.forEach((st, si) => { if (st.auswahl) AUSWAHL_AB[st.auswahl.bereich] = [mi, si]; }));
+const vorAuswahl = (b) => { const a = AUSWAHL_AB[b]; return !!a && pos.mission === a[0] && pos.schritt < a[1]; };
 export function sollStand() {
   const m = mission(), s = schritt(), soll = {};
-  for (const b of BEREICH_IDS) soll[b] = MISSION_VON[b] > pos.mission ? grund(b) : Z.variante(b);
+  for (const b of BEREICH_IDS) soll[b] = MISSION_VON[b] > pos.mission || vorAuswahl(b) ? grund(b) : Z.variante(b);
   if (s.zeige === 'vorher-alle') for (const b of BEREICH_IDS) soll[b] = grund(b);
   if (s.zeige === 'vorher') for (const b of (s.bereich ? [s.bereich] : m.bereiche)) soll[b] = grund(b);
   for (const [b, v] of Object.entries(vorschau)) soll[b] = v;
@@ -109,6 +114,7 @@ function gehe(m, s = 0, { kamera = true, vonHinten = false } = {}) {
   if (missionWechsel) wegeGemessen = false;
   const st = schritt();
   if (st.art === 'loesung') vorschau = { [st.bereich]: st.variante };
+  if (st.art === 'bilanz' && Z.beschluesse[st.bereich] !== st.variante) vorschau = { [st.bereich]: st.variante };   // Ergebnis der Verkehrssimulation, noch nicht übernommen
   if (st.art === 'regen') regenVorschau();
   if (!st.tagNacht && nacht) nachtSetzen(false);
   if (st.art === 'energie') { energieStufe = vonHinten ? st.stufen.length - 1 : 0; ansicht.setzeEnergie(energieStufe + 1); }
@@ -250,7 +256,7 @@ function markenFuer(m) {
   const out = [];
   for (const b of m.bereiche) {
     const v = Z.beschluesse[b];
-    if (v) out.push(h('span', { class: 'marke gold' }, '✓ ', beschlussText(b, v) || v));
+    if (v && !vorAuswahl(b)) out.push(h('span', { class: 'marke gold' }, '✓ ', beschlussText(b, v) || v));
   }
   return out;
 }
@@ -294,6 +300,36 @@ function anzeigen() {
   const tafelKeys = [...(s.tafeln || [])];
 
   if (s.art === 'bild' && s.punkte) { seite.append(...seiteListe(s.seiteTitel || 'Stichpunkte', s.punkte)); seite.hidden = false; }
+  if (s.art === 'bild' && s.link) {
+    // eigenständiges Programm (z. B. Verkehrstool) in einem neuen Tab; der Konfigurator bleibt auf dieser Szene stehen
+    reihe.append(h('button', { type: 'button', class: 'haupt gross extern-link', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗'),
+      s.link.hinweis ? h('span', { class: 'hinweis' }, s.link.hinweis) : null);
+    panel.append(reihe); panel.hidden = false;
+  }
+
+  if (s.art === 'bilanz') {
+    // Entscheidungen der Mission zusammen im Stadtbild – keine Umschalter, keine zweite Ampeldemonstration
+    const kacheln = h('div', { class: 'bilanz', style: `--n:${s.ergebnis.length}` });
+    for (const e of s.ergebnis) {
+      const v = e.bereich === s.bereich ? (vorschau[e.bereich] || Z.beschluesse[e.bereich]) : Z.beschluesse[e.bereich];
+      const vorschauNoch = e.bereich === s.bereich && vorschau[e.bereich] && vorschau[e.bereich] !== Z.beschluesse[e.bereich];
+      kacheln.append(h('button', {
+        type: 'button', class: `bilanz-kachel ${v ? (vorschauNoch ? 'vorschau' : 'ok') : 'offen'}`,
+        title: `${KAMERAS[e.kamera].titel} zeigen`, onclick: () => kameraZeigen(e.kamera),
+      }, h('span', { class: 'zeichen' }, v ? (vorschauNoch ? '…' : '✓') : '–'),
+      h('span', { class: 'text' }, h('b', {}, e.titel), h('span', {}, v ? beschlussText(e.bereich, v) : e.offen || 'noch offen'))));
+      // gewählte Zukunftsoption mit ihrer Tafel (Schwebebahn bzw. Flugtaxi)
+      const ab = AUSWAHL_AB[e.bereich], o = v && ab && MISSIONEN[ab[0]].schritte[ab[1]].auswahl.optionen.find((x) => x.v === v);
+      if (o && o.tafel) tafelKeys.push(o.tafel);
+    }
+    panel.append(kacheln);
+    const fertig = Z.beschluesse[s.bereich] === s.variante;
+    reihe.append(h('button', { type: 'button', onclick: () => kameraZeigen(s.kamera) }, 'Ganze Straße zeigen'),
+      fertig ? h('span', { class: 'status-marke ok' }, `✓ Übernommen: ${beschlussText(s.bereich, s.variante)}`)
+        : h('button', { type: 'button', class: 'haupt', title: 'Ergebnis der Verkehrssimulation in die Stadt übernehmen (Enter)', onclick: () => uebernehmen(s.bereich, s.variante) }, 'Busanmeldung in Stadt übernehmen ⏎'));
+    panel.append(reihe); panel.hidden = false;
+    tafelKeys.push('wohnstrasse', 'kreuzung');
+  }
 
   if (s.auswahl) {
     // kompakter Auswahlbereich: zwei Karten, ein Klick wählt und speichert (Priorisierung – das andere bleibt eine Idee)
@@ -453,7 +489,7 @@ function anzeigen() {
   // Tafeln, Wege, Hervorhebung
   tafelnSetzen(tafelKeys);
   ansicht.setzeWege(wege);
-  const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : s.auswahl ? [s.auswahl.bereich] : [];
+  const markiert = ['wahl', 'schalter', 'loesung'].includes(s.art) ? [s.bereich] : s.auswahl ? [s.auswahl.bereich] : s.art === 'bilanz' ? s.ergebnis.map((e) => e.bereich).filter((b) => Z.beschluesse[b] || vorschau[b]) : [];
   ansicht.setzeMarkierung(markiert);
   ansicht.setzeVersatz(0);
   // Seitenleiste ein/aus (nur wenn es eine gibt)
@@ -668,13 +704,13 @@ function tasten(e) {
   if (s.auswahl && /^[ab]$/i.test(k)) { const o = s.auswahl.optionen.find((x) => x.b === k.toUpperCase()); if (o) auswahlSetzen(s.auswahl.bereich, o.v); e.preventDefault(); return; }
   if (k === 'Enter') {
     if (s.art === 'wahl' && !s.denkimpuls && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
-    else if (s.art === 'loesung') uebernehmen(s.bereich, s.variante);
+    else if (s.art === 'loesung' || s.art === 'bilanz') uebernehmen(s.bereich, s.variante);
     else if (s.art === 'schalter' && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
     e.preventDefault(); return;
   }
   if (lk === 'r' && s.art === 'regen') { regenSetzen(!regenAn); e.preventDefault(); return; }
   if (lk === 'h') { document.body.classList.toggle('ohne-bedienung'); if (KAMERAS[kameraKey]?.rahmen) kameraZeigen(kameraKey); e.preventDefault(); return; }
-  if (k === 'Escape') { if (Object.keys(vorschau).length && s.art !== 'loesung' && s.art !== 'regen') { vorschau = {}; anzeigen(); } }
+  if (k === 'Escape') { if (Object.keys(vorschau).length && s.art !== 'loesung' && s.art !== 'regen' && s.art !== 'bilanz') { vorschau = {}; anzeigen(); } }
 }
 
 /* ---------- Start ---------- */

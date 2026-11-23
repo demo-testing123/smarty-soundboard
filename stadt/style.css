@@ -267,3 +267,17 @@ button:disabled { opacity: .45; cursor: default; }
 .karten.auswahl .karte .kurztext { margin: 0; font-size: 2.15cqh; line-height: 1.25; }
 .karten.auswahl .karte.beschluss { outline: .55cqh solid var(--gold-dunkel); outline-offset: -.55cqh; background: #fff8e6; }
 .karten.auswahl .karte.beschluss .buchstabe { background: var(--gold); color: #1f434b; }
+
+/* ---------- Mobilität: Knopf zum eigenständigen Verkehrstool (Szene 3), Ergebnis im Stadtbild (Szene 5) ---------- */
+.bilanz { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 1cqh; }
+.bilanz-kachel { display: flex; align-items: center; gap: 1.2cqh; min-height: 8cqh; padding: .8cqh 1.4cqh; text-align: left; border-radius: 1.1cqh; border: 1px solid #b8d1ce; background: #fff; color: var(--ink); cursor: pointer; font: inherit; }
+.bilanz-kachel:hover { background: #eef7f5; }
+.bilanz-kachel .zeichen { flex: none; width: 4.4cqh; height: 4.4cqh; border-radius: 50%; display: grid; place-items: center; font-size: 2.6cqh; font-weight: 800; background: #e6ecec; color: var(--muted); }
+.bilanz-kachel .text { display: flex; flex-direction: column; gap: .3cqh; min-width: 0; }
+.bilanz-kachel .text b { font-size: 1.8cqh; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.bilanz-kachel .text span { font-size: 2.2cqh; font-weight: 700; line-height: 1.2; }
+.bilanz-kachel.ok { background: #e8f5f2; border-color: #7fb9b1; }
+.bilanz-kachel.ok .zeichen { background: #155c62; color: #fff; }
+.bilanz-kachel.vorschau { background: #fff8e6; border-color: #d9b35c; border-style: dashed; }
+.bilanz-kachel.vorschau .zeichen { background: var(--gold); color: #1f434b; }
+.bilanz-kachel.offen .text span { color: var(--muted); font-weight: 600; }

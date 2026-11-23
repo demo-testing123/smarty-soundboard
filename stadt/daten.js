@@ -4,6 +4,8 @@
  * Änderungsaufträge vom 23.11.2026: Energiecheck nach der Technikmission (4 Zustände, keine Abstimmung); Mobilität ohne
  * mBot- und Ampelvergleichs-Szene (beides läuft außerhalb: Live-mBot, separates Verkehrstool) → 5 Szenen; Szene 4
  * „Fahren 2050 Autos von allein?“ mit kompakter A/B-Auswahl Schwebebahn/Flugtaxi. Keine neuen SMARTy-Sätze.
+ * Korrektur vom 23.11.2026: Szene 3 öffnet wieder das eigenständige Verkehrstool (../verkehr/, wie früher); Szene 5 zeigt
+ * ohne Ampel-Umschalter die Entscheidungen der Mission zusammen; Schwebebahn/Flugtaxi erst ab Szene 4 im Bild.
  * Die Figur „Mika“ ist überholt und kommt nicht vor. Sätze der Zeitreisenden stehen hier nur als Regie-Stichwort;
  * auf der Leinwand stehen ein kurzer Titel (Leitfrage) und höchstens eine Unterzeile. Längeres steht im Regie-Bereich (Taste I).
  * Keine erfundenen Zahlen: Messwerte (Wege, bebaute Fläche) rechnet das Stadtmodell aus und kennzeichnet sie als Modellwerte.
@@ -24,6 +26,7 @@ export const KAMERAS = {
   parkhaus: { titel: 'Quartiersrand', ziel: [-50, 66, -40], zoom: 24, azimut: 20, hoehe: 50, rahmen: [-64, 63, -46, -38, 76, -24] },
   kreuzung: { titel: 'Kreuzung', ziel: [40, 64, -22], zoom: 22, azimut: 30, hoehe: 46, rahmen: [30, 63, -28, 53, 72, 1] },
   zukunft: { titel: 'Zukunftsverkehr', ziel: [62, 66, -10], zoom: 30, azimut: 200, hoehe: 36, rahmen: [32, 63, -26, 95, 76, 3] },
+  mobilitaet: { titel: 'Wohnstraße bis Zukunftsverkehr', ziel: [16, 64, -22], zoom: 40, azimut: 10, hoehe: 56, rahmen: [-64, 63, -46, 95, 76, 3] },
   energie: { titel: 'Energie der Stadt', ziel: [62, 72, 58], zoom: 40, azimut: 322, hoehe: 33, rahmen: [32, 63, 30, 95, 104, 90] },
   wohnen: { titel: 'Wohngrundstück', ziel: [71, 66, -40], zoom: 27, azimut: 38, hoehe: 38, rahmen: [52, 63, -60, 91, 76, -21] },
   aufstocken: { titel: 'Bestandshaus', ziel: [64, 75, 14], zoom: 22, azimut: 292, hoehe: 26, rahmen: [52, 63, 6, 71, 85, 25] },
@@ -67,6 +70,8 @@ export const BUCHSTABEN_FARBE = { A: '#e2846b', B: '#1f8a8a', C: '#e3a630' };
  *  regen    – Natur: Starkregen-Ansicht grau / grün
  *  schalter – Vorher/Nachher einer Baufläche (+ optional Tag/Nacht)
  *  extern   – Übergang zu einem echten Showelement (Calliope, mBot, Verkehrssimulation, Wohnsimulator)
+ *  bilanz   – Mobilität: Entscheidungen der Mission zusammen im Stadtbild (keine zweite Ampel-/Busdemonstration)
+ *  link     – (bei bild/regen/extern) Knopf, der ein eigenständiges Programm in einem neuen Tab öffnet
  *  wege     – Kurze Wege: drei Wege von „Hier wohnen wir“ zu den möglichen Standorten, gemessen im Modell (Felder, keine Meter)
  *  finale   – Zukunftscheck, Vorschau-Rundgang, Vorher/Nachher der ganzen Stadt
  *  export   – Minecraft-Welt aus den übernommenen Beschlüssen erstellen, prüfen, herunterladen, Anleitung
@@ -191,7 +196,7 @@ export const MISSIONEN = [
     ],
   },
   {
-    id: 'mobilitaet', nr: 3, kurz: 'Mobilität', titel: 'Mission Mobilität – Platz für alle und eine Ampel, die mitdenkt', typ: 'A/B/C Parken, Busproblem (danach Verkehrstool und Live-mBot außerhalb), Ausblick 2050 mit A/B Schwebebahn/Flugtaxi', bereiche: ['parken', 'kreuzung', 'zukunft'],
+    id: 'mobilitaet', nr: 3, kurz: 'Mobilität', titel: 'Mission Mobilität – Platz für alle und eine Ampel, die mitdenkt', typ: 'A/B/C Parken, Busproblem mit Knopf zum eigenständigen Verkehrstool (danach Live-mBot außerhalb), Ausblick 2050 mit A/B Schwebebahn/Flugtaxi, Ergebnis im Stadtbild', bereiche: ['parken', 'kreuzung', 'zukunft'],
     kamera: 'wohnstrasse',
     schritte: [
       {
@@ -213,13 +218,17 @@ export const MISSIONEN = [
         smarty: [['M2 · Jeder Parkplatz braucht Fläche', 'X'], ['M3 · Vorschlag', 'C'], ['M9 · Simulation erkannt', '.']],
       },
       {
-        // Überleitung: nur das Busproblem zeigen – KEINE Ampelsteuerung, Simulation oder mBot-Funktion im Konfigurator
+        // Überleitung: das Busproblem zeigen. Den Vergleich normale Ampel / Busanmeldung macht das eigenständige Verkehrstool
+        // (eigene Seite, unverändert) – im Konfigurator gibt es dafür KEINE eigene Ampelsimulation.
         art: 'bild', kicker: 'Mission Mobilität · Szene 3', titel: 'Der Bus wartet', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
         text: 'Könnte eine schlaue Ampel unserem Bus helfen?',
         tafeln: ['kreuzung'],
+        link: { text: 'Verkehrssimulation öffnen', href: '../verkehr/', hinweis: 'Öffnet in einem neuen Tab. Zurück: Tab schließen (Strg + W), dann Weiter → Szene 4.' },
         regie: ['Z2: „Könnte der Bus der Ampel sagen: Hallo, ich komme?“',
-          'Danach verlässt die Regie den Konfigurator: Show-Zentrale → Verkehrssimulation (normale Ampel / Busanmeldung) → Live-mBot (LED-Ampel von Hand, NICHT mit dem mBot verbunden).',
-          'Anschließend zurück in den Konfigurator: Weiter → Szene 4 „Fahren 2050 Autos von allein?“.'],
+          'Knopf „Verkehrssimulation öffnen ↗“: Das eigenständige Verkehrstool öffnet sich in einem neuen Tab (Vollbild dort mit F). Normale Ampel und Busanmeldung vergleichen.',
+          'Zurück zum Konfigurator: Tab des Verkehrstools schließen (Strg + W). Der Konfigurator steht noch auf Szene 3; Vollbild wieder mit F.',
+          'Danach Live-mBot (LED-Ampel von Hand, NICHT mit dem mBot verbunden), dann Weiter → Szene 4 „Fahren 2050 Autos von allein?“.',
+          'Ersatzweg: Show-Zentrale → Verkehrssimulation.'],
         smarty: [['M4 · Geduld nicht erkannt', 'V'], ['M5 · Funkverbindung – in der Verkehrssimulation', 'B'], ['M6 · Niemand gefährden – in der Verkehrssimulation', 'N'], ['M7 · Test erfolgreich – beim Live-mBot', 'M']],
       },
       {
@@ -245,11 +254,19 @@ export const MISSIONEN = [
         smarty: [['M10 · Zukunftsprognose: selbstfahrende Autos', '-'], ['M11 · Auch schlaue Autos machen Fehler', 'Q']],
       },
       {
-        art: 'schalter', kicker: 'Mission Mobilität · Szene 5', titel: 'Zurück in der Zukunftsstadt', kamera: 'kreuzung', bereich: 'kreuzung',
+        // Abschluss ohne zweite Ampel-/Busdemonstration: Parken (Szene 2), Busanmeldung (Ergebnis der Verkehrssimulation) und
+        // Zukunftsidee (Szene 4) stehen zusammen im Stadtbild. Die Busanmeldung wird mit EINEM Klick übernommen.
+        art: 'bilanz', kicker: 'Mission Mobilität · Szene 5', titel: 'Zurück in der Zukunftsstadt', kamera: 'mobilitaet', bereich: 'kreuzung', variante: 'bus',
         text: 'Mehr Platz auf der Straße – und der Bus meldet sich an.',
-        vorher: 'normal', nachher: 'bus', nachherText: 'Bus meldet sich an', vorherText: 'Normale Ampel',
-        weitereKamera: 'wohnstrasse',
-        regie: ['„In Stadt übernehmen“ setzt die Busanmeldung in unsere Stadt.', 'Z1: „Wer hat die Ideen geliefert?“ – Kinder: „Wir!“'],
+        ergebnis: [
+          { bereich: 'parken', titel: 'Parken', kamera: 'wohnstrasse', offen: 'noch offen – Szene 2' },
+          { bereich: 'kreuzung', titel: 'Ampel', kamera: 'kreuzung' },
+          { bereich: 'zukunft', titel: 'Zukunft 2050', kamera: 'zukunft', offen: 'noch nicht gewählt – Szene 4' },
+        ],
+        regie: ['Keine zweite Ampel- oder Busdemonstration: Die Stadt zeigt zusammen, was wir entschieden haben.',
+          '„Busanmeldung in Stadt übernehmen“ (oder Enter) setzt das Ergebnis der Verkehrssimulation in unsere Stadt.',
+          'Ein Klick auf Parken, Ampel oder Zukunft 2050 fliegt dorthin; „Ganze Straße zeigen“ wieder zurück.',
+          'Z1: „Wer hat die Ideen geliefert?“ – Kinder: „Wir!“'],
         smarty: [['M8 · Mission abgeschlossen', ',']],
       },
     ],
