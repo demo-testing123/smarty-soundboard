@@ -6,6 +6,8 @@
  * „Fahren 2050 Autos von allein?“ mit kompakter A/B-Auswahl Schwebebahn/Flugtaxi. Keine neuen SMARTy-Sätze.
  * Korrektur vom 23.11.2026: Szene 3 öffnet wieder das eigenständige Verkehrstool (../verkehr/, wie früher); Szene 5 zeigt
  * ohne Ampel-Umschalter die Entscheidungen der Mission zusammen; Schwebebahn/Flugtaxi erst ab Szene 4 im Bild.
+ * Aufträge vom 24.11.2026: Publikumsansicht ohne Bedienhinweise, Tastenkürzel und Regieanweisungen (die stehen nur in
+ * „regie“, Taste I); Kurze Wege zeigt ungefähre Meter (vereinfachter Modellmaßstab: ein Feld = zehn Meter, METER_PRO_FELD).
  * Die Figur „Mika“ ist überholt und kommt nicht vor. Sätze der Zeitreisenden stehen hier nur als Regie-Stichwort;
  * auf der Leinwand stehen ein kurzer Titel (Leitfrage) und höchstens eine Unterzeile. Längeres steht im Regie-Bereich (Taste I).
  * Keine erfundenen Zahlen: Messwerte (Wege, bebaute Fläche) rechnet das Stadtmodell aus und kennzeichnet sie als Modellwerte.
@@ -71,8 +73,8 @@ export const BUCHSTABEN_FARBE = { A: '#e2846b', B: '#1f8a8a', C: '#e3a630' };
  *  schalter – Vorher/Nachher einer Baufläche (+ optional Tag/Nacht)
  *  extern   – Übergang zu einem echten Showelement (Calliope, mBot, Verkehrssimulation, Wohnsimulator)
  *  bilanz   – Mobilität: Entscheidungen der Mission zusammen im Stadtbild (keine zweite Ampel-/Busdemonstration)
- *  link     – (bei bild/regen/extern) Knopf, der ein eigenständiges Programm in einem neuen Tab öffnet
- *  wege     – Kurze Wege: drei Wege von „Hier wohnen wir“ zu den möglichen Standorten, gemessen im Modell (Felder, keine Meter)
+ *  link     – (bei bild/regen/extern) Knopf, der ein eigenständiges Programm in einem neuen Tab öffnet (Rückweg nur in „regie“)
+ *  wege     – Kurze Wege: drei Wege von „Hier wohnen wir“ zu den möglichen Standorten; Meter = gemessene Felder × METER_PRO_FELD
  *  finale   – Zukunftscheck, Vorschau-Rundgang, Vorher/Nachher der ganzen Stadt
  *  export   – Minecraft-Welt aus den übernommenen Beschlüssen erstellen, prüfen, herunterladen, Anleitung
  * zeige: welcher Stand der Bauflächen dieses Schritts gezeigt wird – 'vorher' (grau), 'beschluss' (übernommen).
@@ -152,8 +154,8 @@ export const MISSIONEN = [
         art: 'extern', kicker: 'Mission Technik · Experiment', titel: 'Jetzt live: Calliope mini', kamera: 'laternen', zeige: 'vorher',
         text: 'Ein Lichtsensor, ein Programm und eine LED.',
         kette: ['Sensor misst die Helligkeit', 'Programm prüft die Regel', 'LED geht an'],
-        live: 'Dokumentenkamera: Calliope mini, Lichtsensor, externe LED',
-        regie: ['Regel 1: WENN dunkel, DANN LED an, SONST aus.', 'Regel 2 (verbessert): LED erst nach etwa 5 Sekunden UNUNTERBROCHENER Dunkelheit an – ein kurzer Schatten löst kein Flackern aus.', 'Programmier- und Verbesserungsfolie kommen aus der Präsentation (ohne Roboterbild).', 'Keine Kopplung zwischen Calliope und Stadt: Hier zählt das echte Experiment.'],
+        live: 'Calliope mini mit Lichtsensor und LED',
+        regie: ['Live-Bild über die Dokumentenkamera: Calliope mini, Lichtsensor, externe LED.', 'Regel 1: WENN dunkel, DANN LED an, SONST aus.', 'Regel 2 (verbessert): LED erst nach etwa 5 Sekunden UNUNTERBROCHENER Dunkelheit an – ein kurzer Schatten löst kein Flackern aus.', 'Programmier- und Verbesserungsfolie kommen aus der Präsentation (ohne Roboterbild).', 'Keine Kopplung zwischen Calliope und Stadt: Hier zählt das echte Experiment.'],
         smarty: [['T2 · Programm verstanden', 'T'], ['T3 · Programmoptimierung', 'Z'], ['T4 · Experiment erfolgreich', 'U']],
       },
       {
@@ -223,7 +225,7 @@ export const MISSIONEN = [
         art: 'bild', kicker: 'Mission Mobilität · Szene 3', titel: 'Der Bus wartet', kamera: 'kreuzung', zeige: 'vorher', bereich: 'kreuzung',
         text: 'Könnte eine schlaue Ampel unserem Bus helfen?',
         tafeln: ['kreuzung'],
-        link: { text: 'Verkehrssimulation öffnen', href: '../verkehr/', hinweis: 'Öffnet in einem neuen Tab. Zurück: Tab schließen (Strg + W), dann Weiter → Szene 4.' },
+        link: { text: 'Verkehrssimulation öffnen', href: '../verkehr/' },
         regie: ['Z2: „Könnte der Bus der Ampel sagen: Hallo, ich komme?“',
           'Knopf „Verkehrssimulation öffnen ↗“: Das eigenständige Verkehrstool öffnet sich in einem neuen Tab (Vollbild dort mit F). Normale Ampel und Busanmeldung vergleichen.',
           'Zurück zum Konfigurator: Tab des Verkehrstools schließen (Strg + W). Der Konfigurator steht noch auf Szene 3; Vollbild wieder mit F.',
@@ -259,13 +261,14 @@ export const MISSIONEN = [
         art: 'bilanz', kicker: 'Mission Mobilität · Szene 5', titel: 'Zurück in der Zukunftsstadt', kamera: 'mobilitaet', bereich: 'kreuzung', variante: 'bus',
         text: 'Mehr Platz auf der Straße – und der Bus meldet sich an.',
         ergebnis: [
-          { bereich: 'parken', titel: 'Parken', kamera: 'wohnstrasse', offen: 'noch offen – Szene 2' },
+          { bereich: 'parken', titel: 'Parken', kamera: 'wohnstrasse', offen: 'noch offen' },
           { bereich: 'kreuzung', titel: 'Ampel', kamera: 'kreuzung' },
-          { bereich: 'zukunft', titel: 'Zukunft 2050', kamera: 'zukunft', offen: 'noch nicht gewählt – Szene 4' },
+          { bereich: 'zukunft', titel: 'Zukunft 2050', kamera: 'zukunft', offen: 'noch nicht gewählt' },
         ],
         regie: ['Keine zweite Ampel- oder Busdemonstration: Die Stadt zeigt zusammen, was wir entschieden haben.',
           '„Busanmeldung in Stadt übernehmen“ (oder Enter) setzt das Ergebnis der Verkehrssimulation in unsere Stadt.',
           'Ein Klick auf Parken, Ampel oder Zukunft 2050 fliegt dorthin; „Ganze Straße zeigen“ wieder zurück.',
+          'Steht bei Parken „noch offen“ oder bei Zukunft 2050 „noch nicht gewählt“: Szene 2 bzw. Szene 4 nachholen.',
           'Z1: „Wer hat die Ideen geliefert?“ – Kinder: „Wir!“'],
         smarty: [['M8 · Mission abgeschlossen', ',']],
       },
@@ -319,7 +322,7 @@ export const MISSIONEN = [
         art: 'wege', kicker: 'Mission Kurze Wege', titel: 'Wo sind die Brötchen am nächsten?', kamera: 'einkaufen', zeige: 'vorher', bereich: 'einkaufen',
         text: 'Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen.',
         tafeln: ['hierWohnen', 'ladenA', 'ladenB', 'ladenC'],
-        regie: ['Z1: „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen. Wie weit müsstet ihr bis zum nächsten Laden laufen?“', 'Z2: „Welche Strecke sieht am kürzesten aus? Und wo gibt es vielleicht die größte Auswahl?“', 'Erst schätzen lassen, dann „Wege messen“: Gezählt werden Felder im Modell – keine Meter, keine Minuten.'],
+        regie: ['Z1: „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen. Wie weit müsstet ihr bis zum nächsten Laden laufen?“', 'Z2: „Welche Strecke sieht am kürzesten aus? Und wo gibt es vielleicht die größte Auswahl?“', 'Erst schätzen lassen, dann „Wege messen“: Die Meter rechnet der Konfigurator aus den gemessenen Wegen im Modell (vereinfachter Maßstab: ein Feld = zehn Meter, also ungefähre Werte). Keine Minuten.'],
         smarty: [['K1 · Wegvergleich', 'Ö'], ['K3 · Digitale Stadtplanung', 'ß']],
       },
       {
@@ -367,7 +370,7 @@ export const MISSIONEN = [
     kamera: 'gesamt',
     schritte: [
       {
-        art: 'finale', kicker: 'Finale · Vorschau im Konfigurator', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
+        art: 'finale', kicker: 'Finale · Vorschau', titel: 'Schauen wir, was ihr verändert habt!', kamera: 'finale',
         text: 'Erst hier als Vorschau – gleich gehen wir in Minecraft durch die Stadt.',
         regie: ['Nur tatsächlich übernommene Beschlüsse sind zu sehen.', '„Vorher / Nachher“ vergleicht mit der grauen Stadt.', '„Vorschau-Rundgang“: Station für Station mit → oder automatisch. Nach der letzten Station führt „Weiter“ zur Minecraft-Welt.'],
         smarty: [['F1 · Zukunftsanalyse (frühere Fassung, bei Bedarf)', '#'], ['F3 · Digitale Stadtplanung abgeschlossen (Umschalt + ß)', '?'], ['F4 · Menschen, die mitdenken (Umschalt + -)', '_']],

@@ -140,7 +140,7 @@ Stand 22.11.2026 (Drehbuch „humorvoll aktualisiert“ und Änderungsauftrag vo
 
 ## Verkehrssimulation „Die schlaue Ampel“ (`verkehr/`)
 
-Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, in der Show-Zentrale über die Kachel **Verkehrssimulation** (eigener Tab) und im Stadt-Konfigurator in Mobilität Szene 3 über den Knopf **Verkehrssimulation öffnen ↗** (eigener Tab, zurück mit Strg + W). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
+Eigene Seite im selben Projekt: **https://demo-testing123.github.io/smarty-soundboard/verkehr/**, in der Show-Zentrale über die Kachel **Verkehrssimulation** (eigener Tab) und im Stadt-Konfigurator in Mobilität Szene 3 über den Knopf **Verkehrssimulation öffnen ↗** (eigener Tab; Rückweg mit Strg + W steht in der Regie, Taste I). Normale Ampel und intelligente Ampel mit Busfunk im Vergleich, die Wartezeit des Busses wird gemessen. Tasten: `1`/`2` Modus, `Leertaste` Start/Pause, `R` Zurücksetzen, `E` Ergebnis, `F` Vollbild. Anleitung, Messung, Sicherheitslogik und Anpassung: [verkehr/LIESMICH.md](verkehr/LIESMICH.md). Prüfseite: `verkehr/test.html`.
 
 ## Wohnen, Bauen und CO₂ „Wie bauen wir unsere Zukunftsstadt?“ (`wohnen/`)
 

@@ -883,6 +883,10 @@ function einkaufsWelt(variante) {
 }
 const ladenTueren = (v) => LAEDEN[v].flatMap((l) => l.tueren);
 export function ladenAn(v, [x, z]) { return LAEDEN[v].find((l) => l.tueren.some(([a, c]) => a === x && c === z)) || null; }
+// Maßstab für den Wegvergleich (Kurze Wege): Das Stadtmodell hat sonst keinen festgelegten Maßstab. Vereinfachter
+// Modellmaßstab 1 Feld = 10 Meter; die Meter werden aus der gemessenen Weglänge berechnet und als „ungefähr“ gezeigt.
+export const METER_PRO_FELD = 10;
+export const wegMeter = (felder) => (felder == null ? null : felder * METER_PRO_FELD);
 // Weg von „Unser Wohnhaus“ zum nächsten Laden der Variante (für „Wege messen“ und den Rundgang)
 export function einkaufsweg(variante) {
   return fussweg(einkaufsWelt(variante), ORTE.wohnhaus.tuer, ladenTueren(variante));

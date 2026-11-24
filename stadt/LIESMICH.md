@@ -8,11 +8,50 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 - In der Show-Zentrale (`show.html`): Kachel **3D-Stadtkonfigurator**
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
-> **Stand (23.11.2026):** Drei Änderungsaufträge umgesetzt (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
+> **Stand (24.11.2026):** Drei Änderungsaufträge vom 23.11. (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
 > mBot- und Ampelvergleichs-Szene (jetzt 5 Szenen), Auswahl Schwebebahn/Flugtaxi in Mobilität Szene 4. Danach eine Korrektur
 > (Abschnitt 000): Szene 3 öffnet wieder das eigenständige Verkehrstool, Szene 5 zeigt das Ergebnis ohne Ampel-Umschalter.
-> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool und andere Missionen unverändert. `test.html`: 80 von 80.
+> Am 24.11. (Abschnitt 0000): Publikumsansicht ohne Bedienhinweise, Kurze Wege in Metern.
+> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 83 von 83.
 > In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## 0000. Aufträge vom 24.11.2026: Publikumsansicht bereinigt, Kurze Wege in Metern
+
+**Grundsatz:** Auf der Leinwand (Kopfzone, Bedienfeld, Seitenleiste, Fußnote) stehen nur kindgerechte, inhaltliche Informationen.
+Technische Bedienhinweise, Tastenkürzel und Handlungsanweisungen stehen nur in der **Regie** (Taste `I`). Funktionen, Verlinkungen,
+Szenenfolge und Abstimmungen sind unverändert; die Tastenkürzel funktionieren weiter und stehen als Tooltip am Knopf.
+
+| Wo | Vorher auf der Leinwand | Jetzt |
+|---|---|---|
+| Mobilität Szene 3 | „Öffnet in einem neuen Tab. Zurück: Tab schließen (Strg + W), dann Weiter → Szene 4.“ neben dem Knopf | nur der gelbe Knopf „Verkehrssimulation öffnen ↗“ (Funktion gleich); Rückweg steht in der Regie |
+| Mobilität Szene 4 | „Ein Klick auf eine Karte wählt.“ | entfällt; nach der Wahl wie bisher „Beides sind Zukunftsideen …“ |
+| Mobilität Szene 5 | Kacheln „noch offen – Szene 2“ / „noch nicht gewählt – Szene 4“, Knopf „… übernehmen ⏎“ | „noch offen“ / „noch nicht gewählt“, Knopf ohne ⏎; „Szene 2 bzw. 4 nachholen“ steht in der Regie |
+| Start (Szene 0) | Fußnote „Gespeicherter Stand: … (Regie › „Neu beginnen“ setzt zurück)“ | in der Regie: „Gespeicherter Stand: n von 9 Beschlüssen …“ (in jeder Szene) |
+| Natur, Lösung | „Vorschau. Mit „In Stadt übernehmen“ wird der grüne Platz … gebaut.“, Knopf mit ⏎ | entfällt (Fußnote zeigt weiter „Vorschau – noch nicht übernommen“); nach dem Übernehmen wie bisher „Der grüne Natur-Abenteuerspielplatz ist in unserer Stadt.“ |
+| Natur, Starkregen | „Starkregen starten (R)“ / „Regen stoppen (R)“ | ohne „(R)“ |
+| Technik, Calliope | „Jetzt live: Dokumentenkamera: Calliope mini, Lichtsensor, externe LED“ | „Jetzt live: Calliope mini mit Lichtsensor und LED“; Dokumentenkamera steht in der Regie |
+| Technik, Energiecheck | „Zustand 2 von 4 · vereinfachte Animation“ | entfällt (steht schon oben als „2/4“ und in der Fußnote) |
+| alle Abstimmungen, Aufstocken | „In Stadt übernehmen ⏎“ | „In Stadt übernehmen“ (Enter geht weiter) |
+| Finale, Vorschau | Kicker „Vorschau im Konfigurator“, Hinweis „Vorschau im Konfigurator – der echte Rundgang folgt in Minecraft.“, „Vorher zeigen (V)“ | Kicker „Finale · Vorschau“; der Hinweis erscheint nur noch während des Rundgangs (Station n/9); „Vorher zeigen“ |
+| Finale, Minecraft-Welt | Seitenleiste „So öffnet ihr die Welt“ (Download-Ordner, /tp-Befehle, Sicherheitsnetz, Ersatzwelt), Dateidetails, „Datei doppelklicken – die Anleitung steht rechts.“, „Optional: Bauaufträge von Hand“ | Leinwand zeigt nur die drei Schritte und die Knöpfe „Minecraft-Welt erstellen“ / „Noch einmal herunterladen“; Anleitung, Dateidetails, Ersatzwelt-Download und der Hinweis auf die Bauaufträge stehen in der Regie. Bauaufträge weiter über „⛏ Minecraft“ (Taste `M`). |
+
+Nebenbei behoben: In der Regie erschienen statt der SMARTy-Liste „[object HTMLHeadingElement] …“ und an zwei Stellen „null“.
+
+**Kurze Wege in Metern.** Das Stadtmodell hatte keinen festgelegten Maßstab. Für den Wegvergleich gilt jetzt ein vereinfachter
+Modellmaßstab **1 Feld = 10 Meter** (`METER_PRO_FELD` in `stadtmodell.js`). Die Meter werden bei jeder Anzeige aus der tatsächlich
+gemessenen Weglänge berechnet (Breitensuche im Modell × 10): heute **A 530 m, B 350 m, C 140 m** (53 / 35 / 14 Felder).
+- Szene „Wo sind die Brötchen am nächsten?“: nach „Wege messen“ große Meterangaben in den drei Feldern A/B/C, Hinweis „Ungefähre Entfernungen im Stadtmodell“ (statt „Gezählt im Modell: Felder … – keine Meter“). Vorher wie bisher „Erst schätzen: Welcher Weg ist am kürzesten?“.
+- Abstimmung: nach „Wege messen“ auf jeder Karte „Weg von unserem Haus: etwa 530 m“ usw. (groß).
+- Farbige Wege, Marken A/B/C, Abstimmung und „Wege messen“ unverändert; keine neuen Knöpfe, Szenen oder SMARTy-Sätze. Keine Minuten.
+- Die bebaute Fläche bei Wohnen bleibt in Feldern (nicht Teil des Auftrags).
+
+**Geprüft** (`test.html`, 83 von 83), neu dabei:
+- alle 26 Szenen: in Kopfzone, Bedienfeld, Seitenleiste und Fußnote kein „Strg“, „Tab schließen“, „Taste“, „(R)“, „⏎“, „Regie“, „doppelklicken“, „Download-Ordner“, „/tp“, „Dokumentenkamera“, „Konfigurator“, „von Hand“; in Kurze Wege kein „Felder“;
+- Szene 3: im Bedienfeld nur der gelbe Knopf; Rückweg, gespeicherter Stand und Export-Anleitung mit Ersatzwelt stehen in der Regie; Regie ohne „[object]“/„null“;
+- Kurze Wege: Meter = gemessene Felder × 10 (530 / 350 / 140 m), groß, Hinweis wie beauftragt, Bedienfeld überdeckt die 3D-Bühne nicht, Karten „etwa … m“.
+- **Nicht geprüft:** Lesbarkeit am Beamer aus der letzten Reihe.
 
 ---
 
@@ -147,7 +186,7 @@ Blickrichtung beim ersten Start: Bedrock speichert sie nicht in `level.dat`; neu
 | 4 Technik | Neue Reihenfolge: Frage „Woher weiß eine Lampe, dass es dunkel ist?“ → **Calliope live** (Sensor → Programm → LED; Regel 2: erst nach etwa 5 s ununterbrochener Dunkelheit) → Abstimmung über die 1.000 Laternen → Ergebnis Tag/Nacht. Keine Kopplung Calliope–Stadt. |
 | 5 Mobilität | Volle Straße → Parken A/B/C → Bus wartet → **mBot live** (Ampel von Hand) → **Verkehrssimulation** (eigene Seite) → **„Fahren 2050 Autos von allein?“** (Sensoren, Kameras, Computer; Möglichkeiten und Grenzen; keine Vorhersage; ohne Fahrer ist nicht automatisch weniger Verkehr) → zurück in die Stadt (Busanmeldung). Szenennummern und SMARTy-Tasten umsortiert. |
 | 6 Wohnen | Texte kürzer und sachlich; Aufstocken als „zusätzliche Bauidee“ gekennzeichnet. |
-| 6 Kurze Wege | Leitfrage „Wo sind die Brötchen am nächsten?“, großer Startpunkt „Hier wohnen wir“, große farbige Ziele A/B/C (nur Buchstaben), breite Wege mit weißem Rand, keine Fragezeichen; erst schätzen, dann „Wege messen“ (Felder im Modell, keine Meter). |
+| 6 Kurze Wege | Leitfrage „Wo sind die Brötchen am nächsten?“, großer Startpunkt „Hier wohnen wir“, große farbige Ziele A/B/C (nur Buchstaben), breite Wege mit weißem Rand, keine Fragezeichen; erst schätzen, dann „Wege messen“ (seit 24.11.: ungefähre Meter, Modellmaßstab 1 Feld = 10 m, siehe Abschnitt 0000). |
 | 6 Finale | Rundgang heißt „Vorschau-Rundgang“ (im Konfigurator). Nach der letzten Station führt „Weiter“ zu **„Minecraft-Welt erstellen“**: Stadt fertig → Welt erstellen (Download mit Prüfergebnis) → Anleitung zum Öffnen → optional Bauaufträge von Hand. Showablauf (Minecraft-Rundgang, Abschlussfilm mit der Erzählerstimme des Intros, Abschlussfolie mit QR-Codes) steht im Regie-Bereich; Film und Folie sind nicht Teil des Konfigurators. |
 
 ### 0.3 Geprüft (automatisch)
@@ -229,7 +268,7 @@ Die Mission war schon an der verlangten Stelle (nach Wohnen, vor Bildung) als ei
 | C – Bäckerei, Lebensmittel- und Gemüseladen, verteilt, in bestehenden Erdgeschossen | drei Läden im **Erdgeschoss vorhandener Wohnhäuser** (Bäckerei Haus Ost, Lebensmittel Gasse, Gemüse Haus West) mit **gelb gestreiften Markisen**, Schaufenstern, Auslagen, Schildern. Die Häuser bleiben stehen. Der Kiosk der alten Fassung ist entfallen. |
 | auf dem Beamer deutlich erkennbar | Kamera schaut von Westen über das Viertel und wird beim Anzeigen **für das tatsächliche Bildformat** so berechnet, dass das ganze Viertel neben dem Titel und über den Karten liegt (auch 4:3 oder 16:10). Tafeln nennen jeden Laden: „A · Supermarkt“, „B · Markthalle“, „C · Bäckerei“ … |
 | Wechsel A/B/C: Wohnhäuser, Straßen, frühere Ergebnisse bleiben | Test: 0 geänderte Hausblöcke (ab 1. Obergeschoss) und 0 Straßenfelder je Variante; andere Bauflächen bleiben unberührt |
-| Fußwege von Wohnhäusern zu den Geschäften, ohne erfundene Entfernungen | Abstimmung: Linien von **allen 7 Wohnhäusern** des Viertels zum jeweils nächsten Laden der gezeigten Variante (weiße Stifte = Haustüren). Keine Zahlen auf der Leinwand. „Wege messen“ zählt nur **Felder im Modell** (keine Meter, keine Minuten) für den Weg von „Unser Wohnhaus“. Gemessen: A 53, B 35, C 14 Felder; Summe aller 7 Wege A 275, B 235, C 78. |
+| Fußwege von Wohnhäusern zu den Geschäften, ohne erfundene Entfernungen | Abstimmung: Linien von **allen 7 Wohnhäusern** des Viertels zum jeweils nächsten Laden der gezeigten Variante (weiße Stifte = Haustüren). Keine Zahlen auf der Leinwand. „Wege messen“ misst den Weg von „Unser Wohnhaus“ im Modell und zeigt ihn seit 24.11. als ungefähre Meter (1 Feld = 10 m, keine Minuten). Gemessen: A 53, B 35, C 14 Felder = 530 / 350 / 140 m; Summe aller 7 Wege A 275, B 235, C 78. |
 | nach der Handabstimmung fest übernehmen, bis zum Finale sichtbar | wie bei allen Abstimmungen: „Übernehmen“ (`Enter`). Im Finale-Rundgang zeigt die Station „Einkaufen in unserem Viertel“ die gewählten Läden und den Weg von unserem Wohnhaus. |
 | Mika nicht verwenden | Schritt 1: „Wie weit ist es bis zum nächsten Laden?“ / „Stellt euch vor, ihr wohnt hier und wollt morgens frische Brötchen holen.“ In C ist der nächste Laden von unserem Wohnhaus die Bäckerei. |
 | Optik, Bedienung, andere Missionen beibehalten | unverändert; neu ist nur eine zweite Querung der Ringstraße Nord vor dem Haus Ost (Weg zur Mitte) |
@@ -432,7 +471,7 @@ Alle Befehle stehen im Dialog **⛏ Bauauftrag** (`M`), mit Kopierknöpfen und d
 | Technik | Laternen „nur bei Dunkelheit“ übernommen, Spielplatz bleibt grün, nachts leuchten 16 Laternen | ✓ |
 | Mobilität | Parken A, B, C nacheinander: nur die Parkfläche ändert sich (0 Blöcke außerhalb), andere Beschlüsse bleiben | ✓ |
 | Wohnen | A/B/C je 6 Wohnungen; 294 / 196 / 98 Felder bebaut; Karten zeigen die Werte | ✓ |
-| Kurze Wege | von unserem Wohnhaus 53 / 35 / 14 Felder (C: Bäckerei), Wege aller 7 Wohnhäuser, Summe C < B < A, A für 6 von 7 Häusern weiter als C; Wege nur über das Westviertel; Wechsel A/B/C ändert 0 Hausblöcke und 0 Straßenfelder; C-Läden im Erdgeschoss bestehender Häuser; in der Oberfläche je Variante 7 Wege und die Ladentafeln, übernommene Wahl bleibt bis zum Finale; Einkauf C bleibt beim Wechsel der Bildung | ✓ |
+| Kurze Wege | von unserem Wohnhaus 53 / 35 / 14 Felder = 530 / 350 / 140 m (C: Bäckerei), Wege aller 7 Wohnhäuser, Summe C < B < A, A für 6 von 7 Häusern weiter als C; Wege nur über das Westviertel; Wechsel A/B/C ändert 0 Hausblöcke und 0 Straßenfelder; C-Läden im Erdgeschoss bestehender Häuser; in der Oberfläche je Variante 7 Wege und die Ladentafeln, übernommene Wahl bleibt bis zum Finale; Einkauf C bleibt beim Wechsel der Bildung | ✓ |
 | Drehbuch | Reihenfolge Start → Natur → Technik → Mobilität → Wohnen → Kurze Wege → Bildung → Finale, Abstimmungen A/B, A/B, A/B/C ×4; Kurze Wege eigene Abstimmung und Fläche; „frische Brötchen“, keine Entfernungsangaben | ✓ |
 | Bildung | B, dann A: nur die Bildung ändert sich | ✓ |
 | Finale | alle Beschlüsse sichtbar, Zukunftscheck vollständig, Vorher/Nachher, kein Mika | ✓ |

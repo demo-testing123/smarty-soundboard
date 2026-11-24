@@ -281,3 +281,12 @@ button:disabled { opacity: .45; cursor: default; }
 .bilanz-kachel.vorschau { background: #fff8e6; border-color: #d9b35c; border-style: dashed; }
 .bilanz-kachel.vorschau .zeichen { background: var(--gold); color: #1f434b; }
 .bilanz-kachel.offen .text span { color: var(--muted); font-weight: 600; }
+
+/* Publikumsansicht aufgeräumt (24.11.2026): Platzhalter statt Bedienhinweis; Kurze Wege mit großen Meterangaben */
+.knopfreihe .luecke { flex: 1; }
+.wegliste b.meter { font-size: 4.4cqh; font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+.karte .wert.weg { font-size: 2.1cqh; color: var(--ink); }
+.karte .wert.weg b { font-size: 3.2cqh; font-weight: 800; white-space: nowrap; }
+.regie .stand { margin: 0 0 .5cqh; font-size: 1.7cqh; color: var(--muted); }
+.regie ol { margin: 0; padding-left: 2.4cqh; }
+.regie p { margin: .6cqh 0; }

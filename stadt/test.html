@@ -177,7 +177,7 @@ try {
     const langeTexte = MISSIONEN.flatMap((m) => m.schritte).filter((x) => (x.text || '').length > 100).map((x) => x.titel);
     pruefe('Leinwandtexte kurz: Titel und höchstens eine Unterzeile (≤ 100 Zeichen); Hinweisstreifen entfernt', langeTexte.length === 0 && !MISSIONEN.some((m) => m.schritte.some((x) => x.hinweis)), langeTexte.join(' · '));
     pruefe('Kurze Wege ist eine eigene A/B/C-Abstimmung mit eigener Baufläche (nicht mit anderen Missionen zusammengelegt)', eigen && kw.schritte.filter((st) => st.art === 'wahl').length === 1);
-    pruefe('Kurze Wege: Kinder werden direkt angesprochen („frische Brötchen“), ohne Entfernungsangaben', /frische Brötchen/.test(kw.schritte[0].text) && !/\d\s*(m|km|Meter|Minuten|min)\b/.test(JSON.stringify(kw)));
+    pruefe('Kurze Wege: Kinder werden direkt angesprochen („frische Brötchen“), keine festen Entfernungszahlen in den Texten (Meter nur aus dem Modell)',/frische Brötchen/.test(kw.schritte[0].text) && !/\d\s*(m|km|Meter|Minuten|min)\b/.test(JSON.stringify(kw)));
   }
   // Regeln für alle Vorlagen
   const regelFehler = [];
@@ -482,6 +482,53 @@ try {
     const taxi = imBild('zukunft', 'B') && A.tafeln().includes('Flugtaxi') && [...doc.querySelectorAll('.bilanz-kachel')].some((k) => /Flugtaxi/.test(k.textContent));
     pruefe('Szene 5: Parken, Busanmeldung und Zukunftsidee zusammen im Stadtbild (gewählte Option sichtbar), ohne Ampel-Umschalter und ohne zweite Busdemonstration',
       keinUmschalter && kacheln.length === 3 && /Schwebebahn/.test(kacheln[2]) && bild && !!uebern && bus && taxi, `Knöpfe: ${knoepfe.join(' | ')}`);
+  }
+  // Auftrag 24.11.2026: Publikumsansicht ohne Bedienhinweise, Tastenkürzel und Regieanweisungen – die stehen in der Regie (Taste I)
+  {
+    const doc = fr.contentWindow.document, verboten = /Strg|Tab schließen|Taste|\([A-Z]\)|⏎|Regie|doppelklick|Download-Ordner|\/tp\b|Dokumentenkamera|Konfigurator|Ein Klick|– Szene \d|von Hand/i;
+    const funde = [];
+    if (!doc.querySelector('#regie').hidden) A.aktion('regie');
+    for (let mm = 0; mm < MISSIONEN.length; mm++) for (let ss = 0; ss < MISSIONEN[mm].schritte.length; ss++) {
+      A.gehe(mm, ss); await warte(15);
+      const sichtbar = ['#hero', '#panel', '#seite', '#fussnote'].map((s) => { const e = doc.querySelector(s); return e && !e.hidden ? e.textContent : ''; }).join(' | ');
+      const t = sichtbar.match(verboten);
+      if (t) funde.push(`${mm}.${ss + 1}: „${t[0]}“`);
+      if (mm === 5 && /Felder/.test(sichtbar)) funde.push(`${mm}.${ss + 1}: „Felder“`);
+    }
+    pruefe('Publikumsansicht: in keiner Szene Bedienhinweise, Tastenkürzel oder Regieanweisungen (Titel, Bedienfeld, Seitenleiste, Fußnote)', funde.length === 0, funde.join(' · ') || `${MISSIONEN.reduce((n, m) => n + m.schritte.length, 0)} Szenen geprüft`);
+    // dieselben Informationen stehen in der Regie
+    A.gehe(3, 2); A.aktion('regie'); await warte(20);
+    const regie3 = doc.querySelector('#regie').textContent;
+    const knopf3 = [...doc.querySelectorAll('#panel button')].filter((b) => /Verkehrssimulation öffnen ↗/.test(b.textContent));
+    const panel3 = doc.querySelector('#panel').textContent.replace(/\s+/g, ' ').trim();
+    A.gehe(7, 1); await warte(20);
+    const regieEx = doc.querySelector('#regie'), ersatz = regieEx.querySelector('a[download]');
+    const exportOk = /So öffnet ihr die Welt/.test(regieEx.textContent) && /\/tp @s/.test(regieEx.textContent) && !!ersatz && /Ersatzwelt/.test(ersatz.textContent) && doc.querySelector('#seite').hidden;
+    A.aktion('regie');
+    pruefe('Szene 3 zeigt nur den gelben Knopf „Verkehrssimulation öffnen ↗“; Rückweg (Strg + W), gespeicherter Stand und Export-Anleitung mit Ersatzwelt stehen in der Regie',
+      knopf3.length === 1 && knopf3[0].classList.contains('haupt') && panel3 === 'Verkehrssimulation öffnen ↗' && /Strg \+ W/.test(regie3) && /Gespeicherter Stand: \d+ von \d+/.test(regie3) && /Soundboard-Taste/.test(regie3) && !/\[object |\bnull\b/.test(regie3) && exportOk,
+      `Bedienfeld Szene 3: „${panel3}“ · Regie ${/\[object |\bnull\b/.test(regie3) ? 'mit „[object]/null“' : 'sauber'} · Export-Anleitung ${exportOk ? 'in der Regie' : 'fehlt'}`);
+  }
+  // Auftrag 24.11.2026: Kurze Wege in Metern (Modellmaßstab 1 Feld = 10 m), aus den gemessenen Weglängen berechnet
+  {
+    const doc = fr.contentWindow.document;
+    A.gehe(5, 0); await warte(30);
+    const vorher = doc.querySelectorAll('.wegliste b.meter').length;
+    const mess = [...doc.querySelectorAll('#panel button')].find((b) => /Wege messen/.test(b.textContent));
+    if (mess) mess.click(); await warte(20);
+    const soll = ['A', 'B', 'C'].map((v) => `${A.wegLaenge(v) * 10} m`);
+    const ist = [...doc.querySelectorAll('.wegliste b.meter')].map((b) => b.textContent);
+    const hinweis = doc.querySelector('#panel .hinweis')?.textContent;
+    const gross = parseFloat(fr.contentWindow.getComputedStyle(doc.querySelector('.wegliste b.meter')).fontSize) > parseFloat(fr.contentWindow.getComputedStyle(doc.querySelector('.wegliste span')).fontSize) * 1.4;
+    const r = (s) => doc.querySelector(s).getBoundingClientRect(), sz = r('#szene'), pa = r('#panel');
+    const frei = pa.top >= sz.bottom - 1 || pa.bottom <= sz.top + 1;
+    A.gehe(5, 1); await warte(30);
+    const karten = [...doc.querySelectorAll('.karte .wert.weg')].map((w) => w.textContent);
+    const kartenOk = karten.length === 3 && karten.every((t, k) => t === `Weg von unserem Haus: etwa ${soll[k]}`);
+    const knopf = [...doc.querySelectorAll('#panel button')].find((b) => /Längen ausblenden/.test(b.textContent)); if (knopf) knopf.click();
+    pruefe('Kurze Wege: Meter statt Felder, dynamisch aus den gemessenen Wegen × 10 (kein Maßstab im Modell), groß; Hinweis „Ungefähre Entfernungen im Stadtmodell“',
+      M.METER_PRO_FELD === 10 && vorher === 0 && ist.join() === soll.join() && hinweis === 'Ungefähre Entfernungen im Stadtmodell' && gross && frei && kartenOk,
+      `${ist.join(' · ')} (Felder ${['A', 'B', 'C'].map((v) => A.wegLaenge(v)).join('/')}) · Karten: ${karten.map((t) => t.replace('Weg von unserem Haus: ', '')).join(' · ')}`);
   }
   // Layout: Titel, Karten, Seitenleiste und Fußleiste liegen neben der 3D-Bühne, nicht darüber
   {

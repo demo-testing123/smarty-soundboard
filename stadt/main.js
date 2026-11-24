@@ -3,7 +3,7 @@
 import { webglMoeglich, Ansicht } from './ansicht3d.js';
 import { MISSIONEN, KAMERAS, TAFELN, BUCHSTABEN_FARBE, RUNDGANG, beschlussText } from './daten.js';
 import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
-import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN, ENERGIE_ORTE } from './stadtmodell.js';
+import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN, ENERGIE_ORTE, wegMeter } from './stadtmodell.js';
 import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, START, REGIERAUM } from './minecraft-ausgabe.js';
 import { pruefeExport } from './weltleser.js';
 
@@ -238,6 +238,7 @@ function kartenBild(b, v) {
 /* ---------- Wege (Kurze Wege) ---------- */
 function weg(v) { if (!wegeCache.has(v)) wegeCache.set(v, einkaufsweg(v)); return wegeCache.get(v); }
 const wegLaenge = (v) => { const w = weg(v); return w ? w.length - 1 : null; };
+const meterText = (v) => `${wegMeter(wegLaenge(v)).toLocaleString('de-DE')} m`;   // ungefähre Meter aus der gemessenen Weglänge
 function alleWege(v) { if (!alleWegeCache.has(v)) alleWegeCache.set(v, einkaufswege(v)); return alleWegeCache.get(v); }
 const WEISS = '#ffffff';
 
@@ -289,8 +290,7 @@ function anzeigen() {
   if (vorherAn) teile.push(h('b', {}, 'Vorher: '), 'so sah die Stadt grau aus. ');
   else if (Object.entries(vorschau).some(([b, v]) => v !== Z.variante(b))) teile.push(h('b', {}, 'Vorschau – noch nicht übernommen. '));
   if (s.fussnote) teile.push(s.fussnote);
-  if (pos.mission === 0 && pos.schritt === 0 && Object.keys(Z.beschluesse).length) teile.push(` Gespeicherter Stand: ${Object.keys(Z.beschluesse).length} Beschlüsse (Regie › „Neu beginnen“ setzt zurück).`);
-  fn.replaceChildren(...teile);
+  fn.replaceChildren(...teile);   // Publikumsansicht: keine Bedienhinweise – „Gespeicherter Stand“ steht in der Regie (Taste I)
   // Bereiche je Schrittart
   const panel = $('#panel'), seite = $('#seite');
   panel.replaceChildren(); seite.replaceChildren();
@@ -301,9 +301,9 @@ function anzeigen() {
 
   if (s.art === 'bild' && s.punkte) { seite.append(...seiteListe(s.seiteTitel || 'Stichpunkte', s.punkte)); seite.hidden = false; }
   if (s.art === 'bild' && s.link) {
-    // eigenständiges Programm (z. B. Verkehrstool) in einem neuen Tab; der Konfigurator bleibt auf dieser Szene stehen
-    reihe.append(h('button', { type: 'button', class: 'haupt gross extern-link', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗'),
-      s.link.hinweis ? h('span', { class: 'hinweis' }, s.link.hinweis) : null);
+    // eigenständiges Programm (z. B. Verkehrstool) in einem neuen Tab; der Konfigurator bleibt auf dieser Szene stehen.
+    // Der Rückweg (Tab schließen) steht nur in der Regie, nicht auf der Leinwand.
+    reihe.append(h('button', { type: 'button', class: 'haupt gross extern-link', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗'));
     panel.append(reihe); panel.hidden = false;
   }
 
@@ -326,7 +326,7 @@ function anzeigen() {
     const fertig = Z.beschluesse[s.bereich] === s.variante;
     reihe.append(h('button', { type: 'button', onclick: () => kameraZeigen(s.kamera) }, 'Ganze Straße zeigen'),
       fertig ? h('span', { class: 'status-marke ok' }, `✓ Übernommen: ${beschlussText(s.bereich, s.variante)}`)
-        : h('button', { type: 'button', class: 'haupt', title: 'Ergebnis der Verkehrssimulation in die Stadt übernehmen (Enter)', onclick: () => uebernehmen(s.bereich, s.variante) }, 'Busanmeldung in Stadt übernehmen ⏎'));
+        : h('button', { type: 'button', class: 'haupt', title: 'Ergebnis der Verkehrssimulation in die Stadt übernehmen (Enter)', onclick: () => uebernehmen(s.bereich, s.variante) }, 'Busanmeldung in Stadt übernehmen'));
     panel.append(reihe); panel.hidden = false;
     tafelKeys.push('wohnstrasse', 'kreuzung');
   }
@@ -346,7 +346,7 @@ function anzeigen() {
       h('span', { class: 'stempel beschluss' }, '✓ Unsere Wahl'),
       h('div', { class: 'text' }, h('h2', {}, o.titel), h('p', { class: 'kurztext' }, o.text))));
     }
-    panel.append(h('div', { class: 'auswahl-kopf' }, h('b', {}, a.frage), h('span', {}, gewaehlt ? a.hinweis : 'Ein Klick auf eine Karte wählt.')), karten);
+    panel.append(h('div', { class: 'auswahl-kopf' }, h('b', {}, a.frage), gewaehlt ? h('span', {}, a.hinweis) : null), karten);
     panel.hidden = false;
     const t = a.optionen.find((o) => o.v === Z.variante(b));
     if (t && t.tafel) tafelKeys.push(t.tafel);
@@ -359,8 +359,8 @@ function anzeigen() {
     }, h('span', { class: 'n' }, String(k + 1)), h('span', { class: 'kurz' }, st.kurz)))));
     reihe.append(
       h('button', { type: 'button', disabled: i === 0 || null, onclick: () => zurueck() }, '← Zurück'),
-      h('span', { class: 'hinweis' }, `Zustand ${i + 1} von ${n} · vereinfachte Animation`),
-      h('button', { type: 'button', class: 'haupt gross', onclick: () => weiter() }, i < n - 1 ? `Weiter: ${s.stufen[i + 1].kurz} →` : 'Weiter zur Mobilität →'));
+      h('span', { class: 'luecke' }),   // Zustand steht schon in der Kopfzeile (1/4), „vereinfacht“ in der Fußnote
+      h('button',{ type: 'button', class: 'haupt gross', onclick: () => weiter() }, i < n - 1 ? `Weiter: ${s.stufen[i + 1].kurz} →` : 'Weiter zur Mobilität →'));
     panel.append(reihe); panel.hidden = false;
     if (i >= 1) tafelKeys.push('e_solar', 'e_windrad');
     if (i >= 2) tafelKeys.push('e_speicher', 'e_netz');
@@ -384,7 +384,7 @@ function anzeigen() {
         h('div', { class: 'handel' }, h('span', { class: 'z' }, '+'), h('span', {}, o.pro)),
         h('div', { class: 'handel contra' }, h('span', { class: 'z' }, '−'), h('span', {}, o.contra)),
         s.wohnwerte ? h('div', { class: 'wert' }, h('b', {}, `${wohnungen(o.v)} Wohnungen`), ` · bebaute Fläche im Modell: `, h('b', {}, `${bebauteFlaeche(o.v)} Felder`)) : null,
-        s.wege && wegeGemessen ? h('div', { class: 'wert' }, 'Weg von unserem Haus: ', h('b', {}, `${wegLaenge(o.v)} Felder`)) : null,
+        s.wege && wegeGemessen ? h('div', { class: 'wert weg' }, 'Weg von unserem Haus: ', h('b', {}, `etwa ${meterText(o.v)}`)) : null,
       ));
       karten.append(k);
     }
@@ -396,7 +396,7 @@ function anzeigen() {
     else {
       const v = vorschau[b];
       reihe.append(statusMarke(b));
-      reihe.append(h('button', { type: 'button', class: 'haupt', disabled: !v || (v === Z.variante(b) && Z.beschluesse[b] === v) || null, onclick: () => uebernehmen(b, v), title: 'In die Stadt übernehmen (Enter)' }, 'In Stadt übernehmen ⏎'));
+      reihe.append(h('button', { type: 'button', class: 'haupt', disabled: !v || (v === Z.variante(b) && Z.beschluesse[b] === v) || null, onclick: () => uebernehmen(b, v), title: 'In die Stadt übernehmen (Enter)' }, 'In Stadt übernehmen'));
     }
     panel.append(reihe);
     panel.hidden = false;
@@ -410,8 +410,8 @@ function anzeigen() {
   if (s.art === 'loesung') {
     panel.append(h('div', { class: 'loesung-band' }, ...s.punkte.map((p) => h('span', {}, p))));
     const fertig = Z.beschluesse[s.bereich] === s.variante;
-    reihe.append(h('span', { class: 'hinweis' }, fertig ? 'Der grüne Natur-Abenteuerspielplatz ist in unserer Stadt.' : 'Vorschau. Mit „In Stadt übernehmen“ wird der grüne Platz in unserer Stadt gebaut.'));
-    reihe.append(fertig ? h('span', { class: 'status-marke ok' }, '✓ Übernommen') : h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(s.bereich, s.variante) }, 'In Stadt übernehmen ⏎'));
+    reihe.append(fertig ? h('span', { class: 'hinweis' }, 'Der grüne Natur-Abenteuerspielplatz ist in unserer Stadt.') : h('span', { class: 'luecke' }));
+    reihe.append(fertig ? h('span', { class: 'status-marke ok' }, '✓ Übernommen') : h('button', { type: 'button', class: 'haupt', title: 'In die Stadt übernehmen (Enter)', onclick: () => uebernehmen(s.bereich, s.variante) }, 'In Stadt übernehmen'));
     panel.append(reihe); panel.hidden = false;
   }
 
@@ -422,7 +422,7 @@ function anzeigen() {
       h('span', { class: 'gruppe' },
         h('button', { type: 'button', 'aria-pressed': String(regenModus === 'grau'), onclick: () => regenSetzen(regenAn, 'grau') }, 'Versiegelt (grau)'),
         h('button', { type: 'button', 'aria-pressed': String(regenModus === 'gruen'), onclick: () => regenSetzen(regenAn, 'gruen') }, 'Mit Grün')),
-      h('button', { type: 'button', class: 'haupt', onclick: () => regenSetzen(!regenAn) }, regenAn ? 'Regen stoppen (R)' : 'Starkregen starten (R)'),
+      h('button', { type: 'button', class: 'haupt', title: 'Taste R', onclick: () => regenSetzen(!regenAn) }, regenAn ? 'Regen stoppen' : 'Starkregen starten'),
       s.link ? h('button', { type: 'button', onclick: () => window.open(s.link.href, '_blank') }, s.link.text + ' ↗') : null,
     );
     panel.append(reihe); panel.hidden = false;
@@ -436,7 +436,7 @@ function anzeigen() {
     if (s.weitereKamera) reihe.append(h('button', { type: 'button', onclick: () => kameraZeigen(s.weitereKamera) }, KAMERAS[s.weitereKamera].titel + ' zeigen'), h('button', { type: 'button', onclick: () => kameraZeigen(s.kamera) }, KAMERAS[s.kamera].titel + ' zeigen'));
     reihe.append(statusMarke(b));
     const v = vorschau[b];
-    if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', onclick: () => uebernehmen(b, v) }, 'In Stadt übernehmen ⏎'));
+    if (v && v !== Z.variante(b)) reihe.append(h('button', { type: 'button', class: 'haupt', title: 'In die Stadt übernehmen (Enter)', onclick: () => uebernehmen(b, v) }, 'In Stadt übernehmen'));
     panel.append(reihe); panel.hidden = false;
     if (s.material) { seite.append(h('h2', {}, 'Material und Klima'), h('div', { class: 'material' }, ...s.material.map(([t, x]) => h('div', {}, h('b', {}, t), x)))); seite.hidden = false; }
   }
@@ -453,10 +453,10 @@ function anzeigen() {
     for (const v of ['A', 'B', 'C']) {
       const w = weg(v);
       if (w) wege.push({ punkte: w, farbe: BUCHSTABEN_FARBE[v], start: WEISS, breit: true });
-      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), wegeGemessen ? h('b', {}, `${wegLaenge(v)} Felder`) : null));
+      liste.append(h('div', {}, h('i', { style: `background:${BUCHSTABEN_FARBE[v]}` }, v), h('span', {}, LADEN[v].titel), wegeGemessen ? h('b', { class: 'meter' }, meterText(v)) : null));
     }
     panel.append(liste);
-    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Gezählt im Modell: Felder von unserer Haustür bis zum nächsten Laden – keine Meter.' : 'Erst schätzen: Welcher Weg ist am kürzesten?'),
+    reihe.append(h('span', { class: 'hinweis' }, wegeGemessen ? 'Ungefähre Entfernungen im Stadtmodell' : 'Erst schätzen: Welcher Weg ist am kürzesten?'),
       h('button', { type: 'button', class: wegeGemessen ? '' : 'haupt', onclick: () => { wegeGemessen = !wegeGemessen; anzeigen(); } }, wegeGemessen ? 'Längen ausblenden' : 'Wege messen'));
     panel.append(reihe); panel.hidden = false;
   }
@@ -471,11 +471,11 @@ function anzeigen() {
     seite.append(ul); seite.hidden = false;
     const st = rundgang.station >= 0 ? RUNDGANG[rundgang.station] : null;
     reihe.append(
-      h('button', { type: 'button', 'aria-pressed': String(vorherAn), onclick: () => { vorherAn = !vorherAn; anzeigen(); } }, vorherAn ? 'Nachher zeigen' : 'Vorher zeigen (V)'),
+      h('button', { type: 'button', 'aria-pressed': String(vorherAn), title: 'Taste V', onclick: () => { vorherAn = !vorherAn; anzeigen(); } }, vorherAn ? 'Nachher zeigen' : 'Vorher zeigen'),
       h('button', { type: 'button', onclick: () => station(Math.max(0, rundgang.station - 1)) }, '◀ Station'),
       h('button', { type: 'button', class: 'haupt', onclick: () => (rundgang.timer ? rundgangStopp() : rundgangStart()) }, rundgang.timer ? '■ Vorschau anhalten' : '▶ Vorschau-Rundgang'),
       h('button', { type: 'button', onclick: () => station(rundgang.station + 1) }, 'Station ▶'),
-      h('span', { class: 'hinweis' }, st ? `Vorschau ${rundgang.station + 1}/${RUNDGANG.length}: ${st.text}` : 'Vorschau im Konfigurator – der echte Rundgang folgt in Minecraft.'),
+      st ? h('span', { class: 'hinweis' }, `Vorschau ${rundgang.station + 1}/${RUNDGANG.length}: ${st.text}`) : h('span', { class: 'luecke' }),
       h('button', { type: 'button', onclick: () => gehe(pos.mission, pos.schritt + 1) }, 'Weiter zur Minecraft-Welt →'),
     );
     panel.append(reihe); panel.hidden = false;
@@ -534,27 +534,33 @@ function exportZeichnen(panel, seite) {
   else if (x && x.pruefung && !x.pruefung.ok) ergebnis = h('div', { class: 'ergebnis falsch' }, h('b', {}, 'Prüfung fehlgeschlagen – Datei wird nicht angeboten:'), h('ul', {}, ...x.pruefung.punkte.filter((q) => !q[1]).map((q) => h('li', {}, `${q[0]} ${q[2] || ''}`))), 'Für die Show die geprüfte Ersatzwelt verwenden.');
   else if (x && x.pruefung) ergebnis = h('div', { class: 'ergebnis' },
     h('b', {}, aktuell ? '✓ Welt erstellt und geprüft' : 'Welt erstellt – die Beschlüsse haben sich seitdem geändert, bitte neu erstellen'),
-    h('ul', {}, h('li', {}, `Datei: ${x.datei} (${Math.max(1, Math.round(x.groesse / 1024))} KB) im Download-Ordner`), h('li', {}, `Name in Minecraft: „${x.name}“`),
-      h('li', {}, `Geprüft: Start draußen am Platz, Kreativmodus, ${x.pruefung.punkte.length - 4} Bauflächen Block für Block wie beschlossen`)),
     h('button', { type: 'button', onclick: () => herunterladen(x.daten, x.datei, 'application/octet-stream') }, '⬇ Noch einmal herunterladen'));
+  // Publikumsansicht: nur der Ablauf. Dateiname, Prüfdetails, Öffnen-Anleitung, Regieraum und Ersatzwelt stehen in der Regie (Taste I).
   panel.append(h('div', { class: 'ablauf' },
     stufe(1, 'Stadt fertig', n > 0, h('p', {}, `${n} von ${gesamt} Bauflächen übernommen. Nur übernommene Beschlüsse kommen in die Welt – offene Flächen bleiben grau.`)),
     stufe(2, 'Minecraft-Welt erstellen', aktuell && x.pruefung && x.pruefung.ok,
       h('button', { type: 'button', class: 'haupt', disabled: (x && x.laeuft) || null, onclick: () => weltErstellen() }, x && x.laeuft ? 'Wird erstellt …' : aktuell ? 'Neu erstellen' : '⬇ Minecraft-Welt erstellen'), ergebnis),
-    stufe(3, 'In Minecraft Education öffnen', false, h('p', {}, 'Datei doppelklicken – die Anleitung steht rechts.'),
-      h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, 'Optional: Bauaufträge von Hand')),
+    stufe(3, 'In Minecraft Education öffnen', false),
   ));
   panel.hidden = false;
+}
+// Regie (Taste I) im Export-Schritt: Datei, Prüfung, Öffnen-Anleitung, Regieraum, Sicherheitsnetz
+function exportRegie() {
+  const x = exportStand, ok = x && x.pruefung;
   const name = x && x.name ? `„${x.name}“` : '„START IT SMART Stadt 2050 · Datum Uhrzeit“';
-  seite.append(h('h2', {}, 'So öffnet ihr die Welt'),
-    h('ol', {},
+  return [
+    ok ? [h('h3', {}, 'Erstellte Welt'), h('ul', {}, h('li', {}, `Datei: ${x.datei} (${Math.max(1, Math.round(x.groesse / 1024))} KB) im Download-Ordner`), h('li', {}, `Name in Minecraft: „${x.name}“`),
+      h('li', {}, `Geprüft: Start draußen am Platz, Kreativmodus, ${x.pruefung.punkte.length - 4} Bauflächen Block für Block wie beschlossen`))] : null,
+    h('h3', {}, 'So öffnet ihr die Welt'),
+    h('ol', { class: 'anleitung' },
       h('li', {}, 'Die Datei im Download-Ordner doppelklicken. Minecraft Education importiert die Welt. (Oder in Minecraft Education: Spielen › Importieren.)'),
       h('li', {}, `In der Weltenliste ${name} öffnen – Datum und Uhrzeit zeigen die neueste Datei.`),
       h('li', {}, `Ihr startet draußen am ${START.titel}, Blick über den grünen Platz. Fliegen: zweimal Leertaste.`),
-      h('li', {}, 'Regie: Regieraum mit ', h('code', {}, ALLGEMEIN.regieraum), ', zurück zum Start mit ', h('code', {}, `/tp @s ${START.stand.join(' ')}`), '.')),
+      h('li', {}, 'Regieraum mit ', h('code', {}, ALLGEMEIN.regieraum), ', zurück zum Start mit ', h('code', {}, `/tp @s ${START.stand.join(' ')}`), '.')),
     h('p', {}, h('b', {}, 'Sicherheitsnetz: '), 'Bei der Probe eine Welt erstellen, in Minecraft Education öffnen und prüfen – diese Datei für die Show bereithalten. Vorbereitet: ',
-      h('a', { href: ERSATZWELT, download: ERSATZWELT }, 'Ersatzwelt mit typischen Beschlüssen'), ' (ebenfalls vorher prüfen).'));
-  seite.hidden = false;
+      h('a', { href: ERSATZWELT, download: ERSATZWELT }, 'Ersatzwelt mit typischen Beschlüssen'), ' (ebenfalls vorher prüfen).'),
+    h('p', {}, 'Bauaufträge von Hand (nur für Änderungen in einer schon geöffneten Welt): Knopf „⛏ Minecraft (M)“ unten.'),
+  ];
 }
 function tagNachtGruppe() {
   return h('span', { class: 'gruppe' },
@@ -613,12 +619,15 @@ function regieZeichnen() {
   }));
   const mehrheit = m.schritte.some((x) => x.art === 'wahl') ? h('div', { class: 'reihe' }, 'Mehrheit merken:', ...['A', 'B', 'C'].slice(0, (m.schritte.find((x) => x.art === 'wahl').optionen || []).length).map((b) =>
     h('button', { type: 'button', 'aria-pressed': String(Z.mehrheit[m.id] === b), onclick: () => { Z.merkeMehrheit(m.id, Z.mehrheit[m.id] === b ? null : b); anzeigen(); } }, b))) : null;
-  r.replaceChildren(
+  r.replaceChildren(...[    // flach und ohne null: replaceChildren würde Listen als „[object …]“ und null als „null“ schreiben
     h('h2', {}, m.titel), h('div', { class: 'mono', style: 'font-size:1.4cqh;color:#44666c' }, `Typ: ${m.typ}`),
     h('h3', {}, 'Drehbuch-Stichworte'), h('ul', {}, ...(s.regie || ['—']).map((x) => h('li', {}, x))),
+    s.art === 'export' ? exportRegie() : null,
     smarty.length ? [h('h3', {}, 'SMARTy (Soundboard, extern)'), h('ul', {}, ...smarty)] : null,
     mehrheit,
-    h('h3', {}, 'Beschlüsse und Minecraft-Befehl der aktuellen Variante'), tabelle,
+    h('h3', {}, 'Beschlüsse und Minecraft-Befehl der aktuellen Variante'),
+    h('p', { class: 'stand' }, `Gespeicherter Stand: ${Object.keys(Z.beschluesse).length} von ${BEREICH_IDS.length} Beschlüssen – „Neu beginnen …“ setzt für eine neue Vorlesung alles zurück.`),
+    tabelle,
     h('div', { class: 'reihe' },
       h('button', { type: 'button', onclick: () => bauauftragOeffnen() }, '⛏ Minecraft (M)'),
       h('button', { type: 'button', onclick: () => resetMission() }, 'Mission zurücksetzen'),
@@ -626,7 +635,7 @@ function regieZeichnen() {
     h('h3', {}, 'Tasten'),
     h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt / Energiecheck-Zustand'], ['A B C', 'Vorschau / Auswahl'], ['Enter', 'In Stadt übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
     h('h3', {}, 'Verlauf'), h('ul', {}, ...Z.verlauf.slice(-8).reverse().map(([t, x]) => h('li', {}, `${t} ${x}`))),
-  );
+  ].flat(2).filter((x) => x != null));
 }
 
 /* ---------- Minecraft-Bauauftrag ---------- */
