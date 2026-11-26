@@ -8,12 +8,56 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 - In der Show-Zentrale (`show.html`): Kachel **3D-Stadtkonfigurator**
 - Offline per Doppelklick: die Einzeldatei `START-IT-SMART_Stadtkonfigurator.html`
 
-> **Stand (24.11.2026):** Drei Änderungsaufträge vom 23.11. (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
+> **Stand (26.11.2026):** Drei Änderungsaufträge vom 23.11. (Abschnitt 00): Energiecheck nach der Technikmission, Mobilität ohne
 > mBot- und Ampelvergleichs-Szene (jetzt 5 Szenen), Auswahl Schwebebahn/Flugtaxi in Mobilität Szene 4. Danach eine Korrektur
 > (Abschnitt 000): Szene 3 öffnet wieder das eigenständige Verkehrstool, Szene 5 zeigt das Ergebnis ohne Ampel-Umschalter.
 > Am 24.11. (Abschnitt 0000): Publikumsansicht ohne Bedienhinweise, Kurze Wege in Metern.
-> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 83 von 83.
+> Am 26.11. (Abschnitt „Auftrag 01“): Technik · 2/5 ist jetzt das **Calliope-Labor**.
+> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 94 von 94.
 > In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## Auftrag 01 vom 26.11.2026: Calliope-Labor (Mission Technik · 2/5)
+
+Nur die Szene **Technik · 2/5** ist umgebaut. Statt der Stadtansicht zeigt sie ein interaktives, vereinfachtes Blockprogramm für
+eine schlaue Straßenlaterne. Kein MakeCode-Nachbau, keine Verbindung zum echten Calliope (USB oder Bluetooth nicht nötig), läuft offline.
+Alle anderen Szenen, Abstimmungen, Navigation, Stadtzustand, Minecraft-Export, Show-Zentrale und Soundboard sind unverändert.
+
+**Leinwand:** Titel „Wir programmieren eine schlaue Straßenlaterne!“. Drei Karten von links nach rechts, passend zur Kette darunter:
+1. **Calliope mini** (schematisch: Platine mit Kontakten, Tasten A und B, 5×5-LED-Matrix), Helligkeit groß mit Balken und 30-%-Marke, „simuliert“.
+2. **Programm** als verschachtelte Blöcke: DAUERHAFT WIEDERHOLEN (Petrol) › WENN (grün) › DANN/SONST mit Licht AN/AUS (lila). Der gerade gültige Zweig leuchtet gold.
+3. **Straßenlaterne** in einer Tag-/Nachtumgebung (Himmel nach Helligkeit, Wolke als trüber Tag; bei abgedecktem Sensor bleibt es draußen hell), großes „Licht AN/AUS“.
+
+Darunter die Kette „Sensor misst die Helligkeit → Programm prüft die Regel → LED reagiert“ und statt des dunklen Live-Hinweises die
+großen Testknöpfe: Helligkeitsregler 0–100 %, ☀ Sonne, ✋ Sensor abdecken (zweiter Klick: Hand wegnehmen), ☁ Kurze Wolke, ☾ Anhaltende
+Dunkelheit, ↺ Test zurücksetzen. LED-Matrix und Laterne schalten immer gleichzeitig (gleicher Zustand, ohne Überblendung).
+Fußnote: „Alle Werte sind simuliert. Unter 30 % gilt als dunkel – eine vereinfachte Annahme für unser Experiment.“
+
+**Ablauf (Regie):**
+- Zuerst steht nur DAUERHAFT WIEDERHOLEN da. Der Knopf „＋ WENN / ＋ Bedingung / ＋ DANN / ＋ SONST“ (oder `Enter`) ergänzt die einfache Regel Block für Block. Erst danach erscheinen die Testknöpfe (vorher: „Zuerst bauen wir das Programm.“).
+- Versuch A: WENN Helligkeit unter 30 % DANN Licht AN SONST Licht AUS – bei Dunkelheit sofort an.
+- Nach dem Wolkenexperiment „⏱ Zeitblock ergänzen“ (oder Taste `B`): Versuch B, WENN es seit [10] Sekunden ununterbrochen dunkel ist. Die Sekunden (1–20, Standard 10) stehen als Auswahl direkt im grünen WENN-Block und steuern die Simulation; ein Wechsel startet den Test neu. Zähler „Ununterbrochen dunkel: x s von y s“ und Balken laufen automatisch.
+- Danach Umschalter „Versuch A | Versuch B“ (Tasten `A` / `B`). Moduswechsel, „Test zurücksetzen“, neue Sekunden und das Verlassen der Szene beenden den laufenden Test und den Zeitgeber.
+- Regie (Taste `I`): Stand des Labors und „Programm neu aufbauen“. „Neu beginnen“ setzt das Labor ebenfalls zurück. Das Labor speichert nichts.
+- Weiter → unveränderte Szene 3 (Abstimmung über die 1.000 Laternen). SMARTy T2–T4 wie bisher von Hand (T2 nach dem Aufbau, T3 nach dem Zeitblock, T4 nach dem Experiment).
+
+**Logik** (`stadt/labor.js`, Klasse `Labor`): unter 30 % dunkel, ab 30 % hell (Simulationsannahme). A: dunkel → sofort an. B: an, sobald die
+gewählte Dauer ohne Unterbrechung erreicht ist. Hell → sofort aus, Zähler 0. Zeitbasis `performance.now()` (monoton), Prüfung alle 50 ms,
+keine Wartefunktion. Kurze Wolke: startet immer aus einem hellen Zustand, 2 s bei 15 %, dann zurück. Simulierte Werte: Sonne 85 %,
+Sensor abgedeckt 5 %, anhaltende Dunkelheit 10 %. Bei 1 s schaltet die Wolke die Laterne ein (richtiges Ergebnis); 2 s ist der Grenzfall
+(2 s Dunkelheit = 2 s Ziel, die Wolke endet im selben Moment) – für eine sichtbare Wirkung 1 s wählen.
+
+**Geprüft** (`test.html`, 94 von 94), neu dabei:
+- Logik mit genauen Zeiten: Versuch A (Sonne aus, Abdunkeln sofort an, Aufhellen sofort aus, Wolke kurz an und dann aus); Versuch B mit 10 s (Wolke bleibt aus, 9 s aus, 10 s an, Aufhellen sofort aus, 6 s dunkel + kurz hell + dunkel → erst nach weiteren 10 s an); 3 s und 15 s genau nach der Dauer; 1 s: Wolke schaltet ein; nur 1–20 s; Reset, Moduswechsel und neue Sekunden dreimal hintereinander.
+- Oberfläche: Labor statt Stadt in 2/5, schrittweiser Aufbau, Tests erst danach frei, LED-Matrix = Laterne in allen Zuständen (Sonne, Dunkelheit, Hand, Regler 20/30 %, Wolke in Echtzeit), Sekunden-Auswahl 1–20 mit Standard 10, Zähler/Balken mit Zielwert, keine Überläufe in 16:9 (1280×720), A/B per Knopf und Taste, Szenenwechsel beendet den Zeitgeber (dreimal), Zurück/Weiter wie bisher, frühere Abstimmungen bleiben, nichts gespeichert, `Enter` ergänzt Blöcke, „Neu beginnen“ setzt das Labor zurück.
+- Publikumsansicht ohne Bedienwörter (auch im Labor).
+- **Nicht geprüft:** Wirkung am Beamer vor großem Publikum; die Dashboards-Prüfseite wurde nicht neu ausgeführt (Soundboard und Show-Zentrale sind unverändert, nur `sw.js` hat die neue Datei `stadt/labor.js` in der Offline-Liste).
+
+**Zu melden (nicht geändert):**
+- Die Regie nennt weiter „Programmier- und Verbesserungsfolie kommen aus der Präsentation“. Diese Folien zeigen vermutlich dasselbe wie das Labor (Regel bauen, Regel verbessern) – möglicherweise doppelt.
+- Szene 4/5 („Was bewirkt unsere Idee im Jahr 2050?“) zeigt mit Tag/Nacht ebenfalls Laternen, die nur nachts leuchten – inhaltlich nah am Labor, aber auf Stadtebene; keine echte Dopplung.
+- Drehbuch und Moderationskarten nennen 5 Sekunden; der neue Standard im Labor ist 10 Sekunden (separat abgleichen).
 
 ---
 
@@ -183,7 +227,7 @@ Blickrichtung beim ersten Start: Bedrock speichert sie nicht in `level.dat`; neu
 | 1 Layout | Eigene Kopfzone (Kicker, Titel als Leitfrage, eine Unterzeile), darunter die **freie 3D-Bühne**, rechts daneben die Seitenleiste (Knopf „Infos“ in der Fußleiste blendet sie aus), darunter Karten und Fußleiste. Kein Text liegt über der Stadt. Jede Kamera wird bei jeder Bühnengröße neu eingepasst (`rahmen` je Ansicht). Hinweisstreifen („Handzeichen …“, „Im Modell …“) entfernt – Inhalte stehen im Regie-Bereich (Taste `I`). „Übernehmen“ heißt jetzt **„In Stadt übernehmen“**. |
 | 2 Ausgangszustand | Bauflächen einer späteren Mission bleiben grau, bis ihre Mission erreicht ist – Natur Szene 1 ist komplett grau, auch wenn schon Beschlüsse gespeichert sind. A/B-Vorschauen speichern nichts. Status je Abstimmung: „Noch offen“, „Vorschau – noch nicht übernommen“, „✓ Übernommen: …“. „Mission zurücksetzen“ (nur diese Mission, zweimal klicken) und „Neu beginnen“ (Regie: Beschlüsse, Mehrheiten, Vorschau, Rundgang, Regen, Nacht, Export, Kamera). Finale und Export nutzen nur übernommene Beschlüsse. |
 | 3 Natur/Starkregen | Konfigurator: Regen-Infos in der Seitenleiste, gekennzeichnet „Vereinfachtes Modell · Zeit gerafft · ohne Mengen“. Natur-Simulation: Beschriftungen beim Starkregen und im Endbild als **Randlegende links mit feinen Linien** zum Wasser, Schalter **„Beschriftungen“** (Taste `L`) blendet sie aus. |
-| 4 Technik | Neue Reihenfolge: Frage „Woher weiß eine Lampe, dass es dunkel ist?“ → **Calliope live** (Sensor → Programm → LED; Regel 2: erst nach etwa 5 s ununterbrochener Dunkelheit) → Abstimmung über die 1.000 Laternen → Ergebnis Tag/Nacht. Keine Kopplung Calliope–Stadt. |
+| 4 Technik | Neue Reihenfolge: Frage „Woher weiß eine Lampe, dass es dunkel ist?“ → **Calliope live** (Sensor → Programm → LED; Regel 2: erst nach etwa 5 s ununterbrochener Dunkelheit; seit 26.11. als Calliope-Labor, Standard 10 s, siehe „Auftrag 01“) → Abstimmung über die 1.000 Laternen → Ergebnis Tag/Nacht. Keine Kopplung Calliope–Stadt. |
 | 5 Mobilität | Volle Straße → Parken A/B/C → Bus wartet → **mBot live** (Ampel von Hand) → **Verkehrssimulation** (eigene Seite) → **„Fahren 2050 Autos von allein?“** (Sensoren, Kameras, Computer; Möglichkeiten und Grenzen; keine Vorhersage; ohne Fahrer ist nicht automatisch weniger Verkehr) → zurück in die Stadt (Busanmeldung). Szenennummern und SMARTy-Tasten umsortiert. |
 | 6 Wohnen | Texte kürzer und sachlich; Aufstocken als „zusätzliche Bauidee“ gekennzeichnet. |
 | 6 Kurze Wege | Leitfrage „Wo sind die Brötchen am nächsten?“, großer Startpunkt „Hier wohnen wir“, große farbige Ziele A/B/C (nur Buchstaben), breite Wege mit weißem Rand, keine Fragezeichen; erst schätzen, dann „Wege messen“ (seit 24.11.: ungefähre Meter, Modellmaßstab 1 Feld = 10 m, siehe Abschnitt 0000). |
@@ -243,7 +287,7 @@ Untersucht habe ich den **entpackten Code**, nicht nur die Knopftexte.
 |---|---|---|---|---|
 | `0` | Szene 0 – graue Stadt | Stadt 2050 · Mission aktiviert | – | ANSICHT Gesamt |
 | `1` | Natur | grauer Platz · Abstimmung A/B (Diskussionsbilder) · **Lösung: Beides gemeinsam** (Übernehmen) · Starkregen grau/grün · Mission geschafft | Spielplatz | SPIELPLATZ GRAU / GRUEN |
-| `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope live** · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht · **Energiecheck** (4 Zustände, nur Bühneneffekt) | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
+| `2` | Technik | Frage „Woher weiß eine Lampe …?“ · **Calliope-Labor** (seit 26.11.) · Abstimmung „immer an / nur bei Dunkelheit“ · Ergebnis Tag → Nacht · **Energiecheck** (4 Zustände, nur Bühneneffekt) | Hauptstraße (16 Laternen) | LATERNEN IMMER AN / SENSOR, ZEIT TAG / NACHT |
 | `3` | Mobilität (5 Szenen) | volle Straße · Parken A/B/C · Bus wartet mit Knopf **Verkehrssimulation öffnen ↗** (danach Live-mBot außerhalb) · „Autos von allein?“ mit Auswahl **Schwebebahn/Flugtaxi** · Ergebnis: Parken, Busanmeldung, Zukunftsidee | Wohnstraße + Parkhausplatz; Kreuzung; Zukunftsverkehr (Ostweg) | PARKEN GRAU/A/B/C, KREUZUNG NORMAL/BUS, ZUKUNFT BAHN + TAXI (immer beide) |
 | `4` | Wohnen | sechs Familien (Wohnsimulator, eigene Seite) · Wohnformen A/B/C · Aufstocken + 2 Holzgeschosse | Wohngrundstück; Bestandshaus | WOHNEN GRAU/A/B/C, AUFSTOCKEN BESTAND/+2 HOLZ |
 | `5` | Kurze Wege | „Wo sind die Brötchen am nächsten?“: drei Wege von „Hier wohnen wir“ schätzen und messen · Laden A/B/C mit Fußwegen von 7 Wohnhäusern | Westviertel | EINKAUFEN GRAU/A/B/C |

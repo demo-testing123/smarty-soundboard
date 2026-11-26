@@ -33,6 +33,7 @@ import * as M from './stadtmodell.js';
 import * as MC from './minecraft-ausgabe.js';
 import { MISSIONEN, KAMERAS, RUNDGANG } from './daten.js';
 import { unzip, leseLog, leseBatch, leseNbt, schluessel, NACH_SCHLUESSEL, pruefeExport, leseWelt } from './weltleser.js';
+import { Labor, LABOR } from './labor.js';
 
 const bereiche = document.getElementById('bereiche'), erg = [];
 let liste;
@@ -135,6 +136,54 @@ try {
     const imHaus = M.LAEDEN.C.every((l) => l.tueren.every(([x, z]) => grau.hole(x - a0[0], M.S - a0[1], z - a0[2]) !== W.ID.luft && grau.hole(x - a0[0], M.S + 4 - a0[1], z - a0[2]) !== W.ID.luft));
     pruefe('Kurze Wege: C = Bäckerei, Lebensmittel- und Gemüseladen im Erdgeschoss bestehender Häuser', imHaus && M.LAEDEN.C.map((l) => l.name).join() === 'Bäckerei,Lebensmittel,Gemüse');
   }
+  // Calliope-Labor (Auftrag 01 vom 26.11.2026): verbindliche Abnahmetests mit genauen, simulierten Zeiten (ms)
+  {
+    const fertig = () => { const L = new Labor(); for (let i = 0; i < 4; i++) L.blockErgaenzen(0); return L; };
+    const an = (L, t) => L.tick(t).licht;
+    // Aufbau: erst nach allen vier Blöcken frei
+    const Lb = new Labor(); Lb.dunkelheit(0);
+    const vorFertig = !an(Lb, 60000) && Lb.naechster === 'WENN';
+    for (let i = 0; i < 4; i++) Lb.blockErgaenzen(1);
+    pruefe('Labor: Programm wird Block für Block aufgebaut (WENN, Bedingung, DANN, SONST); Test erst danach frei', vorFertig && Lb.fertig && !Lb.blockErgaenzen(2) && LABOR.schwelle === 30 && LABOR.sekunden === 10 && LABOR.wolkeMs === 2000);
+    // Versuch A
+    const A = fertig(); const a = [];
+    A.sonne(0); a.push(!an(A, 0));
+    A.dunkelheit(100); a.push(an(A, 100));                 // sofort an
+    A.sonne(500); a.push(!an(A, 500));                     // sofort aus
+    A.wolke(1000); a.push(an(A, 1000), an(A, 2999), !an(A, 3000), !an(A, 6000));   // kurz an, dann aus
+    pruefe('Labor Versuch A: Sonne → aus · Abdunkeln → sofort an · Aufhellen → sofort aus · kurze Wolke → kurz an, dann aus', a.every(Boolean), a.map(Number).join(''));
+    // Versuch B, Standard 10 s
+    const Bv = fertig(); Bv.verbessern(0); const b = [];
+    b.push(Bv.sekunden === 10, Bv.modus === 'B');
+    Bv.sonne(0); b.push(!an(Bv, 0));
+    Bv.wolke(100); let wolkeAn = false; for (let t = 100; t <= 4000; t += 10) wolkeAn = wolkeAn || an(Bv, t); b.push(!wolkeAn);   // bleibt aus
+    Bv.dunkelheit(5000); b.push(!an(Bv, 14000), !an(Bv, 14999), an(Bv, 15000));      // nach 9 s aus, ab 10 s an
+    Bv.sonne(16000); b.push(!an(Bv, 16000), Bv.zustand(16000).dauerMs === 0);        // sofort aus, Zähler 0
+    Bv.dunkelheit(20000); b.push(!an(Bv, 26000));
+    Bv.setHelligkeit(60, 26000); Bv.dunkelheit(26300);                                // nach 6 s kurz aufhellen, wieder abdunkeln
+    b.push(!an(Bv, 30000), !an(Bv, 36299), an(Bv, 36300));                            // erst nach weiteren 10 s
+    pruefe('Labor Versuch B (10 s): Sonne → aus · kurze Wolke → bleibt aus · 9 s dunkel → aus · ab 10 s → an · Aufhellen → sofort aus · 6 s dunkel, kurz hell, wieder dunkel → erst nach weiteren 10 s an', b.every(Boolean), b.map(Number).join(''));
+    // Variable Dauer
+    const v = [];
+    for (const sek of [3, 15]) { const L = fertig(); L.verbessern(0); L.setSekunden(sek, 0); L.dunkelheit(1000); v.push(!an(L, 1000 + sek * 1000 - 1), an(L, 1000 + sek * 1000), L.zustand(1000 + sek * 500).zielMs === sek * 1000, Math.abs(L.zustand(1000 + sek * 500).fortschritt - 0.5) < 1e-9); }
+    const L1 = fertig(); L1.verbessern(0); L1.setSekunden(1, 0); L1.wolke(500);
+    v.push(!an(L1, 1499), an(L1, 1500), an(L1, 2499), !an(L1, 2500));                 // 1 s: die Wolke schaltet die Laterne kurz ein
+    const Lg = fertig(); Lg.verbessern(0); v.push(Lg.setSekunden(0, 0) === 1, Lg.setSekunden(25, 0) === 20, Lg.setSekunden(10, 0) === 10);
+    pruefe('Labor variable Dauer: 3 s und 15 s schalten genau nach der gewählten Dauer ein; bei 1 s schaltet die 2-Sekunden-Wolke ein; Ziel und Fortschritt passen; nur 1–20 s', v.every(Boolean), v.map(Number).join(''));
+    // Reset, Moduswechsel, neue Sekunden: laufender Test endet sauber (wiederholt)
+    const R = fertig(); R.verbessern(0); const r = [];
+    for (let k = 0; k < 3; k++) {
+      const t = k * 100000;
+      R.dunkelheit(t); R.tick(t + 12000); r.push(R.licht);
+      R.setModus('A', t + 12001); r.push(!R.licht && R.helligkeit === LABOR.sonne && R.dunkelSeit === null && R.modus === 'A');
+      R.dunkelheit(t + 13000); r.push(an(R, t + 13000));
+      R.setModus('B', t + 14000); r.push(!R.licht && R.modus === 'B');
+      R.wolke(t + 15000); R.setSekunden(5 + k, t + 15500); r.push(!R.zustand(t + 15500).wolke && !R.licht && R.sekunden === 5 + k);
+      R.dunkelheit(t + 16000); R.testZurueck(t + 17000); r.push(!R.licht && R.helligkeit === LABOR.sonne && R.zustand(t + 17000).dauerMs === 0);
+      R.setSekunden(10, t + 18000);
+    }
+    pruefe('Labor: Moduswechsel, neue Sekunden und „Test zurücksetzen“ beenden den laufenden Test (Wolke, Zähler, Licht) – dreimal wiederholt', r.every(Boolean), r.map(Number).join(''));
+  }
   // Drehbuch: Reihenfolge der Missionen und alle Abstimmungen (Arbeitsfassung 16.11.2026 + Ergänzungsauftrag Kurze Wege)
   {
     const soll = [['start', null], ['natur', 'A,B'], ['technik', 'A,B'], ['mobilitaet', 'A,B,C'], ['wohnen', 'A,B,C'], ['einkaufen', 'A,B,C'], ['bildung', 'A,B,C'], ['finale', null]];
@@ -143,7 +192,7 @@ try {
     const kw = MISSIONEN.find((m) => m.id === 'einkaufen');
     const eigen = kw.bereiche.join() === 'einkaufen' && MISSIONEN.filter((m) => m.bereiche.includes('einkaufen')).length === 1;
     const tech = MISSIONEN.find((m) => m.id === 'technik').schritte, mob = MISSIONEN.find((m) => m.id === 'mobilitaet').schritte;
-    const iCall = tech.findIndex((x) => /Calliope/.test(x.titel)), iLat = tech.findIndex((x) => x.art === 'wahl');
+    const iCall = tech.findIndex((x) => x.art === 'labor'), iLat = tech.findIndex((x) => x.art === 'wahl');
     pruefe('Korrekturauftrag: Calliope vor der Laternenwahl', iCall >= 0 && iCall < iLat, `Technik: Calliope ${iCall + 1}, Wahl ${iLat + 1}`);
     // Änderungsauftrag Bus/Ampel-Dopplung (23.11.2026): genau 5 Szenen, Szenen 1–2 unverändert, keine mBot- und keine Ampelvergleichs-Szene
     const s12 = JSON.stringify(mob.slice(0, 2).map((x) => [x.art, x.titel, x.text, x.kamera, x.bereich || null, (x.optionen || []).map((o) => [o.v, o.titel, o.pro, o.contra])]));
@@ -191,7 +240,10 @@ try {
   // Texte
   const alleTexte = JSON.stringify(MISSIONEN) + JSON.stringify(KAMERAS) + JSON.stringify(RUNDGANG) + MC.alleBauauftraege();
   pruefe('Keine Figur „Mika“ in Texten, Kameras und Bauaufträgen', !/mika/i.test(alleTexte));
-  pruefe('Keine erfundenen Einheiten (°C, kWh, Tonnen, Liter, Prozent, km, Meter) in den Texten', !/(°C|kWh|Tonnen|Liter|\d\s*%|\bkm\b|\d\s*Meter)/.test(JSON.stringify(MISSIONEN)));
+  const ohneLabor = MISSIONEN.map((m) => ({ ...m, schritte: m.schritte.filter((x) => x.art !== 'labor') }));
+  const lab = MISSIONEN.flatMap((m) => m.schritte).find((x) => x.art === 'labor');
+  pruefe('Keine erfundenen Einheiten (°C, kWh, Tonnen, Liter, Prozent, km, Meter) in den Texten; im Calliope-Labor nur die als simuliert gekennzeichnete Schwelle',
+    !/(°C|kWh|Tonnen|Liter|\d\s*%|\bkm\b|\d\s*Meter)/.test(JSON.stringify(ohneLabor)) && /simuliert/.test(lab.fussnote) && !/(°C|kWh|Tonnen|Liter|\bkm\b|\d\s*Meter)/.test(JSON.stringify(lab)));
   pruefe('Natur: A/B sind nur Diskussionsbilder (keine Minecraft-Kammer, kein Beschluss)', !B.spielplatz.mc.includes('A') && !B.spielplatz.mc.includes('B') && MISSIONEN[1].schritte.find((s) => s.art === 'wahl').denkimpuls === true && MISSIONEN[1].schritte.some((s) => s.art === 'loesung' && s.variante === 'gruen'));
   // Keine neuen SMARTy-Sätze: jeder SMARTy-Hinweis im Konfigurator verweist auf eine vorhandene Soundboard-Taste
   {
@@ -530,11 +582,93 @@ try {
       M.METER_PRO_FELD === 10 && vorher === 0 && ist.join() === soll.join() && hinweis === 'Ungefähre Entfernungen im Stadtmodell' && gross && frei && kartenOk,
       `${ist.join(' · ')} (Felder ${['A', 'B', 'C'].map((v) => A.wegLaenge(v)).join('/')}) · Karten: ${karten.map((t) => t.replace('Weg von unserem Haus: ', '')).join(' · ')}`);
   }
+  // Calliope-Labor in der Oberfläche (Technik · 2/5)
+  {
+    const win = fr.contentWindow, doc = win.document, L = A.labor;
+    const beschlVor = JSON.stringify(A.Z.beschluesse);
+    A.gehe(2, 1); await warte(40);
+    L.neu(win.performance.now()); A.gehe(2, 1); await warte(30);
+    const sichtbar = !doc.querySelector('#labor').hidden && doc.querySelector('#szene').classList.contains('labor-an') && win.getComputedStyle(doc.querySelector('.welt')).visibility === 'hidden';
+    const titelOk = doc.querySelector('#titel').textContent === 'Wir programmieren eine schlaue Straßenlaterne!' && /Sensor misst die Helligkeit.*Programm prüft die Regel.*LED reagiert/.test(doc.querySelector('#panel .kette').textContent) && !doc.querySelector('#panel .live');
+    const knoepfe = () => [...doc.querySelectorAll('.labor-steuerung button, .labor-steuerung input')];
+    const start = !doc.querySelector('.blk.wenn') && knoepfe().every((k) => k.disabled) && doc.querySelector('.labor-kopf .bau')?.textContent === '＋ WENN' && /Versuch A/.test(doc.querySelector('.programm h3').textContent);
+    const bau = [];
+    for (let i = 0; i < 4; i++) { doc.querySelector('.labor-kopf .bau').click(); await warte(10); bau.push(doc.querySelector('.labor-kopf .bau')?.textContent || ''); }
+    const wennText = doc.querySelector('.blk.wenn').textContent;
+    const aufgebaut = /WENN\s*Helligkeit unter 30 %/.test(wennText) && /DANN\s*Licht AN/.test(wennText) && /SONST\s*Licht AUS/.test(wennText) && knoepfe().every((k) => !k.disabled) && !doc.querySelector('.sekunden');
+    pruefe('Labor: Szene Technik 2/5 zeigt statt der Stadt das Labor (Calliope mit 5×5-LEDs, Programm, Laterne); erst nur die einfache Regel, Blöcke per Klick, Tests erst danach frei',
+      sichtbar && titelOk && doc.querySelectorAll('.calliope-svg .led').length === 25 && start && aufgebaut && bau.join('|') === '＋ Bedingung|＋ DANN|＋ SONST|⏱ Zeitblock ergänzen', bau.join(' → '));
+    // LED-Matrix und Laterne zeigen immer denselben Zustand
+    const klick = (re) => { [...doc.querySelectorAll('.labor-knopf')].find((b) => re.test(b.textContent)).click(); };
+    const zustand = () => { const n = doc.querySelectorAll('.calliope-svg .led.an').length, lat = doc.querySelector('.labor-karte.laterne').classList.contains('an'); return n === 25 && lat ? 'an' : n === 0 && !lat ? 'aus' : 'UNGLEICH'; };
+    const folge = [];
+    klick(/Sonne/); await warte(80); folge.push(zustand());
+    klick(/Anhaltende Dunkelheit/); await warte(80); folge.push(zustand());
+    klick(/Sonne/); await warte(80); folge.push(zustand());
+    klick(/Sensor abdecken/); await warte(80); folge.push(zustand() + (doc.querySelector('.calliope .hand.an') ? '+Hand' : ''));
+    klick(/Hand wegnehmen/); await warte(80); folge.push(zustand());
+    const regler = doc.querySelector('.labor-steuerung input[type=range]');
+    regler.value = '20'; regler.dispatchEvent(new win.Event('input')); await warte(80); folge.push(zustand() + ':' + L.helligkeit);
+    regler.value = '30'; regler.dispatchEvent(new win.Event('input')); await warte(80); folge.push(zustand() + ':' + L.helligkeit);
+    klick(/Kurze Wolke/); await warte(150); folge.push(zustand()); await warte(2150); folge.push(zustand());
+    pruefe('Labor Versuch A in der Oberfläche: LED-Matrix und Laterne gleich (Sonne, Dunkelheit, Sensor abdecken, Regler 20 % / 30 %, kurze Wolke kurz an und nach 2 s aus)',
+      folge.join() === 'aus,an,aus,an+Hand,aus,an:20,aus:30,an,aus', folge.join(' · '));
+    // Versuch B: Zeitblock, Sekunden im grünen WENN-Block, Zähler und Balken
+    doc.querySelector('.labor-kopf .bau').click(); await warte(30);
+    let sel = doc.querySelector('.blk.wenn .slot select.sekunden');
+    const opts = sel ? [...sel.options].map((o) => Number(o.value)) : [];
+    const bOk = !!sel && opts.length === 20 && opts[0] === 1 && opts[19] === 20 && sel.value === '10' && L.modus === 'B' && /ununterbrochen dunkel ist/.test(doc.querySelector('.blk.wenn').textContent) && !doc.querySelector('.zaehler').hidden;
+    klick(/Anhaltende Dunkelheit/); await warte(400);
+    sel.value = '3'; sel.dispatchEvent(new win.Event('change')); await warte(60);
+    const nachWechsel = L.sekunden === 3 && L.helligkeit === LABOR.sonne && !L.licht && /0,0 s von 3 s/.test(doc.querySelector('.zaehler').textContent);
+    sel.value = '1'; sel.dispatchEvent(new win.Event('change')); await warte(30);
+    klick(/Kurze Wolke/); await warte(1350); const w1 = zustand(); await warte(1000); const w2 = zustand();
+    sel.value = '2'; sel.dispatchEvent(new win.Event('change')); await warte(30);
+    klick(/Anhaltende Dunkelheit/); await warte(1000);
+    const halb = doc.querySelector('.zaehler').textContent, breite = parseFloat(doc.querySelector('.zaehler .fuellung').style.width), z1 = zustand();
+    await warte(1150); const z2 = zustand(), voll = doc.querySelector('.zaehler').classList.contains('voll');
+    klick(/Sonne/); await warte(80); const z3 = zustand();
+    pruefe('Labor Versuch B in der Oberfläche: Sekunden 1–20 im WENN-Block (Standard 10), neuer Wert startet den Test neu; 1 s: Wolke schaltet ein, danach aus; 2 s: Zähler und Balken bis zum Ziel, dann an; Sonne → sofort aus',
+      bOk && nachWechsel && w1 === 'an' && w2 === 'aus' && /von 2 s/.test(halb) && breite > 35 && breite < 75 && z1 === 'aus' && z2 === 'an' && voll && z3 === 'aus',
+      `B ${bOk}, Wechsel ${nachWechsel}, Wolke bei 1 s ${w1}/${w2}, 2 s: „${halb.replace(/\s+/g, ' ').trim()}“ ${breite.toFixed(0)} % ${z1} → ${z2} → Sonne ${z3}`);
+    // Platz in 16:9: nichts läuft über
+    const ueber = [...doc.querySelectorAll('.labor-karte, .prog')].filter((k) => k.scrollHeight > k.clientHeight + 1).map((k) => k.className);
+    const lr = doc.querySelector('#labor').getBoundingClientRect(), sr = doc.querySelector('#szene').getBoundingClientRect(), st = doc.querySelector('.labor-steuerung');
+    pruefe('Labor in 16:9: Karten, Programm (Versuch B mit Zähler) und Testknöpfe passen ohne Überlauf', ueber.length === 0 && lr.bottom <= sr.bottom + 1 && lr.right <= sr.right + 1 && st.scrollWidth <= st.clientWidth + 1, ueber.join(' · ') || `Bühne ${Math.round(sr.width)}×${Math.round(sr.height)} px`);
+    // Moduswechsel per Knopf und Taste; Szenenwechsel beendet Timer und Test; Zurück/Weiter wie bisher (wiederholt)
+    const wechsel = [];
+    for (let k = 0; k < 3; k++) {
+      A.gehe(2, 1); await warte(30);
+      klick(/Anhaltende Dunkelheit/); await warte(30);
+      [...doc.querySelectorAll('.labor-kopf .gruppe button')].find((b) => /Versuch A/.test(b.textContent)).click(); await warte(30);
+      wechsel.push(L.modus === 'A' && !L.licht && L.helligkeit === LABOR.sonne);
+      doc.body.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'b', bubbles: true })); await warte(30);
+      wechsel.push(L.modus === 'B');
+      klick(/Anhaltende Dunkelheit/); await warte(30);
+      A.weiter(); await warte(30);
+      wechsel.push(A.pos().mission === 2 && A.pos().schritt === 2 && !A.laborLaeuft() && L.helligkeit === LABOR.sonne && L.dunkelSeit === null && doc.querySelector('#labor').hidden && !doc.querySelector('#szene').classList.contains('labor-an'));
+      A.zurueck(); await warte(30);
+      wechsel.push(A.pos().schritt === 1 && A.laborLaeuft() && L.fertig && L.verbessert && !!doc.querySelector('.labor-steuerung:not(.aus)'));
+      A.zurueck(); await warte(30);
+      wechsel.push(A.pos().schritt === 0 && !A.laborLaeuft());
+      A.gehe(3, 0); await warte(20); wechsel.push(!A.laborLaeuft());
+    }
+    const unveraendert = JSON.stringify(A.Z.beschluesse) === beschlVor;
+    pruefe('Labor: Versuch A/B (Knopf und Taste) und Szenenwechsel beenden Timer und Test; Zurück/Weiter wie bisher (2/5 ↔ 1/5, 3/5); frühere Abstimmungen bleiben; das Labor speichert nichts',
+      wechsel.every(Boolean) && unveraendert && !/labor/i.test(win.localStorage.getItem('sis-stadtkonfigurator-v1-test') || ''), `${wechsel.map(Number).join('')} · Beschlüsse ${unveraendert ? 'gleich' : 'GEÄNDERT'}`);
+    // Tastatur: Enter ergänzt den nächsten Block
+    L.neu(win.performance.now()); A.gehe(2, 1); await warte(20);
+    doc.body.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await warte(20);
+    const enter = L.stufe === 1 && !!doc.querySelector('.blk.wenn') && A.pos().schritt === 1;
+    for (let i = 0; i < 3; i++) doc.body.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    pruefe('Labor: Tastatur – Enter ergänzt den nächsten Block (Szene bleibt stehen)', enter && L.fertig);
+    A.gehe(3, 0); await warte(20);
+  }
   // Layout: Titel, Karten, Seitenleiste und Fußleiste liegen neben der 3D-Bühne, nicht darüber
   {
     const doc = fr.contentWindow.document, rect = (s) => { const e = doc.querySelector(s); if (!e || e.hidden || fr.contentWindow.getComputedStyle(e).display === 'none') return null; return e.getBoundingClientRect(); };
     const schnitt = (a, b) => a && b && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
-    const faelle = [[0, 1], [1, 1], [1, 3], [2, 2], [2, 4], [3, 2], [3, 3], [3, 4], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
+    const faelle = [[0, 1], [1, 1], [1, 3], [2, 1], [2, 2], [2, 4], [3, 2], [3, 3], [3, 4], [4, 2], [5, 0], [5, 1], [7, 0], [7, 1]], fehler = [];
     let kameraOk = true, kInfo = [];
     for (const [mm, ss] of faelle) {
       A.gehe(mm, ss); await warte(40);
@@ -578,8 +712,9 @@ try {
   A.aktion('vorher'); await warte(50);
   pruefe('Finale: Vorher/Nachher wechselt zwischen grauer und verbesserter Stadt', vorherGrau && IDS.every((id) => A.angezeigt[id] === A.Z.variante(id)));
   // 7
+  const laborVor = A.labor.stufe;
   A.neuBeginnen(); await warte(50);
-  pruefe('7 · Neu beginnen setzt alles zurück: Beschlüsse, Vorschau, Export, Kamera (Startansicht); graue Stadt', A.exportStand() === null && Object.keys(A.vorschau()).length === 0 && A.kameraKey() === 'start' && Object.keys(A.Z.beschluesse).length === 0 && IDS.every((id) => A.angezeigt[id] === B[id].grund && imBild(id, B[id].grund)) && gleich(M.grundstadt3D().ausschnitt([[-64, 56, -64], [95, 119, 95]]), g.ausschnitt([[-64, 56, -64], [95, 119, 95]])));
+  pruefe('7 · Neu beginnen setzt alles zurück: Beschlüsse, Vorschau, Export, Kamera (Startansicht), Calliope-Labor; graue Stadt', laborVor > 0 && A.labor.stufe === 0 && !A.labor.verbessert && !A.laborLaeuft() && A.exportStand() === null &&Object.keys(A.vorschau()).length === 0 && A.kameraKey() === 'start' && Object.keys(A.Z.beschluesse).length === 0 && IDS.every((id) => A.angezeigt[id] === B[id].grund && imBild(id, B[id].grund)) && gleich(M.grundstadt3D().ausschnitt([[-64, 56, -64], [95, 119, 95]]), g.ausschnitt([[-64, 56, -64], [95, 119, 95]])));
   // 8
   const fremd = fr.contentWindow.performance.getEntriesByType('resource').map((r) => r.name).filter((n) => !n.startsWith(location.origin) && !n.startsWith('data:') && !n.startsWith('blob:'));
   pruefe('8 · Keine externen Ressourcen (läuft offline)', fremd.length === 0, fremd.slice(0, 3).join(' · ') || `${fr.contentWindow.performance.getEntriesByType('resource').length} Dateien, alle aus diesem Ordner`);

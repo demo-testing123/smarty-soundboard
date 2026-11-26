@@ -8,6 +8,7 @@
  * ohne Ampel-Umschalter die Entscheidungen der Mission zusammen; Schwebebahn/Flugtaxi erst ab Szene 4 im Bild.
  * Aufträge vom 24.11.2026: Publikumsansicht ohne Bedienhinweise, Tastenkürzel und Regieanweisungen (die stehen nur in
  * „regie“, Taste I); Kurze Wege zeigt ungefähre Meter (vereinfachter Modellmaßstab: ein Feld = zehn Meter, METER_PRO_FELD).
+ * Auftrag 01 vom 26.11.2026: Technik · 2/5 ist das Calliope-Labor (art 'labor', labor.js) statt der Stadtansicht.
  * Die Figur „Mika“ ist überholt und kommt nicht vor. Sätze der Zeitreisenden stehen hier nur als Regie-Stichwort;
  * auf der Leinwand stehen ein kurzer Titel (Leitfrage) und höchstens eine Unterzeile. Längeres steht im Regie-Bereich (Taste I).
  * Keine erfundenen Zahlen: Messwerte (Wege, bebaute Fläche) rechnet das Stadtmodell aus und kennzeichnet sie als Modellwerte.
@@ -71,7 +72,8 @@ export const BUCHSTABEN_FARBE = { A: '#e2846b', B: '#1f8a8a', C: '#e3a630' };
  *  loesung  – Natur: „Beides gemeinsam!“ als bewusste gemeinsame Verbesserung
  *  regen    – Natur: Starkregen-Ansicht grau / grün
  *  schalter – Vorher/Nachher einer Baufläche (+ optional Tag/Nacht)
- *  extern   – Übergang zu einem echten Showelement (Calliope, mBot, Verkehrssimulation, Wohnsimulator)
+ *  extern   – Übergang zu einem echten Showelement (Wohnsimulator)
+ *  labor    – Calliope-Labor: Blockprogramm „schlaue Straßenlaterne“ mit simulierter Helligkeit (ersetzt die 3D-Stadt der Szene)
  *  bilanz   – Mobilität: Entscheidungen der Mission zusammen im Stadtbild (keine zweite Ampel-/Busdemonstration)
  *  link     – (bei bild/regen/extern) Knopf, der ein eigenständiges Programm in einem neuen Tab öffnet (Rückweg nur in „regie“)
  *  wege     – Kurze Wege: drei Wege von „Hier wohnen wir“ zu den möglichen Standorten; Meter = gemessene Felder × METER_PRO_FELD
@@ -151,11 +153,24 @@ export const MISSIONEN = [
         smarty: [['T1 · Sprachbefehl', 'R']],
       },
       {
-        art: 'extern', kicker: 'Mission Technik · Experiment', titel: 'Jetzt live: Calliope mini', kamera: 'laternen', zeige: 'vorher',
+        // Calliope-Labor (Auftrag 01 vom 26.11.2026): ersetzt in dieser Szene die Stadtansicht. Vereinfachte Blockprogrammierung,
+        // simulierte Helligkeit, keine Hardwarekopplung, keine Speicherung – die Laternen-Entscheidung bleibt in der nächsten Szene.
+        art: 'labor', kicker: 'Mission Technik · Experiment', titel: 'Wir programmieren eine schlaue Straßenlaterne!', kamera: 'laternen', zeige: 'vorher',
         text: 'Ein Lichtsensor, ein Programm und eine LED.',
-        kette: ['Sensor misst die Helligkeit', 'Programm prüft die Regel', 'LED geht an'],
-        live: 'Calliope mini mit Lichtsensor und LED',
-        regie: ['Live-Bild über die Dokumentenkamera: Calliope mini, Lichtsensor, externe LED.', 'Regel 1: WENN dunkel, DANN LED an, SONST aus.', 'Regel 2 (verbessert): LED erst nach etwa 5 Sekunden UNUNTERBROCHENER Dunkelheit an – ein kurzer Schatten löst kein Flackern aus.', 'Programmier- und Verbesserungsfolie kommen aus der Präsentation (ohne Roboterbild).', 'Keine Kopplung zwischen Calliope und Stadt: Hier zählt das echte Experiment.'],
+        kette: ['Sensor misst die Helligkeit', 'Programm prüft die Regel', 'LED reagiert'],
+        labor: { schwelle: 30, sekunden: 10, min: 1, max: 20, wolkeMs: 2000 },
+        fussnote: 'Alle Werte sind simuliert. Unter 30 % gilt als dunkel – eine vereinfachte Annahme für unser Experiment.',
+        regie: ['Echten Calliope zeigen (Dokumentenkamera: Calliope mini, Lichtsensor, externe LED). Das Labor ist eine Simulation, nicht mit dem Calliope verbunden.',
+          'Einfache Regel gemeinsam aufbauen: Knopf „＋ …“ (oder Enter) ergänzt nacheinander WENN, Bedingung, DANN, SONST. Erst danach sind die Testknöpfe frei. → SMARTy T2.',
+          'Testen: Sonne → Licht aus · Sensor abdecken oder anhaltende Dunkelheit → sofort an · Sonne → sofort aus.',
+          'Kurze Wolke (zwei Sekunden dunkel, dann hell): Die Laterne geht unnötig kurz an. Frage: „Wie können wir das Programm schlauer machen?“',
+          '„⏱ Zeitblock ergänzen“ (oder Taste B) zeigt die verbesserte Regel → SMARTy T3. Sekunden im grünen WENN-Block gemeinsam wählen (1–20, Standard 10).',
+          'Wolke erneut testen: Bei 10 Sekunden bleibt die Laterne aus. Danach anhaltende Dunkelheit: Zähler und Balken laufen bis zur gewählten Zeit, dann Licht an. Bei 1 Sekunde geht die Laterne während der Wolke an – ein richtiges Testergebnis (2 Sekunden ist der Grenzfall).',
+          'Versuch A / B (Tasten A / B) und „Test zurücksetzen“ beenden den laufenden Test; neue Sekunden starten den Test neu. „Programm neu aufbauen“ unten.',
+          'Danach SMARTy T4, dann Weiter → Abstimmung über die 1.000 Laternen (unverändert).',
+          'Für das Team: Das bisherige Drehbuch nennt 5 Sekunden. Neuer Standard im Labor: 10 Sekunden, frei einstellbar. Drehbuch und Moderationskarten separat abgleichen.',
+          'Programmier- und Verbesserungsfolie kommen aus der Präsentation (ohne Roboterbild).',
+          'Keine Kopplung zwischen Calliope und Stadt: Hier zählt das Experiment.'],
         smarty: [['T2 · Programm verstanden', 'T'], ['T3 · Programmoptimierung', 'Z'], ['T4 · Experiment erfolgreich', 'U']],
       },
       {

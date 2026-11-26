@@ -290,3 +290,112 @@ button:disabled { opacity: .45; cursor: default; }
 .regie .stand { margin: 0 0 .5cqh; font-size: 1.7cqh; color: var(--muted); }
 .regie ol { margin: 0; padding-left: 2.4cqh; }
 .regie p { margin: .6cqh 0; }
+
+/* ---------- Calliope-Labor (Technik · 2/5, Auftrag 01 vom 26.11.2026): ersetzt in dieser Szene die 3D-Stadt ---------- */
+.szene.labor-an .welt, .szene.labor-an .tafeln { visibility: hidden; }
+.labor {
+  position: absolute; inset: 0; z-index: 3; padding: 1.2cqh;
+  background-color: var(--paper); background-image: linear-gradient(#205c640a 1px, transparent 1px), linear-gradient(90deg, #205c640a 1px, transparent 1px); background-size: 2.4cqh 2.4cqh;
+}
+.labor-buehne { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1fr); gap: 1.2cqh; }
+.labor-karte { min-height: 0; display: flex; flex-direction: column; gap: .9cqh; background: #fff; border: 1px solid var(--line); border-radius: 1.2cqh; padding: 1.1cqh 1.3cqh; box-shadow: 0 .4cqh 1.2cqh #0f3a3114; overflow: hidden; }
+.labor-kopf { display: flex; align-items: center; gap: .9cqh; flex: none; min-height: 4.6cqh; }
+.labor-kopf .n { width: 3.6cqh; height: 3.6cqh; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--gold); border: 1px solid var(--gold-dunkel); font: 500 2cqh Plex, monospace; color: #2a4444; }
+.labor-kopf h3 { margin: 0; font-size: 2.5cqh; letter-spacing: -.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.labor-kopf .rolle { font: 500 1.4cqh Plex, monospace; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); }
+.labor-kopf .luecke { flex: 1; }
+.labor-kopf button { font-size: 2.1cqh; font-weight: 800; min-height: 5cqh; padding: .5cqh 1.6cqh; border-radius: .9cqh; border: 1px solid #b8d1ce; background: #eef6f5; }
+.labor-kopf .gruppe { display: inline-flex; border-radius: .9cqh; overflow: hidden; border: 1px solid #b8d1ce; }
+.labor-kopf .gruppe button { border: 0; border-radius: 0; }
+.labor-kopf .gruppe button + button { border-left: 1px solid #b8d1ce; }
+.labor-kopf .gruppe button[aria-pressed='true'] { background: #155c62; color: #fff; }
+
+/* 1 · Calliope mini */
+.calliope { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; }
+.calliope-svg { height: 100%; max-width: 100%; }
+.calliope-svg .platine { fill: #1f5c64; stroke: #1f5c64; stroke-width: 18; }
+.calliope-svg .kontakt { fill: #e9c46a; stroke: #b88a2c; stroke-width: 2.5; }
+.calliope-svg .matrix-feld { fill: #123b41; }
+.calliope-svg .led { fill: #3a4f52; }   /* ohne Übergang: LEDs und Laterne wechseln im selben Bild */
+.calliope-svg .led.an { fill: #ff4d3d; filter: drop-shadow(0 0 2.5px #ff7a5c); }
+.calliope-svg .taste { fill: #2a2f33; stroke: #9fb6b3; stroke-width: 2; }
+.calliope-svg .taste-text { fill: #fff; font: 700 11px DM, sans-serif; text-anchor: middle; }
+.calliope-svg .platine-text { fill: #e8f3f1; font: 700 10.5px DM, sans-serif; text-anchor: middle; letter-spacing: .03em; }
+.calliope .hand { position: absolute; left: 76%; top: 22%; transform: translate(-50%, -50%) rotate(-18deg) scale(.6); font-size: 8.5cqh; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; filter: drop-shadow(0 .6cqh 1cqh #0004); }
+.calliope .hand.an { opacity: 1; transform: translate(-50%, -50%) rotate(-18deg) scale(1); }
+.hell-anzeige { flex: none; display: grid; gap: .5cqh; }
+.hell-anzeige .zeile { display: flex; align-items: baseline; gap: 1cqh; font-size: 2.1cqh; font-weight: 700; }
+.hell-anzeige .wert { font-size: 4.4cqh; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin-left: auto; }
+.hell-anzeige .wort { font-size: 2.1cqh; font-weight: 800; padding: .2cqh 1cqh; border-radius: 99px; }
+.hell-anzeige .wort.hell { background: #fff0c2; color: #6b4a00; }
+.hell-anzeige .wort.dunkel { background: #1d2b49; color: #fff; }
+.messbalken { position: relative; height: 2.2cqh; border-radius: 99px; background: #e2ebe9; border: 1px solid #c4d6d3; }
+.messbalken .fuellung { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; background: linear-gradient(90deg, #26365a, #ffc15e); }
+.messbalken .schwelle { position: absolute; left: var(--schwelle); top: -.5cqh; height: 3.2cqh; border-left: .35cqh solid #c0392b; font: 500 1.3cqh Plex, monospace; color: #8e2a1f; padding-left: .4cqh; line-height: 1; display: flex; align-items: flex-end; }
+.hell-anzeige small, .zaehler small { font-size: 1.45cqh; color: var(--muted); }
+
+/* 2 · Programm: verschachtelte Blöcke */
+.prog { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.blk { color: #fff; font-weight: 800; font-size: 2.85cqh; line-height: 1.2; border-radius: 1cqh; }
+.blk .kopf { display: flex; align-items: center; gap: 1cqh; }
+.blk.wenn > .kopf .slot { flex: 0 1 auto; min-width: 0; }
+.blk.schleife { background: #1d5a63; padding: .8cqh 1.3cqh 1.3cqh; box-shadow: 0 .4cqh 0 #11434b; letter-spacing: .02em; }
+.blk.schleife > .innen { margin: .7cqh 0 0 2.4cqh; min-height: 6cqh; padding: .7cqh; border-radius: .8cqh; background: #f3f8f7; display: flex; flex-direction: column; }
+.blk.wenn { background: #2f8a5b; padding: .8cqh 1.2cqh 1cqh; box-shadow: 0 .4cqh 0 #1f6a43; }
+.blk .lbl { min-width: 10.5cqh; letter-spacing: .03em; flex: none; }
+.slot { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3cqh .5cqh; min-height: 5cqh; padding: .4cqh 1.4cqh; border-radius: 2.6cqh; }
+.slot.leer { min-width: 22cqh; border: .3cqh dashed #ffffffb0; background: #ffffff1c; }
+.slot.voll { background: #59b47f; border: .3cqh solid #ffffff70; box-shadow: inset 0 -.3cqh 0 #00000018; }
+.slot.zeit { background: #6cc28f; font-size: 2.6cqh; line-height: 1.25; }
+.slot .stueck { white-space: nowrap; }
+.slot select { font: 800 2.8cqh DM, sans-serif; color: var(--ink); background: #fff; border: .3cqh solid #ffc15e; border-radius: .8cqh; padding: .1cqh .5cqh; min-height: 4.6cqh; cursor: pointer; }
+.blk.wenn .zeile { display: flex; align-items: center; gap: 1cqh; margin-top: .7cqh; padding-left: 2.4cqh; }
+.blk.aktion { background: #7a55b9; padding: .55cqh 1.6cqh; box-shadow: 0 .35cqh 0 #533589; transition: box-shadow .15s, outline-color .15s; outline: .55cqh solid transparent; }
+.blk.wenn .zeile.aktiv .blk.aktion { outline-color: var(--gold); box-shadow: 0 0 2.4cqh #ffc15ecc, 0 .35cqh 0 #533589; }
+.blk.wenn .zeile.aktiv .lbl::after { content: " \25C0"; color: var(--gold); }
+.neu { animation: blockNeu 1.2s ease-out; }
+@keyframes blockNeu { 0% { transform: scale(.85); opacity: 0; } 25% { transform: scale(1.04); opacity: 1; } 100% { transform: none; } }
+.zaehler { flex: none; display: grid; gap: .5cqh; padding: .7cqh 1.1cqh; border-radius: 1cqh; background: #eef6f5; border: 1px solid #c4d6d3; }
+.zaehler .zeile { display: flex; align-items: baseline; justify-content: space-between; gap: 1cqh; font-size: 2.1cqh; font-weight: 700; }
+.zaehler .zeile small { margin-right: auto; }
+.zaehler .zeile b { font-size: 3.4cqh; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.fortschritt { height: 2.4cqh; border-radius: 99px; background: #d6e3e1; overflow: hidden; }
+.fortschritt .fuellung { display: block; height: 100%; background: #2f8a5b; border-radius: 99px; }
+.zaehler.voll .fortschritt .fuellung { background: var(--gold); }
+
+/* 3 · Straßenlaterne */
+.laterne-bild { flex: 1; min-height: 0; display: grid; place-items: center; }
+.laterne-svg { height: 100%; max-width: 100%; border-radius: 1cqh; }
+.laterne-svg .himmel { transition: fill .4s; }
+.laterne-svg .sonne { fill: #ffd15c; transition: opacity .4s; }
+.laterne-svg .mond { fill: #e8eefc; transition: opacity .4s; }
+.laterne-svg .sterne { fill: #fff; transition: opacity .4s; }
+.laterne-svg .wolke { fill: #e9eef2; stroke: #b9c5cf; stroke-width: 1.5; transition: opacity .3s; }
+.laterne-svg .boden { fill: #8fb07a; }
+.laterne-svg .strasse { fill: #4b5058; }
+.laterne-svg .markierung { fill: #e9e4d6; }
+.laterne-svg .mast { fill: #3d434b; }
+.laterne-svg .arm { fill: none; stroke: #3d434b; stroke-width: 5; stroke-linecap: round; }
+.laterne-svg .kopf { fill: #2f353c; }
+.laterne-svg .glas { fill: #6d6556; }
+.laterne-svg .kegel, .laterne-svg .schein { fill: #ffe28a; opacity: 0; }
+.laterne.an .laterne-svg .glas { fill: #fff3b0; }
+.laterne.an .laterne-svg .kegel { opacity: .42; }
+.laterne.an .laterne-svg .schein { opacity: .7; }
+.licht-status { flex: none; text-align: center; }
+.licht-status b { display: inline-block; font-size: 3.6cqh; font-weight: 800; letter-spacing: .02em; padding: .5cqh 2.4cqh; border-radius: 1cqh; background: #2b3438; color: #c9d3d6; }
+.laterne.an .licht-status b { background: var(--gold); color: #193e47; box-shadow: 0 0 2.4cqh #ffc15e99; }
+
+/* Testknöpfe im Bedienfeld (ersetzen den dunklen Live-Hinweis) */
+.labor-steuerung { position: relative; display: flex; align-items: stretch; gap: 1cqh; }
+.labor-steuerung .regler { flex: 1.6 1 0; display: flex; align-items: center; gap: 1.2cqh; padding: .8cqh 1.4cqh; border-radius: 1.1cqh; background: #fff; border: 1px solid #b8d1ce; font-size: 2.1cqh; font-weight: 800; }
+.labor-steuerung .regler input { flex: 1; min-width: 0; height: 4cqh; accent-color: #c5933a; cursor: pointer; }
+.labor-steuerung .regler output { min-width: 7.5cqh; text-align: right; font-size: 2.6cqh; font-variant-numeric: tabular-nums; }
+.labor-knopf { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: .8cqh; min-height: 7cqh; padding: .6cqh 1.2cqh; font-size: 2.15cqh; font-weight: 800; line-height: 1.1; text-align: center; border-radius: 1.1cqh; border: 1px solid #b8d1ce; background: #fff; box-shadow: 0 .3cqh 0 #c5d6d3; }
+.labor-knopf .zeichen { font-size: 3.2cqh; line-height: 1; }
+.labor-knopf:hover:not(:disabled) { background: #fff6dd; }
+.labor-knopf[aria-pressed='true'], .labor-knopf.laeuft { background: var(--gold); border-color: var(--gold-dunkel); box-shadow: 0 .3cqh 0 #bd8f3d; }
+.labor-knopf.leise { flex: .85 1 0; background: #eef6f5; }
+.labor-steuerung.aus > :not(.labor-gesperrt) { visibility: hidden; }   /* Testknöpfe erst, wenn das Programm fertig ist */
+.labor-steuerung button:disabled, .labor-steuerung input:disabled { cursor: not-allowed; }
+.labor-gesperrt { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.6cqh; font-weight: 800; color: var(--muted); border: .3cqh dashed #a9c2be; border-radius: 1.1cqh; background: #ffffffa6; }

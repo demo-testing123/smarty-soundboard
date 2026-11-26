@@ -6,6 +6,7 @@ import { Zustand, SPEICHER_SCHLUESSEL } from './zustand.js';
 import { BEREICHE, BEREICH_IDS, stadtFuer, vorlage, einsetzen, einkaufsweg, einkaufswege, bebauteFlaeche, wohnungen, LADEN, LAEDEN, ENERGIE_ORTE, wegMeter } from './stadtmodell.js';
 import { befehle, bauauftrag, alleBauauftraege, stadtMcworld, ALLGEMEIN, tp, START, REGIERAUM } from './minecraft-ausgabe.js';
 import { pruefeExport } from './weltleser.js';
+import { Labor, laborAnsicht } from './labor.js';
 
 const $ = (s) => document.querySelector(s);
 function h(tag, attrs = {}, ...kinder) {
@@ -37,6 +38,12 @@ let energieStufe = 0;                    // Energiecheck: Zustand 0–3 (angezei
 let resetBereit = null;
 let exportStand = null;                  // letzte erzeugte Minecraft-Welt: { name, datei, groesse, pruefung, beschluesse } oder { fehler }
 const bilder = new Map(), wegeCache = new Map(), alleWegeCache = new Map();
+// Calliope-Labor (Technik · 2/5): Programm und Test nur im Arbeitsspeicher – keine Speicherung, keine Beschlüsse
+const LABOR_SCHRITT = MISSIONEN.flatMap((m) => m.schritte).find((x) => x.art === 'labor');
+const labor = new Labor(LABOR_SCHRITT ? LABOR_SCHRITT.labor : {});
+let laborSicht = null, laborTimer = null;
+const uhr = () => performance.now();                  // monotone Zeitbasis
+function laborStopp() { if (laborTimer) clearInterval(laborTimer); laborTimer = null; laborSicht = null; }
 // Tafeln: feste aus daten.js + Ladentafeln aus dem Stadtmodell (eine Quelle für Bau, Tafel und Weg)
 const TAFELN_ALLE = { ...TAFELN };
 for (const v of ['A', 'B', 'C']) {
@@ -101,6 +108,7 @@ function verlassen() {
   vorschau = {}; vorherAn = false;
   if (regenAn) { regenAn = false; ansicht.setzeRegen(null); }
   if (ansicht.energie) ansicht.setzeEnergie(null);       // Energiecheck verlassen: Licht und Stadt wie vorher
+  if (schritt().art === 'labor') { laborStopp(); labor.testZurueck(uhr()); }   // Labor verlassen: Timer und Test sauber beenden
   rundgangStopp();
   rundgang.station = -1;
 }
@@ -202,6 +210,7 @@ function neuBeginnen() {
   // alles auf Anfang: Beschlüsse, Mehrheiten, Vorschauen, Rundgang, Regen, Nacht, Export, Ansicht und Kamera
   Z.neuBeginnen();
   vorschau = {}; vorherAn = false; wegeGemessen = false; exportStand = null;
+  laborStopp(); labor.neu(uhr());
   if (regenAn) { regenAn = false; ansicht.setzeRegen(null); }
   rundgangStopp(); rundgang.station = -1;
   nachtSetzen(false);
@@ -298,6 +307,11 @@ function anzeigen() {
   const wege = [];
   const reihe = h('div', { class: 'knopfreihe' });
   const tafelKeys = [...(s.tafeln || [])];
+  // Calliope-Labor ersetzt in seiner Szene die 3D-Stadt; in allen anderen Szenen ist es aus
+  const laborEl = $('#labor'), istLabor = s.art === 'labor';
+  $('#szene').classList.toggle('labor-an', istLabor);
+  laborEl.hidden = !istLabor;
+  if (!istLabor && laborEl.firstChild) { laborStopp(); laborEl.replaceChildren(); }
 
   if (s.art === 'bild' && s.punkte) { seite.append(...seiteListe(s.seiteTitel || 'Stichpunkte', s.punkte)); seite.hidden = false; }
   if (s.art === 'bild' && s.link) {
@@ -486,6 +500,14 @@ function anzeigen() {
 
   if (s.art === 'export') exportZeichnen(panel, seite);
 
+  if (istLabor) {
+    if (s.kette) panel.append(h('div', { class: 'kette' }, ...s.kette.flatMap((t, i) => [i ? h('i', {}, '→') : null, h('span', {}, t)])));
+    laborSicht = laborAnsicht(labor, { uhr, geaendert: () => { if (!$('#regie').hidden) regieZeichnen(); } });
+    laborEl.replaceChildren(laborSicht.szene);
+    panel.append(laborSicht.steuerung); panel.hidden = false;
+    if (!laborTimer) laborTimer = setInterval(() => { if (laborSicht) laborSicht.aktualisieren(uhr()); }, 50);
+  }
+
   // Tafeln, Wege, Hervorhebung
   tafelnSetzen(tafelKeys);
   ansicht.setzeWege(wege);
@@ -623,6 +645,8 @@ function regieZeichnen() {
     h('h2', {}, m.titel), h('div', { class: 'mono', style: 'font-size:1.4cqh;color:#44666c' }, `Typ: ${m.typ}`),
     h('h3', {}, 'Drehbuch-Stichworte'), h('ul', {}, ...(s.regie || ['—']).map((x) => h('li', {}, x))),
     s.art === 'export' ? exportRegie() : null,
+    s.art === 'labor' ? [h('h3', {}, 'Calliope-Labor'), h('p', { class: 'stand' }, `Programm: ${labor.stufe} von 4 Blöcken · Versuch ${labor.modus}${labor.verbessert ? '' : ' (Zeitblock noch nicht ergänzt)'} · ${labor.sekunden} Sekunden`),
+      h('div', { class: 'reihe' }, h('button', { type: 'button', onclick: () => { labor.neu(uhr()); anzeigen(); } }, 'Programm neu aufbauen'))] : null,
     smarty.length ? [h('h3', {}, 'SMARTy (Soundboard, extern)'), h('ul', {}, ...smarty)] : null,
     mehrheit,
     h('h3', {}, 'Beschlüsse und Minecraft-Befehl der aktuellen Variante'),
@@ -633,7 +657,7 @@ function regieZeichnen() {
       h('button', { type: 'button', onclick: () => resetMission() }, 'Mission zurücksetzen'),
       h('button', { type: 'button', onclick: () => $('#neu').showModal() }, 'Neu beginnen …')),
     h('h3', {}, 'Tasten'),
-    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt / Energiecheck-Zustand'], ['A B C', 'Vorschau / Auswahl'], ['Enter', 'In Stadt übernehmen'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
+    h('div', { class: 'tasten' }, ...[['0–7', 'Szene/Mission'], ['← →', 'Schritt / Energiecheck-Zustand'], ['A B C', 'Vorschau / Auswahl / Labor-Versuch'], ['Enter', 'In Stadt übernehmen / Labor: nächster Block'], ['V', 'Vorher/Nachher'], ['G', 'Gesamtansicht'], ['S', 'Zur Szene'], ['N', 'Tag/Nacht'], ['R', 'Regen'], ['M', 'Minecraft'], ['H', 'Bedienung aus/an'], ['I', 'Regie'], ['F', 'Vollbild'], ['Esc', 'Vorschau weg']].map(([k, t]) => h('div', {}, h('kbd', {}, k), ' ', t))),
     h('h3', {}, 'Verlauf'), h('ul', {}, ...Z.verlauf.slice(-8).reverse().map(([t, x]) => h('li', {}, `${t} ${x}`))),
   ].flat(2).filter((x) => x != null));
 }
@@ -703,7 +727,8 @@ function aktion(a) {
   else if (a === 'weiter') weiter();
 }
 function tasten(e) {
-  if (e.target.closest('dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const ziel = e.target instanceof Element ? e.target : null;
+  if (ziel?.closest('dialog') || ziel?.closest('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;   // Regler/Auswahl im Labor behalten ihre Tasten
   const s = schritt(), k = e.key;
   if (/^[0-7]$/.test(k)) { gehe(Number(k), 0); e.preventDefault(); return; }
   const map = { ArrowRight: 'weiter', PageDown: 'weiter', ' ': 'weiter', ArrowLeft: 'zurueck', PageUp: 'zurueck', g: 'gesamt', s: 'szene', n: 'nacht', m: 'minecraft', i: 'regie', f: 'vollbild', v: 'vorher' };
@@ -711,6 +736,10 @@ function tasten(e) {
   if (map[lk]) { aktion(map[lk]); e.preventDefault(); return; }
   if (s.art === 'wahl' && /^[abc]$/i.test(k)) { const o = s.optionen.find((x) => x.b === k.toUpperCase()); if (o) vorschauSetzen(s.bereich, o.v); e.preventDefault(); return; }
   if (s.auswahl && /^[ab]$/i.test(k)) { const o = s.auswahl.optionen.find((x) => x.b === k.toUpperCase()); if (o) auswahlSetzen(s.auswahl.bereich, o.v); e.preventDefault(); return; }
+  if (s.art === 'labor' && laborSicht) {
+    if (k === 'Enter') { laborSicht.blockErgaenzen(); e.preventDefault(); return; }
+    if (/^[ab]$/i.test(k)) { if (labor.fertig) laborSicht.modus(k.toUpperCase()); e.preventDefault(); return; }
+  }
   if (k === 'Enter') {
     if (s.art === 'wahl' && !s.denkimpuls && vorschau[s.bereich]) uebernehmen(s.bereich, vorschau[s.bereich]);
     else if (s.art === 'loesung' || s.art === 'bilanz') uebernehmen(s.bereich, s.variante);
@@ -766,7 +795,7 @@ async function start() {
   }
   const naechstes = () => { const x = vorbereiten.shift(); if (!x) return; bildFuer(...x); setTimeout(naechstes, 60); };
   setTimeout(naechstes, 800);
-  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent), weltErstellen, exportStand: () => exportStand, sollStand, kameraKey: () => kameraKey, energieSetzen, energieStufe: () => energieStufe, auswahlSetzen };
+  window.__stadt = { Z, ansicht: () => ansicht, welt: () => welt, gehe, weiter, zurueck, uebernehmen, vorschauSetzen, sollStand, angezeigt, pos: () => ({ ...pos }), vorschau: () => ({ ...vorschau }), nachtSetzen, neuBeginnen, resetMission, aktion, wegLaenge, alleWege, station, tafeln: () => tafelEls.map((t) => t.el.textContent), weltErstellen, exportStand: () => exportStand, sollStand, kameraKey: () => kameraKey, energieSetzen, energieStufe: () => energieStufe, auswahlSetzen, labor, laborLaeuft: () => !!laborTimer };
   window.__stadtOk = true;
 }
 start().catch((e) => {

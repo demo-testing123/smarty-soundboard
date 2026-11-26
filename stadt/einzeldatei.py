@@ -23,6 +23,7 @@ MODULE = {   # fester Name → Datei
     'sis/ansicht3d': 'stadt/ansicht3d.js',
     'sis/minecraft-ausgabe': 'stadt/minecraft-ausgabe.js',
     'sis/weltleser': 'stadt/weltleser.js',
+    'sis/labor': 'stadt/labor.js',
     'sis/main': 'stadt/main.js',
 }
 NACH_DATEI = {v: k for k, v in MODULE.items()}
