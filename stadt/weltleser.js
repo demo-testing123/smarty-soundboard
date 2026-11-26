@@ -7,6 +7,7 @@
 import * as W from '../minecraft/welt.js';
 import { crcMaskiert, crc32 } from '../minecraft/mcworld.js';
 import { BEREICHE, BEREICH_IDS, BEREICH_MC, vorlage, boxVon } from './stadtmodell.js';
+import { belebungsBloecke, varianteInWelt } from './belebung.js';
 import { START } from './minecraft-ausgabe.js';
 
 const dec = new TextDecoder();
@@ -119,9 +120,16 @@ export async function pruefeExport(zipDaten, beschluesse = {}) {
   ok('Kreativmodus (Fliegen), Befehle an', lv.GameType === 1 && lv.commandsEnabled === 1 && lv.commandblocksenabled === 1);
   for (const id of BEREICH_IDS) {
     const fest = BEREICHE[id].mcFest, v = fest || beschluesse[id] || BEREICHE[id].grund, t = vorlage(id, v), [a, , c] = boxVon(id), y1 = boxVon(id)[1];
-    let abw = 0;
-    for (let y = 0; y < t.dy; y++) for (let z = 0; z < t.dz; z++) for (let x = 0; x < t.dx; x++) if (L.hole(a + x, y1 + y, c + z) !== t.hole(x, y, z)) abw++;
-    ok(`${BEREICHE[id].titel}: ${fest ? 'immer beide (unabhängig von der Abstimmung)' : v === BEREICHE[id].grund ? 'Ausgangszustand' : 'wie beschlossen'}`, abw === 0, abw ? `${abw} Blöcke weichen ab` : v);
+    // Änderungsauftrag 03: erwartet = Vorlage + Einrichtung der Belebung (die nur Luft ersetzt)
+    const extra = varianteInWelt(id, beschluesse) === v ? belebungsBloecke(id, v) : new Map();
+    let abw = 0, ersetzt = 0;
+    for (let y = 0; y < t.dy; y++) for (let z = 0; z < t.dz; z++) for (let x = 0; x < t.dx; x++) {
+      const e = extra.get(`${a + x},${y1 + y},${c + z}`), soll = e ? W.ID[e] : t.hole(x, y, z);
+      if (e && t.hole(x, y, z) !== W.ID.luft) ersetzt++;
+      if (L.hole(a + x, y1 + y, c + z) !== soll) abw++;
+    }
+    ok(`${BEREICHE[id].titel}: ${fest ? 'immer beide (unabhängig von der Abstimmung)' : v === BEREICHE[id].grund ? 'Ausgangszustand' : 'wie beschlossen'}${extra.size ? ', eingerichtet' : ''}`, abw === 0 && ersetzt === 0,
+      abw || ersetzt ? `${abw} Blöcke weichen ab, ${ersetzt} überschrieben` : `${v}${extra.size ? ` + ${extra.size} Einrichtungsblöcke` : ''}`);
   }
   return { ok: punkte.every((p) => p[1]), punkte, name: lv.LevelName };
 }

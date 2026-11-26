@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TASTE = {"'": "Umschalt + #", "&": "Umschalt + 6", "*": "Umschalt + +", "?": "Umschalt + ß", "_": "Umschalt + -"}
+TASTE = {"'": "Umschalt + #", "&": "Umschalt + 6", "*": "Umschalt + +", "?": "Umschalt + ß", "_": "Umschalt + -", "!": "Umschalt + 1", '"': "Umschalt + 2"}
 SPRECHER = {"smarty": "SMARTy", "ki": "Zeitmaschinen-KI"}
 
 

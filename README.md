@@ -130,7 +130,7 @@ Stand 22.11.2026 (Drehbuch „humorvoll aktualisiert“ und Änderungsauftrag vo
 | Wohnen | W1 → W2 → W3 → W4 → W5 |
 | Kurze Wege | K1 → K3 → K2 |
 | Bildung | B1 → B4 → B2 → B3 |
-| Finale | F3 → F4 → F5a → F5b → Abschlussfilm (Show-Zentrale) |
+| Finale | F3 → F4 → F5a → F5b → Abschlussfilm (Show-Zentrale) → F6 (Umschalt + 1) → F7 (Umschalt + 2) |
 
 - **Wieder im Drehbuch** (vorhandene Aufnahmen, Wortlaut geprüft): O9 „Ich habe mich mitgeschmuggelt …“, N3 „Wetterwarnung! …“, N4 „Neue Erkenntnis gespeichert …“.
 - **Neu vertont:** M10 (Taste `-`), M11 (Taste `Q`). Die Tasten waren frei, weil die Erzähler-Pads nicht mehr im Soundboard sind.

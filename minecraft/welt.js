@@ -108,6 +108,38 @@ export const BLOECKE = {
   fass: ['barrel', { facing_direction: i(1), open_bit: b(0) }, '#8a6a42'],
   bienen: ['bee_nest', { direction: i(0), honey_level: i(0) }, '#d8b25a'],
   bretterBirke: ['birch_planks', {}, '#d6c28c'],
+  // Änderungsauftrag 03 (26.11.2026) „Die Minecraft-Stadt erwacht zum Leben“ – NUR ANGEHÄNGT, die IDs davor bleiben gleich.
+  // Befehlsblöcke unter dem Regieraum (rufen die Figuren): Blickrichtung = nächster Block der Kette (2 Nord, 4 West, 5 Ost)
+  wiederholbefehlOst: ['repeating_command_block', { conditional_bit: b(0), facing_direction: i(5) }, '#6a4fa0'],
+  ketteOst: ['chain_command_block', { conditional_bit: b(0), facing_direction: i(5) }, '#4f8a6a'],
+  ketteWest: ['chain_command_block', { conditional_bit: b(0), facing_direction: i(4) }, '#4f8a6a'],
+  ketteNord: ['chain_command_block', { conditional_bit: b(0), facing_direction: i(2) }, '#4f8a6a'],
+  ketteBedingtOst: ['chain_command_block', { conditional_bit: b(1), facing_direction: i(5) }, '#4f8a6a'],
+  befehlsblockUnten: ['command_block', { conditional_bit: b(0), facing_direction: i(0) }, '#c08050'],
+  // Einrichtung (Zustände geprüft gegen Bedrock 1.20.70)
+  tischplatte: ['spruce_slab', { 'minecraft:vertical_half': s('top') }, '#86653f'],
+  ofenSued: ['furnace', { 'minecraft:cardinal_direction': s('south') }, '#7c7c7c'],
+  ofenNord: ['furnace', { 'minecraft:cardinal_direction': s('north') }, '#7c7c7c'],
+  ofenWest: ['furnace', { 'minecraft:cardinal_direction': s('west') }, '#7c7c7c'],
+  kuerbis: ['pumpkin', { 'minecraft:cardinal_direction': s('south') }, '#d9822b'],
+  melone: ['melon_block', {}, '#8bb83c'],
+  kuchen: ['cake', { bite_counter: i(0) }, '#f2e6d9'],
+  honig: ['honeycomb_block', {}, '#e5a53a'],
+  azaleeBusch: ['flowering_azalea', {}, '#7aa84a'],
+  bildschirm: ['black_stained_glass_pane', {}, '#222222'],
+  webstuhl: ['loom', { direction: i(0) }, '#b8945f'],
+  kartentisch: ['cartography_table', {}, '#7a5a3a'],
+  schmiedetisch: ['smithing_table', {}, '#3d3a44'],
+  zielscheibe: ['target', {}, '#e8d8c8'],
+  haengelampe: ['lantern', { hanging: b(1) }, '#f0c060'],
+  teppichRot: ['red_carpet', {}, '#a3302a'],
+  teppichBlau: ['blue_carpet', {}, '#3c5aa6'],
+  teppichGelb: ['yellow_carpet', {}, '#f0c02c'],
+  // Betten: Fuß- und Kopfteil, direction = Richtung vom Fuß zum Kopf (2 Nord, 3 Ost); Farbe steht in der Block-Entität
+  bettNordFuss: ['bed', { direction: i(2), head_piece_bit: b(0), occupied_bit: b(0) }, '#a3302a'],
+  bettNordKopf: ['bed', { direction: i(2), head_piece_bit: b(1), occupied_bit: b(0) }, '#e8ebeb'],
+  bettOstFuss: ['bed', { direction: i(3), head_piece_bit: b(0), occupied_bit: b(0) }, '#a3302a'],
+  bettOstKopf: ['bed', { direction: i(3), head_piece_bit: b(1), occupied_bit: b(0) }, '#e8ebeb'],
 };
 export const NAMEN = Object.keys(BLOECKE);
 export const ID = Object.fromEntries(NAMEN.map((n, k) => [n, k]));

@@ -578,6 +578,7 @@ function exportRegie() {
       h('li', {}, 'Die Datei im Download-Ordner doppelklicken. Minecraft Education importiert die Welt. (Oder in Minecraft Education: Spielen › Importieren.)'),
       h('li', {}, `In der Weltenliste ${name} öffnen – Datum und Uhrzeit zeigen die neueste Datei.`),
       h('li', {}, `Ihr startet draußen am ${START.titel}, Blick über den grünen Platz. Fliegen: zweimal Leertaste.`),
+      h('li', {}, 'Nach wenigen Sekunden erscheinen von selbst Bewohner, Kinder, Verkaufspersonal und Tiere (einmal, sobald die ganze Stadt geladen ist). Falls nicht: im Regieraum der Knopf im Boden beim Schild „FIGUREN“.'),
       h('li', {}, 'Regieraum mit ', h('code', {}, ALLGEMEIN.regieraum), ', zurück zum Start mit ', h('code', {}, `/tp @s ${START.stand.join(' ')}`), '.')),
     h('p', {}, h('b', {}, 'Sicherheitsnetz: '), 'Bei der Probe eine Welt erstellen, in Minecraft Education öffnen und prüfen – diese Datei für die Show bereithalten. Vorbereitet: ',
       h('a', { href: ERSATZWELT, download: ERSATZWELT }, 'Ersatzwelt mit typischen Beschlüssen'), ' (ebenfalls vorher prüfen).'),

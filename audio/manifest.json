@@ -797,6 +797,44 @@
    ]
   ]
  },
+ "SMARTy_F6_Altersumwandlung_Scherz": {
+  "datei": "audio/SMARTy_F6_Altersumwandlung_Scherz.mp3",
+  "hash": "9b6dabdd95",
+  "lufs": -17.0,
+  "tp": -1.9,
+  "dauer": 5.72,
+  "teile": [
+   [
+    0.04,
+    3.109
+   ],
+   [
+    4.409,
+    5.471
+   ]
+  ]
+ },
+ "SMARTy_F7_Mission_erfolgreich": {
+  "datei": "audio/SMARTy_F7_Mission_erfolgreich.mp3",
+  "hash": "791e68978f",
+  "lufs": -16.8,
+  "tp": -1.9,
+  "dauer": 5.27,
+  "teile": [
+   [
+    0.04,
+    1.546
+   ],
+   [
+    1.896,
+    3.211
+   ],
+   [
+    3.761,
+    5.019
+   ]
+  ]
+ },
  "SMARTy_01_Landung": {
   "datei": "audio/SMARTy_01_Landung.mp3",
   "hash": "658a66eeda",
@@ -843,7 +881,7 @@
  },
  "Erzaehler_00_Eroeffnung__film": {
   "datei": "film/Eroeffnung_Film.mp4",
-  "hash": "1be3d21070",
+  "hash": "b8461ee3df",
   "film": true
  },
  "Film_Abschluss_2050__film": {

@@ -1,6 +1,6 @@
 /* Offline-Speicher: beide Dashboards (Regie-Soundboard, Show-Zentrale), alle Sprachclips und die Filme bleiben
  * nach dem ersten Besuch im Browser, damit die Show in der Turnhalle auch ohne Internet läuft. */
-const CACHE = 'smarty-v27';
+const CACHE = 'smarty-v28';
 const FILM_CACHE = 'smarty-filme';
 const CORE = ['./', 'index.html', 'regie.js', 'show.html', 'show.js', 'show.json', 'dashboard.css', 'symbole.js', 'qr.js',
   'sounds.json', 'audio/manifest.json', 'bilder/start-it-smart-logo.png', 'bilder/intro.jpg', 'bilder/abschluss.jpg',
@@ -15,7 +15,7 @@ const SPIELE = [
   'minecraft/', 'minecraft/index.html', 'minecraft/style.css', 'minecraft/main.js', 'minecraft/welt.js', 'minecraft/mcworld.js',
   'natur/', 'natur/index.html', 'natur/style.css', 'natur/main.js', 'natur/config.js', 'natur/model.js', 'natur/scene3d.js',
   'stadt/', 'stadt/index.html', 'stadt/style.css', 'stadt/main.js', 'stadt/daten.js', 'stadt/zustand.js', 'stadt/stadtmodell.js',
-  'stadt/ansicht3d.js', 'stadt/minecraft-ausgabe.js', 'stadt/weltleser.js', 'stadt/labor.js', 'stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld',
+  'stadt/ansicht3d.js', 'stadt/minecraft-ausgabe.js', 'stadt/weltleser.js', 'stadt/labor.js', 'stadt/belebung.js', 'stadt/START-IT-SMART_Ersatzwelt_Stadt-2050.mcworld',
   'stadt/schrift/dm-sans.woff2', 'stadt/schrift/ibm-plex-mono-500.woff2',
 ];
 

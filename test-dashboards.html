@@ -39,7 +39,7 @@ const MISSIONEN = ['Eröffnung', 'Natur', 'Technik', 'Mobilität', 'Wohnen', 'Ku
 const REIHENFOLGE = {
   eroeffnung: ['KI1', 'KI2', 'KI3', 'O1', 'O9'], natur: ['N1', 'N2', 'N3', 'N5', 'N4'], technik: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
   mobilitaet: ['M1', 'M2', 'M3', 'M9', 'M4', 'M5', 'M6', 'M7', 'M10', 'M11', 'M8'], wohnen: ['W1', 'W2', 'W3', 'W4', 'W5'],
-  wege: ['K1', 'K3', 'K2'], bildung: ['B1', 'B4', 'B2', 'B3'], finale: ['F3', 'F4', 'F5a', 'F5b'],
+  wege: ['K1', 'K3', 'K2'], bildung: ['B1', 'B4', 'B2', 'B3'], finale: ['F3', 'F4', 'F5a', 'F5b', 'F6', 'F7'],
 };
 const RESERVE = ['O8', 'O10', 'O2', 'O5', 'O7', 'F1', 'F2'];
 // Wortlaut aus dem Drehbuch vom 22.11.2026 (neu, reaktiviert oder geändert)
@@ -53,6 +53,9 @@ const WORTLAUT = {
   F3: 'Digitale Stadtplanung abgeschlossen. Eure Entscheidungen wurden im Stadtmodell zusammengeführt. Bereit für den virtuellen Rundgang!',
   F4: 'Computer können rechnen, messen und simulieren. Aber eine lebenswerte Stadt braucht Menschen, die mitdenken.',
   O1: 'Systemcheck abgeschlossen. Zeitreise überstanden. Moment mal … wo sind wir denn hier gelandet?',
+  // Änderungsauftrag Nr. 04 (Finale nach dem Abschlussfilm)
+  F6: 'Altersumwandlung kann leider nicht rückgängig gemacht werden. … War nur ein Scherz!',
+  F7: 'Zukunftsgestalter erkannt: ungefähr fünfhundert! Mission erfolgreich!',
 };
 const KACHELN = ['Introfilm', 'Abschlussfilm', '3D-Stadtkonfigurator', 'Wohnsimulation', 'Verkehrssimulation', 'Minecraft Education', 'Calliope mini', 'Präsentationsmaterialien'];
 const warte = (ms) => new Promise((r) => setTimeout(r, ms));

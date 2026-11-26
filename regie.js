@@ -19,7 +19,7 @@
 
   const SPRECHER = { smarty: { name: 'SMARTy', icon: 'hund' }, ki: { name: 'Zeitmaschinen-KI', icon: 'chip' } };
   const ICON = { eroeffnung: 'rakete', natur: 'blatt', technik: 'zahnrad', mobilitaet: 'auto', wohnen: 'haus', wege: 'pin', bildung: 'hut', finale: 'flagge' };
-  const TASTE_ANZEIGE = { "'": 'Umschalt + #', '&': 'Umschalt + 6', '*': 'Umschalt + +', '?': 'Umschalt + ß', '_': 'Umschalt + -' };
+  const TASTE_ANZEIGE = { "'": 'Umschalt + #', '&': 'Umschalt + 6', '*': 'Umschalt + +', '?': 'Umschalt + ß', '_': 'Umschalt + -', '!': 'Umschalt + 1', '"': 'Umschalt + 2' };
   const RESERVIERT = new Set([' ', 'escape', 'f']);   // Stopp, Stopp, weich ausblenden
 
   let missionen = [];

@@ -149,19 +149,28 @@ function schildNbt(x, y, z, zeilen) {
   const text = () => N.c({ Text: N.s(zeilen.join('\n')), SignTextColor: N.i(-16777216), IgnoreLighting: N.b(0), PersistFormatting: N.b(1), TextOwner: N.s('') });
   return { id: N.s('Sign'), x: N.i(x), y: N.i(y), z: N.i(z), isMovable: N.b(1), IsWaxed: N.b(1), FrontText: text(), BackText: text() };
 }
-function befehlNbt(x, y, z, befehl, name) {
+// modus (Änderungsauftrag 03): fehlt = Impuls mit Knopf (wie bisher, unverändert) · 'auto' = Impuls, immer aktiv (läuft einmal)
+// · 'wiederholen' = Wiederholen, immer aktiv, alle „takt“ Ticks · 'kette' = Kettenblock, immer aktiv, „bedingt“ = nur nach Erfolg davor
+function befehlNbt(x, y, z, befehl, name, modus = null, bedingt = false, takt = 0) {
+  const art = modus === 'wiederholen' ? 1 : modus === 'kette' ? 2 : 0, immer = modus ? 1 : 0;
   return {
     id: N.s('CommandBlock'), x: N.i(x), y: N.i(y), z: N.i(z), isMovable: N.b(1),
-    Command: N.s(befehl), CustomName: N.s(name), ExecuteOnFirstTick: N.b(0),
-    LPCommandMode: N.i(0), LPCondionalMode: N.b(0), LPRedstoneMode: N.b(0),   // Impuls, unbedingt, braucht Redstone (Knopf)
+    Command: N.s(befehl), CustomName: N.s(name), ExecuteOnFirstTick: N.b(modus === 'wiederholen' ? 1 : 0),
+    LPCommandMode: N.i(art), LPCondionalMode: N.b(bedingt ? 1 : 0), LPRedstoneMode: N.b(immer),   // ohne modus: Impuls, unbedingt, braucht Redstone (Knopf)
     LastExecution: N.l(0), LastOutput: N.s(''), LastOutputParams: N.list('string', []),
-    SuccessCount: N.i(0), TickDelay: N.i(0), TrackOutput: N.b(1), Version: N.i(13),
-    auto: N.b(0), conditionMet: N.b(0), conditionalMode: N.b(0), powered: N.b(0),
+    SuccessCount: N.i(0), TickDelay: N.i(takt), TrackOutput: N.b(modus ? 0 : 1), Version: N.i(13),
+    auto: N.b(immer), conditionMet: N.b(0), conditionalMode: N.b(bedingt ? 1 : 0), powered: N.b(0),
   };
+}
+// Bett (Änderungsauftrag 03): Farbe 0–15 (0 weiß, 3 hellblau, 5 hellgrün, 11 blau, 14 rot)
+function bettNbt(x, y, z, farbe) {
+  return { id: N.s('Bed'), x: N.i(x), y: N.i(y), z: N.i(z), isMovable: N.b(1), color: N.b(farbe) };
 }
 export function entityNbt(key, e) {
   const [x, y, z] = key.split(',').map(Number);
-  return e.art === 'schild' ? schildNbt(x, y, z, e.zeilen) : befehlNbt(x, y, z, e.befehl, e.name);
+  if (e.art === 'schild') return schildNbt(x, y, z, e.zeilen);
+  if (e.art === 'bett') return bettNbt(x, y, z, e.farbe);
+  return befehlNbt(x, y, z, e.befehl, e.name, e.modus, e.bedingt, e.takt);
 }
 
 /* ---------- level.dat ---------- */

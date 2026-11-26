@@ -9,11 +9,14 @@
  * Keine direkte Verbindung Browser → Minecraft: Der Browser erzeugt eine Datei; geöffnet wird sie in Minecraft Education.
  * Ausnahme mit Absicht: Zukunftsverkehr (mcFest) steht IMMER als Schwebebahn UND Flugtaxi in der Welt – die Abstimmung im
  * Konfigurator ist nur eine Priorisierung und wird nicht nach Minecraft übertragen (Änderungsauftrag „Zukunftsmobilität 2050“).
+ * Änderungsauftrag 03 (26.11.2026): Nach den Beschlüssen kommt die Belebung (belebung.js) als zusätzliche Ebene dazu –
+ * Einrichtung nur in Luftblöcke, Figuren über Befehlsblöcke unter dem Regieraum. Kammern und Bauaufträge bleiben unverändert.
  */
 import { Welt } from '../minecraft/welt.js';
 import { mcworld } from '../minecraft/mcworld.js';
 import { BEREICH_MC, BEREICHE, BEREICH_IDS, boxVon, groesseVon, ursprungVon, baueGrundstadt, stift, vorlage, einsetzen, mcGrund, STADT, S } from './stadtmodell.js';
 import { KAMERAS, MISSIONEN } from './daten.js';
+import { belebe } from './belebung.js';
 
 const p3 = (v) => v.join(' ');
 export const WELTNAME = 'START IT SMART Stadt 2050';
@@ -102,7 +105,7 @@ export function regieKnoepfe() {
   while (unten.length && unten[unten.length - 1] === null) unten.pop();
   return { unten, oben };
 }
-export function erzeugeStadtWelt(beschluesse = {}) {
+export function erzeugeStadtWelt(beschluesse = {}, { belebung = true } = {}) {
   const w = new Welt(BEREICH_MC), p = stift(w);
   baueGrundstadt(p);
   // Vorlagen-Kammern: Decke und Boden aus Andesit (nur über der eigenen Fläche), Licht in der Decke, Inhalt = Vorlage
@@ -143,6 +146,8 @@ export function erzeugeStadtWelt(beschluesse = {}) {
     const v = BEREICHE[id].mcFest || beschluesse[id];
     if (v && v !== BEREICHE[id].grund && BEREICHE[id].mc.includes(v)) einsetzen(w, id, vorlage(id, v));
   }
+  // Belebung (Änderungsauftrag 03): Einrichtung passend zu den Varianten in der Welt, Figuren, Befehlsblöcke dafür
+  if (belebung) w.belebung = belebe(w, beschluesse, REGIERAUM, ALLGEMEIN.ticking);
   return w;
 }
 // Welt-Datei mit genau diesen Beschlüssen (nur übernommene, keine Vorschau)
@@ -170,7 +175,9 @@ export function bauauftrag(id, v, titelVariante) {
 }
 export function alleBauauftraege() {
   const t = [`START IT SMART – Bauaufträge für Minecraft Education (Welt „${WELTNAME}“)`, '',
-    'EINMAL VOR DER VORLESUNG', `   ${ALLGEMEIN.ticking}`, '   (hält die ganze Stadt geladen; 10 × 10 Chunks = die erlaubte Höchstgröße)', `   ${ALLGEMEIN.ruhe}`, '',
+    'EINMAL VOR DER VORLESUNG', `   ${ALLGEMEIN.ticking}`, '   (hält die ganze Stadt geladen; 10 × 10 Chunks = die erlaubte Höchstgröße – geschieht beim ersten Öffnen auch von selbst)', `   ${ALLGEMEIN.ruhe}`, '',
+    'BELEBUNG: Bewohner, Kinder, Verkaufspersonal und Tiere erscheinen beim ersten Öffnen von selbst, sobald die Stadt geladen ist.',
+    '   Falls nicht: im Regieraum der Knopf im Boden (Schild „FIGUREN“) ruft alle neu. Ein Bauauftrag von Hand setzt eine Fläche ohne Einrichtung.', '',
     `START: draußen am ${START.titel} (${p3(START.stand)}); die Stadt ist so gebaut wie beim Export beschlossen.`, '',
     'REGIERAUM (Knöpfe für Ansichten und Bauaufträge, nur per Teleport erreichbar)', `   ${ALLGEMEIN.regieraum}`, `   zurück zum Start: /tp @s ${p3(START.stand)}`, '', 'ANSICHTEN'];
   for (const k of ANSICHTEN) t.push(`   ${KAMERAS[k].titel.padEnd(16)} ${tp(k)}`);

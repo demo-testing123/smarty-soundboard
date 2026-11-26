@@ -13,8 +13,72 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 > (Abschnitt 000): Szene 3 öffnet wieder das eigenständige Verkehrstool, Szene 5 zeigt das Ergebnis ohne Ampel-Umschalter.
 > Am 24.11. (Abschnitt 0000): Publikumsansicht ohne Bedienhinweise, Kurze Wege in Metern.
 > Am 26.11. (Abschnitt „Auftrag 01“): Technik · 2/5 ist jetzt das **Calliope-Labor**.
-> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 94 von 94.
+> Am 26.11. (Abschnitt „Auftrag 03“): Die exportierte **Minecraft-Welt ist belebt** – eingerichtete Wohnungen, Läden, Schule/Bahnhof/Treffpunkte, Figuren.
+> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 103 von 103.
 > In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## Auftrag 03 vom 26.11.2026: Die Minecraft-Zukunftsstadt erwacht zum Leben
+
+Die Belebung ist eine **zusätzliche Ebene** des Weltgenerators (`stadt/belebung.js`, aufgerufen am Ende von `erzeugeStadtWelt`).
+Sie kommt nach allen Beschlüssen und verändert nichts Vorhandenes. Die Oberfläche des Konfigurators, die 3D-Bühne,
+Abstimmungen, Soundboard und Filme sind unverändert.
+
+**Grundsätze**
+- Einrichtung (Möbel, Waren, Pflanzkübel, Beete, Bänke, Schilder) wird **nur in Luftblöcke** gesetzt. Wände, Böden, Türen und Wege bleiben.
+- Was eingerichtet wird, richtet sich nach der Variante, die in der Welt tatsächlich steht. Flächen im Ausgangszustand bekommen keine
+  Blöcke, nur Figuren. Darum bleiben die Vorlagen-Kammern und die /clone-Knöpfe im Regieraum exakt wie bisher.
+  (Ein Bauauftrag von Hand setzt eine Fläche ohne Einrichtung.)
+- Die Dateiprüfung vor dem Download (`pruefeExport`) vergleicht jede Baufläche mit „Vorlage + Einrichtung“ und meldet, falls etwas
+  überschrieben wäre.
+
+**Was eingerichtet wird**
+| Fläche | Variante | Einrichtung und Figuren |
+|---|---|---|
+| Bestand (immer) | – | **Musterwohnung** im Haus 1 der Nordreihe (Tür an der Wohnstraße): Wohnzimmer mit Sofa, Couchtisch, Fernseher, Regal; Küche mit Herd und Essplatz; Elternschlafzimmer; Kinderzimmer mit Bett, Schreibtisch, Spielzeug. Drei Bewohner. Sitzgruppen und Pflanzkübel am breiten Gehweg östlich der Hauptstraße, Beete vor und zwischen den Bürotürmen, zwei Autos auf freien Stellplätzen im Südosten. Passanten auf Gehwegen, eine Katze. |
+| Wohnen | A | Haus 1: Wohnküche (Herd, Tisch, Sofa, Fernseher); Haus 2: Schlafzimmer und Kinderecke. Bewohner, Kinder und Hühner in den Gärten. |
+| | B | Haus Süd: Wohnküche mit Sofaecke; Haus Nord: Schlafzimmer, Flur, Kinderzimmer. Bewohner, Kinder und Katze im Hof. |
+| | C | Erdgeschoss des hohen Hauses: Wohnküche, Schlafzimmer, Kinderzimmer. Bewohner, Kind und Kaninchen im Park. |
+| Einkaufen | A | Supermarkt: Wandregale und Mittelregal mit Waren, zwei Kassen mit Kassierer/Kassiererin (NPC), Lampen, Kunden. |
+| | B | Markthalle: Obst, Kuchen, Kürbisse, Honig auf den vorhandenen Ständen, vier Händler (NPC), Besucher. |
+| | C | Bäckerei (Theke, Kuchen, Brot, Backofen), Gemüseladen (Kisten, Theke), Lebensmittelladen (Regale, Theke) – je mit Verkaufspersonal (NPC); Kunden in der Gasse. Trennwände zum Hausflur, die Haustüren bleiben frei. |
+| Bildung | A | Schule: Klassenzimmer (Tafel, Pult, Tische mit Stühlen, Bücher), Computerraum, Forscherwerkstatt; Lehrerin und Forscherin (NPC), Kinder; Flur bleibt frei. |
+| | B | Alter Bahnhof (außen unverändert): Café mit Theke und Tischen, Treffpunkt mit Sofa, Regal, Tischtennisplatte; Werkbänke wie bisher; Café- und Werkstattpersonal, Besucher. |
+| | C | Lerngarten-Hütte als Kreativraum (Bücher, Webstuhl, Kartentisch), Sporthalle als **Jugendtreff** (Sofa, Tische, Bücher, Kicker/Tischtennis, Zielscheibe, Kreativecke, Schild); Kinder am Bewegungsplatz, Besucherin an der Lese-Ecke. |
+| Spielplatz | grün | nicht umgebaut, nur belebt: vier Kinder, zwei Erwachsene, zwei Kaninchen, eine Katze. |
+| übrige | alle | Figuren: Wartende an der Bushaltestelle, Fahrgäste an der Schwebebahn und am Flugtaxi, Passanten an Hauptstraße und Wohnstraße, Kinder in der Spielstraße (Parken B). |
+
+**Figuren** (höchstens 60, je nach Beschlüssen 25–52): Dorfbewohner (laufen umher), Kinder (Dorfbewohner als Kind), NPC als
+Verkaufs- und Lehrpersonal (stehen an ihrem Platz und schauen zu den Spielern), Katzen, Kaninchen, Hühner. Keine aggressiven
+Kreaturen (die Welt steht weiter auf „friedlich“, keine natürlichen Spawns). Jede Figur steht beim Erscheinen frei
+(2 Blöcke Luft, fester Boden, kein Wasser).
+
+**Wie die Figuren in die Welt kommen** (ohne Handgriff, nur alte, stabile Befehle – die Befehlsblöcke der Welt haben Befehlsversion 13):
+1. Ein Befehlsblock unter dem Regieraum setzt beim ersten Öffnen einmal den Ticking-Bereich „stadt“ (wie der Knopf „EINMALIG“).
+2. Ein Wiederhol-Block prüft alle 2 Sekunden, ob die ganze Stadt geladen ist (Grundgestein an 25 Punkten lesbar).
+   Dann setzt er einen Merker (nie wieder) und startet die Figurenkette **genau einmal**.
+3. Die Kette (unter dem Regieraum) räumt alte Figuren weg und ruft jede Figur mit `summon`.
+4. **Notfall:** Im Regieraum (`/tp @s 8 50 -7`) steht beim Schild „FIGUREN“ ein Knopf im Boden – er ruft alle Figuren neu.
+
+**Nicht gemacht:** fahrende Autos oder Busse. Minecraft hat keine Fahrzeuge; nachgebaute fahrende Blockautos (per /clone in
+Schritten) könnten Figuren und Spieler einklemmen und laufen nicht zuverlässig ohne Pflege. Stattdessen stehen Autos auf Parkflächen
+(wie bisher, plus zwei auf freien Stellplätzen) und der Bus an der Kreuzung.
+
+**Geprüft** (`test.html`, 9 neue Prüfungen, insgesamt 103 von 103):
+- Einrichtung jeder Variante nur in freie Luft, Ausgangszustände ohne Blöcke; Kammern, Bauaufträge, Zurücksetzen wie bisher.
+- Sechs Kombinationen (ohne Beschlüsse, die beiden Testsätze, alle A, alle B, alle C): Datei gelesen und Block für Block geprüft,
+  Welt mit/ohne Belebung verglichen (nur Luft ersetzt), alle eingerichteten Räume vom Startpunkt zu Fuß erreichbar (Breitensuche;
+  Gegenprobe: der verschlossene Bahnhof ist unerreichbar), Figuren frei und eindeutig, Bauregeln (Pflanzen auf Erde, Lampen,
+  Teppiche, Schilder befestigt, Betten vollständig), Export unter 3 s.
+- Befehlskette und Sperre im Modell nachgelaufen: lückenlos, jede Figur genau einmal, Merker, 25 Prüfpunkte, Ticking-Befehl.
+- **Amulet** (unabhängiger Leser) mit einer exportierten Welt (Beschlüsse wie die Ersatzwelt): alle 534 Einrichtungsblöcke mit den
+  richtigen Zuständen gelesen, keiner unbekannt; 14 Betten mit Farbe; Befehlsblöcke als Wiederholen/Kette/Impuls mit „immer aktiv“
+  und Takt 40; Kette vom Knopf aus 58 Blöcke mit 51 `summon`.
+- `minecraft/test.html` (Spielplatz-Test) weiter 29 von 29; Einzeldatei erzeugt die belebte Welt.
+- Die **Ersatzwelt** ist mit Belebung neu erzeugt (gleiche Beschlüsse wie bisher: grün, Sensor, C, Bus, B, Holz, C, A).
+- **Nicht geprüft:** in Minecraft Education selbst – ob die Figuren erscheinen, wie sie sich bewegen, wie flüssig der Rundgang ist.
+  Vor der Show einmal öffnen: nach etwa 5–10 Sekunden sollten Bewohner da sein (sonst Knopf „FIGUREN“ im Regieraum).
 
 ---
 

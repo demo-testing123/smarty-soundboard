@@ -370,7 +370,20 @@
           "szene": "Nachricht aus dem Jahr 2050 – direkt vor dem Abschlussfilm"
         },
         {
-          "hinweis": "Danach: Abschlussfilm (Show-Zentrale) → Bühnenabschied → Abschlussfolie mit QR-Codes (Show-Zentrale)."
+          "hinweis": "Danach: Abschlussfilm (Show-Zentrale), dann Bühnenabschied mit F6 und F7."
+        },
+        {
+          "id": "SMARTy_F6_Altersumwandlung_Scherz",
+          "nr": "F6",
+          "szene": "nach dem Abschlussfilm – nach Z2 „Und … was ist jetzt mit unserer Alterstransformation?“"
+        },
+        {
+          "id": "SMARTy_F7_Mission_erfolgreich",
+          "nr": "F7",
+          "szene": "nach dem Abschlussfilm – nach Z2 „Seid ihr bereit …?“ und PUBLIKUM „JAAA!“"
+        },
+        {
+          "hinweis": "Danach: Applaus und Abgang → Abschlussfolie mit QR-Codes (Show-Zentrale)."
         },
         {
           "id": "SMARTy_F1_Zukunftsanalyse",
@@ -807,6 +820,27 @@
       "sprechen": "Nachricht aus dem Jahr zweitausendfünfzig empfangen.",
       "einsatz": "Szene 3 · direkt danach F5b (Taste Umschalt + 6), dann der Knopf „Abschlussfilm – Nachricht aus 2050“ (Erzähler-Bereich, nur per Klick)",
       "szene": "Finale – Unsere Zukunftsstadt ist fertig!"
+    },
+    {
+      "id": "SMARTy_F6_Altersumwandlung_Scherz",
+      "stimme": "smarty",
+      "taste": "!",
+      "titel": "F6 · Altersumwandlung – nur ein Scherz",
+      "text": "Altersumwandlung kann leider nicht rückgängig gemacht werden. … War nur ein Scherz!",
+      "sprechen": "Altersumwandlung kann leider nicht rückgängig gemacht werden. [Pause 1.3] War nur ein Scherz!",
+      "tempo": -4,
+      "einsatz": "Finale nach dem Abschlussfilm – nach Z2 „Und … was ist jetzt mit unserer Alterstransformation?“, danach Z1 „SMARTy! Das war jetzt nicht lustig!“ (Taste Umschalt + 1) · Wortlaut Änderungsauftrag Nr. 04 · Sprechweise: erst sachlich, deutliche Pause, dann die Auflösung",
+      "szene": "Finale – nach dem Abschlussfilm"
+    },
+    {
+      "id": "SMARTy_F7_Mission_erfolgreich",
+      "stimme": "smarty",
+      "taste": "\"",
+      "titel": "F7 · Mission erfolgreich",
+      "text": "Zukunftsgestalter erkannt: ungefähr fünfhundert! Mission erfolgreich!",
+      "sprechen": "Zukunftsgestalter erkannt: [Pause 0.35] ungefähr fünfhundert! [Pause 0.55] Mission erfolgreich!",
+      "einsatz": "Finale nach dem Abschlussfilm – nach Z2 „Seid ihr bereit, auch in eurer eigenen Stadt Zukunftsgestalter zu sein?“ und PUBLIKUM „JAAA!“, danach Applaus und Abgang (Taste Umschalt + 2) · Wortlaut Änderungsauftrag Nr. 04",
+      "szene": "Finale – nach dem Abschlussfilm"
     },
     {
       "id": "SMARTy_01_Landung",

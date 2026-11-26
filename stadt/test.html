@@ -34,6 +34,7 @@ import * as MC from './minecraft-ausgabe.js';
 import { MISSIONEN, KAMERAS, RUNDGANG } from './daten.js';
 import { unzip, leseLog, leseBatch, leseNbt, schluessel, NACH_SCHLUESSEL, pruefeExport, leseWelt } from './weltleser.js';
 import { Labor, LABOR } from './labor.js';
+import * as BL from './belebung.js';
 
 const bereiche = document.getElementById('bereiche'), erg = [];
 let liste;
@@ -282,7 +283,7 @@ try {
   const cmd = [...welt.entities.entries()].filter(([, e]) => e.art === 'befehl');
   const brauchte = kammern.map(([id, v]) => MC.befehle(id, v).bauen.slice(1));
   pruefe('Regieraum: ein Knopf je Variante mit dem richtigen /clone', brauchte.every((b) => cmd.some(([, e]) => e.befehl === b)), `${cmd.length} Befehlsblöcke, ${brauchte.length} Bauaufträge`);
-  pruefe('Jeder Befehlsblock hat einen Knopf daneben', cmd.every(([k]) => { const [x, y, z] = k.split(',').map(Number); return [[0, 1, 0], [0, 0, 1]].some(([a, b, c]) => [W.ID.knopf, W.ID.knopfSued].includes(welt.hole(x + a, y + b, z + c))); }));
+  pruefe('Jeder Befehlsblock mit Knopf (Bauaufträge, Ansichten) hat einen Knopf daneben', cmd.filter(([, e]) => !e.modus).every(([k]) => { const [x, y, z] = k.split(',').map(Number); return [[0, 1, 0], [0, 0, 1]].some(([a, b, c]) => [W.ID.knopf, W.ID.knopfSued].includes(welt.hole(x + a, y + b, z + c))); }));
   const ans = MC.ANSICHTEN.map((k) => [k, MC.ansicht(k)]);
   pruefe('Ansichtspunkte: in der Welt, frei, nicht in einer Baufläche', ans.every(([, { stand: [x, y, z] }]) => welt.index(x, y, z) >= 0 && !welt.hole(x, y, z) && !welt.hole(x, y + 1, z) && welt.hole(x, y - 1, z) === W.ID.sperre && !IDS.some((id) => { const [a, e] = box3(id); return x >= a[0] && x <= e[0] && z >= a[2] && z <= e[2] && y >= a[1] && y <= e[1]; })), ans.map(([k, a]) => `${k} ${a.stand.join(' ')}`).join(' · '));
   // Tausch simulieren
@@ -341,9 +342,9 @@ try {
   pruefe('Alle Blöcke der Datei stimmen mit dem Modell überein', abw.length === 0 && subs > 0, `${gepr.toLocaleString('de-DE')} Blöcke in ${subs} Subchunks` + (abw.length ? ' · ' + abw.join(' · ') : ''));
   let ents = 0, entOk = true;
   for (const { key, val } of batch.m.values()) if (key.length === 9 && key[8] === 49) {
-    let o = 0; while (o < val.length) { const r = leseNbt(val, o); o = r.ende; ents++; const m = welt.entities.get(`${r.v.x},${r.v.y},${r.v.z}`); if (!m || (m.art === 'befehl' ? r.v.Command !== m.befehl : r.v.FrontText.Text !== m.zeilen.join('\n'))) entOk = false; }
+    let o = 0; while (o < val.length) { const r = leseNbt(val, o); o = r.ende; ents++; const m = welt.entities.get(`${r.v.x},${r.v.y},${r.v.z}`); if (!m || (m.art === 'befehl' ? r.v.Command !== m.befehl : m.art === 'bett' ? r.v.color !== m.farbe : r.v.FrontText.Text !== m.zeilen.join('\n'))) entOk = false; }
   }
-  pruefe('Schilder und Befehlsblöcke in der Datei', entOk && ents === welt.entities.size, `${ents} Block-Entitäten`);
+  pruefe('Schilder, Befehlsblöcke und Betten in der Datei', entOk && ents === welt.entities.size, `${ents} Block-Entitäten`);
 
   // Export mit Beschlüssen (so wie im Finale): Datei lesen und gegen die Beschlüsse prüfen
   const satz1 = { spielplatz: 'gruen', laternen: 'sensor', parken: 'C', kreuzung: 'bus', wohnen: 'B', aufstocken: 'holz', einkaufen: 'C', bildung: 'A' };
@@ -362,6 +363,124 @@ try {
       zk.push(gleich(ex.ausschnitt(box3('zukunft')), M.vorlage('zukunft', 'beide')));
     }
     pruefe('Minecraft-Welt: Schwebebahn UND Flugtaxi stehen immer drin – bei Wahl A, Wahl B und ohne Wahl', zk.every(Boolean), zk.join(' · '));
+  }
+
+  // ---------- Belebung (Änderungsauftrag 03 vom 26.11.2026): die Stadt erwacht zum Leben ----------
+  {
+    const R = MC.REGIERAUM;
+    // a) Einrichtung je Variante: nur in Luft, innerhalb der Fläche; Ausgangszustände ohne Blöcke (Kammern/Zurücksetzen exakt)
+    const planFehler = [], groesse = [];
+    for (const id of IDS) for (const v of B[id].mc) {
+      const p = BL.einrichtung(id, v);
+      if (p.fehler.length) planFehler.push(`${id}:${v} ${p.fehler[0]}`);
+      if (v === M.mcGrund(id) && p.bloecke.size) planFehler.push(`${id}:${v} Ausgangszustand mit Blöcken`);
+      if (p.bloecke.size) groesse.push(`${id}:${v} ${p.bloecke.size}`);
+    }
+    const gp = BL.grundPlan();
+    if (gp.fehler.length) planFehler.push('Grundstadt ' + gp.fehler[0]);
+    pruefe('Belebung: Einrichtung jeder Variante nur in freie Luftblöcke, nichts überschrieben; Flächen im Ausgangszustand ohne Blöcke (Kammern und Bauaufträge wie bisher)',
+      !planFehler.length, planFehler.join(' · ') || `Grundstadt ${gp.bloecke.size} · ` + groesse.join(' · '));
+
+    // b) Kombinationen der Beschlüsse: Datei prüfen, alles erhalten, begehbar, Figuren gültig
+    const saetze = {
+      'ohne Beschlüsse': {},
+      satz1, satz2,
+      'alle A': { spielplatz: 'gruen', laternen: 'sensor', parken: 'A', kreuzung: 'bus', wohnen: 'A', aufstocken: 'holz', einkaufen: 'A', bildung: 'A' },
+      'alle B': { spielplatz: 'gruen', laternen: 'immer', parken: 'B', kreuzung: 'normal', wohnen: 'B', aufstocken: 'bestand', einkaufen: 'B', bildung: 'B' },
+      'alle C': { spielplatz: 'grau', laternen: 'sensor', parken: 'C', kreuzung: 'bus', wohnen: 'C', aufstocken: 'holz', einkaufen: 'C', bildung: 'C' },
+    };
+    const TYPEN = new Set(['villager_v2', 'npc', 'cat', 'rabbit', 'chicken']);
+    const technik = (x, y, z) => x >= R.x1 - 1 && x <= R.x2 + 1 && z >= R.z1 - 1 && z <= R.z2 + 1 && y <= R.boden + 3 && y >= R.boden - 4;
+    const ergebnis = [], dateiFehler = [], wegFehler = [], figurFehler = [], diffFehler = [], regelFehler = [];
+    let maxFig = 0, maxMs = 0;
+    for (const [n, s] of Object.entries(saetze)) {
+      const t0 = performance.now();
+      const ex = await MC.stadtMcworld(s);
+      maxMs = Math.max(maxMs, performance.now() - t0);
+      const pr = await pruefeExport(ex.daten, s);
+      if (!pr.ok) dateiFehler.push(`${n}: ` + pr.punkte.filter((q) => !q[1]).map((q) => q[0] + ' ' + q[2]).join(', '));
+      const w = ex.welt, b = w.belebung, pl = BL.plaene(s);
+      // nur ergänzt: Welt ohne Belebung vergleichen – jede Änderung war Luft (außer den Befehlsblöcken am Regieraum)
+      const w0 = MC.erzeugeStadtWelt(s, { belebung: false });
+      let geaendert = 0;
+      const { x0, y0, z0, nx, nz } = w.bereich;
+      for (let k = 0; k < w.daten.length; k++) if (w.daten[k] !== w0.daten[k]) {
+        const x = x0 + (k % nx), z = z0 + (Math.floor(k / nx) % nz), y = y0 + Math.floor(k / (nx * nz));
+        geaendert++;
+        if (w0.daten[k] !== W.ID.luft && !technik(x, y, z)) { diffFehler.push(`${n}: ${W.NAMEN[w0.daten[k]]} → ${W.NAMEN[w.daten[k]]} bei ${x} ${y} ${z}`); break; }
+      }
+      if (b.belegt) diffFehler.push(`${n}: ${b.belegt} Einrichtungsblöcke trafen belegte Zellen`);
+      // begehbar: jeder eingerichtete Raum zu Fuß vom Startpunkt
+      const ziele = pl.flatMap((p) => p.ziele);
+      const nicht = BL.erreichbar(w, MC.START.stand, ziele).filter(([, ok]) => !ok).map(([t]) => t);
+      if (nicht.length) wegFehler.push(`${n}: ${nicht.join(', ')}`);
+      // Figuren: Anzahl, Namen, Art, Platz (2 Blöcke frei, fester Boden, kein Wasser), in der Stadt
+      const f = b.figuren, namen = f.map((x) => x.name);
+      maxFig = Math.max(maxFig, f.length);
+      if (f.length > BL.FIGUREN_HOECHSTENS) figurFehler.push(`${n}: ${f.length} Figuren`);
+      if (new Set(namen).size !== namen.length) figurFehler.push(`${n}: Namen doppelt`);
+      for (const x of f) {
+        const unten = w.hole(x.x, x.y - 1, x.z);
+        if (!TYPEN.has(x.typ) || !/^[A-Za-z]+$/.test(x.name) || !BL.DURCH.has(w.hole(x.x, x.y, x.z)) || !BL.DURCH.has(w.hole(x.x, x.y + 1, x.z)) || BL.DURCH.has(unten) || unten === W.ID.wasser
+          || x.x < M.STADT.x1 || x.x > M.STADT.x2 || x.z < M.STADT.z1 || x.z > M.STADT.z2) { figurFehler.push(`${n}: ${x.name} ${x.x} ${x.y} ${x.z}`); break; }
+      }
+      // Bauregeln der neuen Blöcke: Pflanzen auf Erde/Moos, Teppich/Laterne/Kuchen auf festem Block, Hängelampe unter festem Block,
+      // Schilder befestigt, Betten vollständig (Kopf in Bettrichtung neben dem Fuß)
+      const fst = (id) => fest(id) && !BL.DURCH.has(id);
+      for (const p of pl) for (const [k, name] of p.bloecke) {
+        const [x, y, z] = k.split(',').map(Number), id = W.ID[name], u = w.hole(x, y - 1, z);
+        let bad = '';
+        if ((W.istPflanze(id) || name === 'azaleeBusch') && ![W.ID.gras, W.ID.erde, W.ID.moos].includes(u)) bad = 'Pflanze ohne Erde';
+        else if (/^teppich|^laterne$|^kuchen$|^bildschirm$/.test(name) && !fst(u)) bad = 'ohne Halt';
+        else if (name === 'haengelampe' && !fst(w.hole(x, y + 1, z))) bad = 'Hängelampe ohne Decke';
+        else if (W.istSchild(id)) { const [a, c] = { Nord: [0, 1], Sued: [0, -1], West: [1, 0], Ost: [-1, 0] }[name.replace('schild', '')]; if (!fst(w.hole(x + a, y, z + c))) bad = 'Schild ohne Halt'; }
+        else if (/^bett(Nord|Ost)Fuss$/.test(name)) { const r = name.includes('Nord') ? [0, -1] : [1, 0]; if (W.NAMEN[w.hole(x + r[0], y, z + r[1])] !== name.replace('Fuss', 'Kopf') || !w.entities.get(k)) bad = 'Bett unvollständig'; }
+        if (bad) { regelFehler.push(`${n}: ${bad} ${name} ${x} ${y} ${z}`); break; }
+      }
+      ergebnis.push(`${n}: ${b.bloecke} Blöcke, ${f.length} Figuren, ${ziele.length} Räume`);
+    }
+    pruefe('Belebung: Kombinationen der Beschlüsse – Datei gelesen, jede Baufläche = Beschluss + Einrichtung, nichts überschrieben (Belebung ersetzt nur Luft)',
+      !dateiFehler.length && !diffFehler.length, [...dateiFehler, ...diffFehler].join(' · ') || ergebnis.join(' · '));
+    pruefe('Belebung: eingerichtete Wohnungen, Läden, Schule, Bahnhof, Jugendtreff zu Fuß vom Startpunkt erreichbar (Eingänge und Wege frei)', !wegFehler.length, wegFehler.join(' · ') || `${Object.keys(saetze).length} Kombinationen`);
+    pruefe(`Belebung: Figuren stehen frei (2 Blöcke Luft, fester Boden, kein Wasser), Namen eindeutig, nur friedliche Arten, höchstens ${BL.FIGUREN_HOECHSTENS}`, !figurFehler.length, figurFehler.join(' · ') || `höchstens ${maxFig} Figuren`);
+    pruefe('Belebung: Bauregeln der Einrichtung (Pflanzen auf Erde, Lampen/Teppiche gestützt, Schilder befestigt, Betten vollständig)', !regelFehler.length, regelFehler.join(' · '));
+    pruefe('Belebung: Export bleibt schnell (eine Welt mit Belebung in unter 8 s)', maxMs < 8000, `${(maxMs / 1000).toFixed(1)} s`);
+
+    // c) Befehlsblöcke: Kette vom Knopf im Regieraum, Sperre, Stadt geladen halten
+    const w = MC.erzeugeStadtWelt(satz1), o = BL.technikOrte(R), f = w.belebung.figuren;
+    const RICHT = { befehlsblockUnten: [0, -1, 0], ketteOst: [1, 0, 0], ketteWest: [-1, 0, 0], ketteNord: [0, 0, -1], wiederholbefehlOst: [1, 0, 0], ketteBedingtOst: [1, 0, 0] };
+    const lauf = (start) => { const out = []; let p = start; for (let i = 0; i < 400; i++) { const n = W.NAMEN[w.hole(...p)], e = w.entities.get(p.join(',')); if (!RICHT[n] || !e) break; out.push([n, e]); const d = RICHT[n]; p = [p[0] + d[0], p[1] + d[1], p[2] + d[2]]; } return out; };
+    const kette = lauf(o.H), befehle = kette.map(([, e]) => e.befehl);
+    const gerufen = f.map(BL.rufBefehl);
+    const ketteOk = W.NAMEN[w.hole(...o.knopf)] === 'knopf' && !kette[0][1].modus && kette.slice(1).every(([n, e]) => n.startsWith('kette') && e.modus === 'kette' && !e.bedingt)
+      && befehle.slice(0, BL.AUFRAEUMEN.length).join() === BL.AUFRAEUMEN.join() && gerufen.every((c) => befehle.filter((b) => b === c).length === 1)
+      && befehle[befehle.length - 1] === `setblock ${o.T.join(' ')} spruce_planks` && befehle.length === BL.AUFRAEUMEN.length + f.length + 1
+      && W.NAMEN[w.hole(...o.T)] === 'fichteBretter' && befehle.every((b) => /^(kill @e\[type=\w+\]|summon (villager_v2|npc|cat|rabbit|chicken) [^\s]+ -?[\d.]+ -?\d+ -?[\d.]+|summon villager_v2 -?[\d.]+ -?\d+ -?[\d.]+ minecraft:entity_born [A-Za-z]+|setblock -?\d+ -?\d+ -?\d+ \w+)$/.test(b));
+    pruefe('Belebung: Befehlskette – Kopf im Boden des Regieraums mit Knopf, lückenlos verkettet, erst aufräumen, dann jede Figur genau einmal rufen, zuletzt Boden zurück (nur alte, stabile Befehle)',
+      ketteOk, `${kette.length} Befehlsblöcke, ${gerufen.length} Figuren · Beispiel: ${befehle[BL.AUFRAEUMEN.length]}`);
+    const sperre = lauf(o.R0), sb = sperre.map(([, e]) => e.befehl);
+    const punkteOk = BL.PRUEFPUNKTE.length === 25 && BL.PRUEFPUNKTE.every(([x, z]) => w.hole(x, -64, z) === W.ID.grundgestein && sb.includes(`testforblock ${x} -64 ${z} bedrock`));
+    const sperreOk = sperre[0][0] === 'wiederholbefehlOst' && sperre[0][1].modus === 'wiederholen' && sperre[0][1].takt > 0 && sb[0] === `testforblock ${o.M.join(' ')} air` && w.hole(...o.M) === W.ID.luft
+      && sperre.slice(1).every(([n, e]) => n === 'ketteBedingtOst' && e.bedingt) && sb[sb.length - 2] === `setblock ${o.M.join(' ')} stone` && sb[sb.length - 1] === `setblock ${o.T.join(' ')} redstone_block`;
+    const tick = w.entities.get(o.ticking.join(','));
+    const lage = [...w.entities.entries()].filter(([, e]) => e.modus).every(([k]) => { const [x, y, z] = k.split(',').map(Number); return technik(x, y, z) && !IDS.some((id) => { const [a, e] = box3(id); return x >= a[0] && x <= e[0] && z >= a[2] && z <= e[2]; }); });
+    pruefe('Belebung: Sperre löst die Figuren genau einmal aus, sobald die ganze Stadt geladen ist (25 Prüfpunkte Grundgestein), danach Merker auf Stein; „Stadt geladen halten“ läuft einmal von selbst; alle Befehlsblöcke unter dem Regieraum, keiner unter einer Baufläche',
+      sperreOk && punkteOk && tick && tick.modus === 'auto' && tick.befehl === MC.ALLGEMEIN.ticking.slice(1) && lage, `${sperre.length} Blöcke in der Sperre`);
+    // d) passend ausgestaltet: Personal/Einrichtung je gewählter Variante
+    const hat = (id, v, ...namen) => { const fn = BL.einrichtung(id, v).figuren.map((x) => x.name); return namen.every((n) => fn.includes(n)); };
+    const bl = (id, v, ...bloecke) => { const p = BL.einrichtung(id, v), vals = [...p.bloecke.values()]; return bloecke.every((b) => vals.includes(b)); };
+    const passend = [
+      ['Supermarkt: Regale, Kasse, Kassierer', bl('einkaufen', 'A', 'fass', 'melone', 'quarz', 'bildschirm') && hat('einkaufen', 'A', 'Kassiererin', 'Kassierer')],
+      ['Markthalle: Waren auf den Ständen, Händler', bl('einkaufen', 'B', 'melone', 'kuchen', 'kuerbis', 'honig') && hat('einkaufen', 'B', 'Obsthaendler', 'Baeckerin', 'Gemuesefrau', 'Imker')],
+      ['kleine Läden: Bäckerei, Gemüse, Lebensmittel mit Verkaufspersonal', bl('einkaufen', 'C', 'kuchen', 'heu', 'ofenSued', 'melone') && hat('einkaufen', 'C', 'Baecker', 'Gemuesehaendler', 'Ladnerin')],
+      ['Schule: Klassenzimmer, Computerraum, Forscherwerkstatt, Lehrkräfte', bl('bildung', 'A', 'asphalt', 'tischplatte', 'bildschirm', 'werkbank', 'schmiedetisch') && hat('bildung', 'A', 'Lehrerin', 'Forscherin')],
+      ['Bahnhof: Café, Treffpunkt, Werkstattleitung', bl('bildung', 'B', 'kuchen', 'quarz', 'bankSued', 'gruenBeton') && hat('bildung', 'B', 'Cafe', 'Werkstattleiter')],
+      ['Freizeitorte: Kreativraum, Jugendtreff', bl('bildung', 'C', 'insektenhotel', 'webstuhl', 'zielscheibe') && hat('bildung', 'C', 'Jugendtreff')],
+      ['Wohnformen A/B/C: Wohnzimmer, Küche, Essplatz, Schlaf- und Kinderzimmer', ['A', 'B', 'C'].every((v) => bl('wohnen', v, 'ofenSued'.replace('Sued', v === 'B' ? 'Nord' : 'Sued'), 'tischplatte', 'bettNordFuss', 'haengelampe'))],
+      ['Musterwohnung im Bestand (immer)', [...gp.bloecke.values()].filter((n) => /^bett/.test(n)).length >= 6 && gp.ziele.length === 3],
+      ['Spielplatz grün: Kinder, Eltern, Kaninchen, Katze (nicht umgebaut)', BL.einrichtung('spielplatz', 'gruen').bloecke.size === 0 && BL.einrichtung('spielplatz', 'gruen').figuren.filter((x) => x.kind).length >= 4 && BL.einrichtung('spielplatz', 'gruen').figuren.some((x) => x.typ === 'rabbit')],
+    ];
+    pruefe('Belebung: Einrichtungen passen zur gewählten Variante (Läden, Schule/Bahnhof/Treffpunkte, Wohnformen, Spielplatz)', passend.every(([, ok]) => ok), passend.filter(([, ok]) => !ok).map(([t]) => t).join(' · ') || passend.map(([t]) => t.split(':')[0]).join(' · '));
   }
 
   const endeB = erg.length;
