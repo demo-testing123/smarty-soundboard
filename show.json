@@ -92,6 +92,8 @@
       "icon": "praesentation",
       "canva": "",
       "knopf": "Präsentation öffnen",
+      "folien": "folien/START_IT_SMART_Buehnenfolien.pdf",
+      "folienKnopf": "Bühnenfolien öffnen (PDF)",
       "dateien": "PowerPoint vom Laptop (z. B. Eroeffnung_Show.pptx im Ordner StartItSmart_Eroeffnung_Film): im Explorer doppelklicken. Der Browser kann lokale PowerPoint-Dateien nicht selbst starten."
     }
   ],

@@ -176,6 +176,15 @@ async function tests() {
   check('Calliope ist ein Link (kein Nachbau)', cal && /^https:\/\//.test(cal.href) && !d2.querySelector('.kachel[data-id="calliope"] iframe'), cal ? cal.href : 'kein Link');
   const pr = d2.querySelector('.kachel[data-id="praesentation"] .los');
   check('Canva/Präsentation ist ein Link oder fehlt sichtbar (kein Nachbau)', pr && (pr.tagName === 'A' ? /^https:\/\//.test(pr.href) : /fehlt/.test(pr.textContent)), pr ? `${pr.tagName === 'A' ? pr.href : pr.textContent}` : '');
+  // Auftrag 06: Bühnenfolien als PDF in „Präsentationsmaterialien“ (statt der Abschlussfolie mit QR-Codes)
+  {
+    const fk = d2.querySelector('.kachel[data-id="praesentation"] a[data-folien]'), ziel = fk ? fk.getAttribute('href').split('#')[0] : '';
+    const r = ziel ? await fetch(ziel, { cache: 'no-store' }) : null, b = r && r.ok ? new Uint8Array(await r.arrayBuffer()) : new Uint8Array();
+    const pdf = String.fromCharCode(...b.slice(0, 5)) === '%PDF-', seiten = (new TextDecoder('latin1').decode(b).match(/\/Type\s*\/Page[^s]/g) || []).length;
+    check('Präsentationsmaterialien: Knopf „Bühnenfolien öffnen (PDF)“ öffnet die Folien-PDF (3 Seiten) in eigenem Tab; Canva-Knopf bleibt; keine alte QR-Folie mehr',
+      fk && pdf && seiten === 3 && fk.target === 'smarty-folien' && pr && !d2.querySelector('.kachel[data-id="praesentation"] [data-folie]'),
+      fk ? `${ziel} → ${r && r.status}, ${Math.round(b.length / 1024)} KB, ${seiten} Seiten` : 'Knopf fehlt');
+  }
   const ersatz = await fetch(show.minecraft.ersatzwelt, { method: 'HEAD', cache: 'no-store' });
   check('Minecraft Education: Kachel mit Start- und Import-Anleitung, Ersatzwelt erreichbar', d2.querySelector('[data-minecraft]') && d2.getElementById('mcDlg') && ersatz.ok, `${show.minecraft.start} · Ersatzwelt ${ersatz.status}`);
   check('Show-Zentrale: kein Beamerfenster-System', !/beamerfenster/i.test(d2.body.innerText) && !d2.querySelector('[id*="beamer" i]'), '');

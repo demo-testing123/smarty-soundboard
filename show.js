@@ -86,7 +86,8 @@
         const url = link('canva');
         knopf = url ? `<a class="knopf gelb los" href="${esc(url)}" target="smarty-praesentation" rel="noopener">${ico('play')} ${esc(k.knopf)} (Canva)</a>`
                     : `<button type="button" class="knopf gelb los" data-links aria-disabled="true">Canva-Link fehlt – hier eintragen</button>`;
-        zweit = `<div class="zweit"><button type="button" class="knopf" data-folie>${ico('qr')} Abschlussfolie mit QR-Codes zeigen</button></div>`;
+        // Auftrag 06: Bühnenfolien als unverändertes PDF (aus der Original-PowerPoint), öffnet im eigenen Tab
+        zweit = k.folien ? `<div class="zweit"><a class="knopf" data-folien href="${esc(k.folien)}#view=Fit" target="smarty-folien">${ico('praesentation')} ${esc(k.folienKnopf || 'Bühnenfolien öffnen (PDF)')}</a></div>` : '';
         info = esc(k.dateien || '');
       }
       el.innerHTML = `

@@ -50,7 +50,7 @@ Beide Seiten verlinken sich gegenseitig: „Show-Zentrale →“ und „← Zur�
 | Verkehrssimulation | `verkehr/` |
 | Minecraft Education | Anleitung in drei Schritten: App über das Startmenü starten (oder „Direkt starten versuchen“ über `https://education.minecraft.net/open`), Welt aus dem Konfigurator exportieren oder Ersatzwelt laden, Weltimport und Startpunkt getrennt testen |
 | Calliope mini | MakeCode für Calliope (`https://makecode.calliope.cc/`), externer Link |
-| Präsentationsmaterialien | Canva-Link (einstellbar), Abschlussfolie mit zwei QR-Codes, Hinweis auf die lokale PowerPoint-Datei |
+| Präsentationsmaterialien | Canva-Link (einstellbar), **Bühnenfolien als PDF** (`folien/START_IT_SMART_Buehnenfolien.pdf`, unverändert aus `START_IT_SMART_Buehnenfolien.pptx` gespeichert: Begrüßung, Zukunftsstadt/Download mit QR zur Notion-Seite, Feedback mit QR zum Fillout-Formular; öffnet im eigenen Tab, Vollbild mit F11), Hinweis auf die lokale PowerPoint-Datei. Bis Auftrag 06 stand hier die Abschlussfolie mit zwei QR-Codes. |
 
 - **Filme:** Ein Klick auf „… starten“ spielt den Film in einem normalen Video-Element ab und schaltet dabei in den Vollbildmodus, auf dem Bildschirm, auf dem das Fenster liegt.
   - Es gibt nur ein Video-Element. Der Filmton läuft also genau einmal, und ein zweiter Film ersetzt den ersten.
