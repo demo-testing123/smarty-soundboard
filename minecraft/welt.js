@@ -140,6 +140,11 @@ export const BLOECKE = {
   bettNordKopf: ['bed', { direction: i(2), head_piece_bit: b(1), occupied_bit: b(0) }, '#e8ebeb'],
   bettOstFuss: ['bed', { direction: i(3), head_piece_bit: b(0), occupied_bit: b(0) }, '#a3302a'],
   bettOstKopf: ['bed', { direction: i(3), head_piece_bit: b(1), occupied_bit: b(0) }, '#e8ebeb'],
+  // Nachbesserung 03 (27.11.2026) „Lebendige Straßen“ – NUR ANGEHÄNGT. Fahrräder: Schleifstein als Rad, liegende Kette als Rahmen
+  radX: ['grindstone', { attachment: s('standing'), direction: i(1) }, '#4a4a4a'],
+  radZ: ['grindstone', { attachment: s('standing'), direction: i(0) }, '#4a4a4a'],
+  rahmenX: ['chain', { pillar_axis: s('x') }, '#c03a3a'],
+  rahmenZ: ['chain', { pillar_axis: s('z') }, '#c03a3a'],
 };
 export const NAMEN = Object.keys(BLOECKE);
 export const ID = Object.fromEntries(NAMEN.map((n, k) => [n, k]));

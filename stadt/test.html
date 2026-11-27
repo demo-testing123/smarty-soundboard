@@ -389,10 +389,10 @@ try {
       'alle B': { spielplatz: 'gruen', laternen: 'immer', parken: 'B', kreuzung: 'normal', wohnen: 'B', aufstocken: 'bestand', einkaufen: 'B', bildung: 'B' },
       'alle C': { spielplatz: 'grau', laternen: 'sensor', parken: 'C', kreuzung: 'bus', wohnen: 'C', aufstocken: 'holz', einkaufen: 'C', bildung: 'C' },
     };
-    const TYPEN = new Set(['villager_v2', 'npc', 'cat', 'rabbit', 'chicken']);
+    const TYPEN = new Set(BL.RUFBAR);
     const technik = (x, y, z) => x >= R.x1 - 1 && x <= R.x2 + 1 && z >= R.z1 - 1 && z <= R.z2 + 1 && y <= R.boden + 3 && y >= R.boden - 4;
-    const ergebnis = [], dateiFehler = [], wegFehler = [], figurFehler = [], diffFehler = [], regelFehler = [];
-    let maxFig = 0, maxMs = 0;
+    const ergebnis = [], dateiFehler = [], wegFehler = [], figurFehler = [], diffFehler = [], regelFehler = [], lebenFehler = [];
+    let maxFig = 0, maxMs = 0, minDraussen = Infinity, minNah = Infinity, raederMax = 0;
     for (const [n, s] of Object.entries(saetze)) {
       const t0 = performance.now();
       const ex = await MC.stadtMcworld(s);
@@ -424,6 +424,20 @@ try {
         if (!TYPEN.has(x.typ) || !/^[A-Za-z]+$/.test(x.name) || !BL.DURCH.has(w.hole(x.x, x.y, x.z)) || !BL.DURCH.has(w.hole(x.x, x.y + 1, x.z)) || BL.DURCH.has(unten) || unten === W.ID.wasser
           || x.x < M.STADT.x1 || x.x > M.STADT.x2 || x.z < M.STADT.z1 || x.z > M.STADT.z2) { figurFehler.push(`${n}: ${x.name} ${x.x} ${x.y} ${x.z}`); break; }
       }
+      // Nachbesserung 03: Leben im öffentlichen Raum – genug Bewohner unter freiem Himmel (in der fertigen Welt nachgeprüft),
+      // mehrere gleich am Startpunkt, und an jeder Art von Ort: Gehwege, Spielplatz, Haltestelle, Läden, Schule/Treffpunkt, Wohnhäuser
+      const dorf = f.filter((x) => x.typ === 'villager'), draussen = dorf.filter((x) => x.draussen);
+      const nah = draussen.filter((x) => Math.hypot(x.x - MC.START.stand[0], x.z - MC.START.stand[2]) <= 24).length;
+      minDraussen = Math.min(minDraussen, draussen.length); minNah = Math.min(minNah, nah);
+      if (draussen.length < BL.DRAUSSEN_MINDESTENS) lebenFehler.push(`${n}: nur ${draussen.length} Bewohner draußen`);
+      if (nah < 4) lebenFehler.push(`${n}: nur ${nah} Bewohner am Startpunkt`);
+      for (const x of draussen) for (let y = x.y + 2; y < x.y + 40; y++) if (!BL.DURCH.has(w.hole(x.x, y, x.z))) { lebenFehler.push(`${n}: ${x.name} steht unter einem Dach`); break; }
+      const an = (pre) => dorf.some((x) => x.ort.startsWith(pre));
+      const orte = { Gehwege: draussen.filter((x) => x.ort === 'Grundstadt').length >= 15, Spielplatz: dorf.filter((x) => x.ort.startsWith('spielplatz')).length >= 3,
+        Haltestelle: f.some((x) => x.name === 'Fahrgast') && an('kreuzung'), 'Läden': an('einkaufen'), 'Schule/Treffpunkt': an('bildung'), 'Wohnhäuser': an('wohnen') };
+      const fehlt = Object.entries(orte).filter(([, ok]) => !ok).map(([o]) => o);
+      if (fehlt.length) lebenFehler.push(`${n}: niemand an ${fehlt.join(', ')}`);
+      raederMax = Math.max(raederMax, pl.reduce((k, p) => k + [...p.bloecke.values()].filter((b) => b.startsWith('rahmen')).length, 0));
       // Bauregeln der neuen Blöcke: Pflanzen auf Erde/Moos, Teppich/Laterne/Kuchen auf festem Block, Hängelampe unter festem Block,
       // Schilder befestigt, Betten vollständig (Kopf in Bettrichtung neben dem Fuß)
       const fst = (id) => fest(id) && !BL.DURCH.has(id);
@@ -435,6 +449,11 @@ try {
         else if (name === 'haengelampe' && !fst(w.hole(x, y + 1, z))) bad = 'Hängelampe ohne Decke';
         else if (W.istSchild(id)) { const [a, c] = { Nord: [0, 1], Sued: [0, -1], West: [1, 0], Ost: [-1, 0] }[name.replace('schild', '')]; if (!fst(w.hole(x + a, y, z + c))) bad = 'Schild ohne Halt'; }
         else if (/^bett(Nord|Ost)Fuss$/.test(name)) { const r = name.includes('Nord') ? [0, -1] : [1, 0]; if (W.NAMEN[w.hole(x + r[0], y, z + r[1])] !== name.replace('Fuss', 'Kopf') || !w.entities.get(k)) bad = 'Bett unvollständig'; }
+        else if (/^(rad|rahmen)[XZ]$/.test(name)) {                       // Fahrrad: auf festem Boden, Rahmen zwischen zwei Rädern
+          const a = name.slice(-1), d = a === 'X' ? [1, 0] : [0, 1];
+          if (!fst(u)) bad = 'Fahrrad ohne Boden';
+          else if (name.startsWith('rahmen') && (W.NAMEN[w.hole(x - d[0], y, z - d[1])] !== 'rad' + a || W.NAMEN[w.hole(x + d[0], y, z + d[1])] !== 'rad' + a)) bad = 'Fahrrad unvollständig';
+        }
         if (bad) { regelFehler.push(`${n}: ${bad} ${name} ${x} ${y} ${z}`); break; }
       }
       ergebnis.push(`${n}: ${b.bloecke} Blöcke, ${f.length} Figuren, ${ziele.length} Räume`);
@@ -443,7 +462,9 @@ try {
       !dateiFehler.length && !diffFehler.length, [...dateiFehler, ...diffFehler].join(' · ') || ergebnis.join(' · '));
     pruefe('Belebung: eingerichtete Wohnungen, Läden, Schule, Bahnhof, Jugendtreff zu Fuß vom Startpunkt erreichbar (Eingänge und Wege frei)', !wegFehler.length, wegFehler.join(' · ') || `${Object.keys(saetze).length} Kombinationen`);
     pruefe(`Belebung: Figuren stehen frei (2 Blöcke Luft, fester Boden, kein Wasser), Namen eindeutig, nur friedliche Arten, höchstens ${BL.FIGUREN_HOECHSTENS}`, !figurFehler.length, figurFehler.join(' · ') || `höchstens ${maxFig} Figuren`);
-    pruefe('Belebung: Bauregeln der Einrichtung (Pflanzen auf Erde, Lampen/Teppiche gestützt, Schilder befestigt, Betten vollständig)', !regelFehler.length, regelFehler.join(' · '));
+    pruefe('Belebung: Bauregeln der Einrichtung (Pflanzen auf Erde, Lampen/Teppiche gestützt, Schilder befestigt, Betten und Fahrräder vollständig)', !regelFehler.length, regelFehler.join(' · '));
+    pruefe(`Belebung (Nachbesserung 03): Leben im öffentlichen Raum – je Kombination mindestens ${BL.DRAUSSEN_MINDESTENS} Bewohner unter freiem Himmel, mindestens 4 nahe am Startpunkt, Menschen an Gehwegen, Spielplatz, Haltestelle, Läden, Schule/Treffpunkt und Wohnhäusern`,
+      !lebenFehler.length, lebenFehler.join(' · ') || `mindestens ${minDraussen} draußen, ${minNah} am Startpunkt, bis zu ${raederMax} Fahrräder`);
     pruefe('Belebung: Export bleibt schnell (eine Welt mit Belebung in unter 8 s)', maxMs < 8000, `${(maxMs / 1000).toFixed(1)} s`);
 
     // c) Befehlsblöcke: Kette vom Knopf im Regieraum, Sperre, Stadt geladen halten
@@ -455,9 +476,16 @@ try {
     const ketteOk = W.NAMEN[w.hole(...o.knopf)] === 'knopf' && !kette[0][1].modus && kette.slice(1).every(([n, e]) => n.startsWith('kette') && e.modus === 'kette' && !e.bedingt)
       && befehle.slice(0, BL.AUFRAEUMEN.length).join() === BL.AUFRAEUMEN.join() && gerufen.every((c) => befehle.filter((b) => b === c).length === 1)
       && befehle[befehle.length - 1] === `setblock ${o.T.join(' ')} spruce_planks` && befehle.length === BL.AUFRAEUMEN.length + f.length + 1
-      && W.NAMEN[w.hole(...o.T)] === 'fichteBretter' && befehle.every((b) => /^(kill @e\[type=\w+\]|summon (villager_v2|npc|cat|rabbit|chicken) [^\s]+ -?[\d.]+ -?\d+ -?[\d.]+|summon villager_v2 -?[\d.]+ -?\d+ -?[\d.]+ minecraft:entity_born [A-Za-z]+|setblock -?\d+ -?\d+ -?\d+ \w+)$/.test(b));
+      && W.NAMEN[w.hole(...o.T)] === 'fichteBretter' && befehle.every((b) => /^(kill @e\[type=\w+\]|summon (villager|npc|cat|rabbit|chicken) [^\s]+ -?[\d.]+ -?\d+ -?[\d.]+|summon villager -?[\d.]+ -?\d+ -?[\d.]+ minecraft:entity_born [A-Za-z]+|setblock -?\d+ -?\d+ -?\d+ \w+)$/.test(b));
     pruefe('Belebung: Befehlskette – Kopf im Boden des Regieraums mit Knopf, lückenlos verkettet, erst aufräumen, dann jede Figur genau einmal rufen, zuletzt Boden zurück (nur alte, stabile Befehle)',
       ketteOk, `${kette.length} Befehlsblöcke, ${gerufen.length} Figuren · Beispiel: ${befehle[BL.AUFRAEUMEN.length]}`);
+    // Nachbesserung 03: Ursache der fehlenden Bewohner – „villager_v2“ ist in Bedrock nicht rufbar ("is_summonable": false)
+    const gerufeneArten = new Set(befehle.filter((b) => b.startsWith('summon ')).map((b) => b.split(' ')[1]));
+    const bewohnerRuf = befehle.filter((b) => b.startsWith('summon villager ')).length, dorfZahl = f.filter((x) => x.typ === 'villager').length;
+    pruefe('Belebung (Nachbesserung 03): nur rufbare Arten – Dorfbewohner mit „summon villager“ (nicht „villager_v2“, das Minecraft nicht ruft), jeder Bewohner hat seinen Befehl, Aufräumen erfasst beide Kennungen',
+      [...gerufeneArten].every((a) => BL.RUFBAR.includes(a)) && !gerufeneArten.has('villager_v2') && bewohnerRuf === dorfZahl && dorfZahl > 0
+        && BL.AUFRAEUMEN.includes('kill @e[type=villager]') && BL.AUFRAEUMEN.includes('kill @e[type=villager_v2]'),
+      `Arten: ${[...gerufeneArten].join(', ')} · ${bewohnerRuf} Bewohner-Befehle · Beispiel Kind: ${befehle.find((b) => b.includes('entity_born')) || '–'}`);
     const sperre = lauf(o.R0), sb = sperre.map(([, e]) => e.befehl);
     const punkteOk = BL.PRUEFPUNKTE.length === 25 && BL.PRUEFPUNKTE.every(([x, z]) => w.hole(x, -64, z) === W.ID.grundgestein && sb.includes(`testforblock ${x} -64 ${z} bedrock`));
     const sperreOk = sperre[0][0] === 'wiederholbefehlOst' && sperre[0][1].modus === 'wiederholen' && sperre[0][1].takt > 0 && sb[0] === `testforblock ${o.M.join(' ')} air` && w.hole(...o.M) === W.ID.luft
@@ -469,6 +497,7 @@ try {
     // d) passend ausgestaltet: Personal/Einrichtung je gewählter Variante
     const hat = (id, v, ...namen) => { const fn = BL.einrichtung(id, v).figuren.map((x) => x.name); return namen.every((n) => fn.includes(n)); };
     const bl = (id, v, ...bloecke) => { const p = BL.einrichtung(id, v), vals = [...p.bloecke.values()]; return bloecke.every((b) => vals.includes(b)); };
+    const raeder = (id, v) => [...BL.einrichtung(id, v).bloecke.values()].filter((b) => b.startsWith('rahmen')).length;
     const passend = [
       ['Supermarkt: Regale, Kasse, Kassierer', bl('einkaufen', 'A', 'fass', 'melone', 'quarz', 'bildschirm') && hat('einkaufen', 'A', 'Kassiererin', 'Kassierer')],
       ['Markthalle: Waren auf den Ständen, Händler', bl('einkaufen', 'B', 'melone', 'kuchen', 'kuerbis', 'honig') && hat('einkaufen', 'B', 'Obsthaendler', 'Baeckerin', 'Gemuesefrau', 'Imker')],
@@ -479,6 +508,8 @@ try {
       ['Wohnformen A/B/C: Wohnzimmer, Küche, Essplatz, Schlaf- und Kinderzimmer', ['A', 'B', 'C'].every((v) => bl('wohnen', v, 'ofenSued'.replace('Sued', v === 'B' ? 'Nord' : 'Sued'), 'tischplatte', 'bettNordFuss', 'haengelampe'))],
       ['Musterwohnung im Bestand (immer)', [...gp.bloecke.values()].filter((n) => /^bett/.test(n)).length >= 6 && gp.ziele.length === 3],
       ['Spielplatz grün: Kinder, Eltern, Kaninchen, Katze (nicht umgebaut)', BL.einrichtung('spielplatz', 'gruen').bloecke.size === 0 && BL.einrichtung('spielplatz', 'gruen').figuren.filter((x) => x.kind).length >= 4 && BL.einrichtung('spielplatz', 'gruen').figuren.some((x) => x.typ === 'rabbit')],
+      ['Fahrräder passend zur Mobilität: Parkhaus-Variante Fahrradständer, Spielstraße Kinderfahrräder, Parken vor den Häusern und grau keine', raeder('parken', 'C') >= 6 && raeder('parken', 'B') >= 2 && raeder('parken', 'A') === 0 && raeder('parken', 'grau') === 0],
+      ['Bushaltestelle: Wartende unter dem Dach (beide Varianten)', hat('kreuzung', 'bus', 'Fahrgast') && hat('kreuzung', 'normal', 'Fahrgast')],
     ];
     pruefe('Belebung: Einrichtungen passen zur gewählten Variante (Läden, Schule/Bahnhof/Treffpunkte, Wohnformen, Spielplatz)', passend.every(([, ok]) => ok), passend.filter(([, ok]) => !ok).map(([t]) => t).join(' · ') || passend.map(([t]) => t.split(':')[0]).join(' · '));
   }

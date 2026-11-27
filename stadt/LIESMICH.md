@@ -14,8 +14,52 @@ Der Browser ist **Regieoberfläche und 3D-Vorschau**. Am Ende erzeugt er eine **
 > Am 24.11. (Abschnitt 0000): Publikumsansicht ohne Bedienhinweise, Kurze Wege in Metern.
 > Am 26.11. (Abschnitt „Auftrag 01“): Technik · 2/5 ist jetzt das **Calliope-Labor**.
 > Am 26.11. (Abschnitt „Auftrag 03“): Die exportierte **Minecraft-Welt ist belebt** – eingerichtete Wohnungen, Läden, Schule/Bahnhof/Treffpunkte, Figuren.
-> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert. `test.html`: 103 von 103.
-> In Minecraft Education weiterhin nicht getestet.
+> Keine neuen SMARTy-Sätze, Soundboard, Show-Zentrale, Verkehrstool unverändert.
+> Am 27.11. (Abschnitt „Nachbesserung 03“): **Bewohner erscheinen wirklich** (Ursache gefunden), viel mehr Leben auf Straßen und
+> Plätzen, Fahrräder. `test.html`: 105 von 105. In Minecraft Education weiterhin nicht getestet.
+
+---
+
+## Nachbesserung 03 vom 27.11.2026: Lebendige Straßen
+
+**Ursache der fehlenden Bewohner:** Die Befehlskette rief die Dorfbewohner mit `summon villager_v2 …`. Diese Kennung ist in
+Bedrock und Minecraft Education **nicht rufbar** – in Mojangs Verhaltensdatei `villager_v2.json` steht `"is_summonable": false`
+(geprüft in den offiziellen Beispieldateien 1.20.70, 1.21.0 und 26.70), und laut Befehlsreferenz ist ein `/summon` einer nicht
+rufbaren Art „nicht auswertbar“. Katzen, Kaninchen und NPC sind rufbar – darum erschienen nur sie, alle 41 Bewohner fehlten.
+Die Kette selbst lief (sonst wären auch keine Katzen da gewesen).
+
+**Behoben:** Dorfbewohner werden jetzt mit `summon villager <Name> x y z` gerufen, Kinder mit
+`summon villager x y z minecraft:entity_born <Name>` (`villager` ist rufbar, `"is_summonable": true`). Aufräumen entfernt beide
+Kennungen. Die Sperre prüft jetzt jede Sekunde (statt alle 2 s), ob die Stadt geladen ist.
+
+**Mehr Leben im öffentlichen Raum** (`belebung.js`; Möbel, Katzen, Spielplatz, Abstimmungen unverändert):
+- 57–61 Dorfbewohner je Beschluss-Kombination (ohne Beschlüsse 41), davon **43–50 unter freiem Himmel**, dazu 5–7 NPC und
+  3–6 Tiere; höchstens 80 Figuren (gemessen: höchstens 72). Kinder (16–21) spielen, Erwachsene ziehen umher.
+- Verteilt auf: Gehwege der Ringstraße Nord (am Startpunkt, sichtbar nach wenigen Sekunden), Ringstraße West und Süd,
+  Hauptstraße, breiter Gehweg Ost, Vorplatz/Park im Südosten, vor den Häusern der Nordreihe und des Westviertels,
+  vor den Läden (je Variante), am Schuleingang und Schulhof / Bahnhofsvorplatz / Jugendtreff, Spielplatz (grau und grün),
+  Wohngrundstück (alle Varianten, auch grau), Spielstraße.
+- **Bushaltestelle:** eine Wartende (NPC, steht still unter dem Dach), dazu Fahrgäste, die kommen und gehen.
+- **Warum sie sich bewegen:** Die Welt steht fest auf Mittag (6000). Laut `villager_v2.json` sind Dorfbewohner mit Grundplan
+  dann im Tagesplan „umherziehen“, Kinder im Tagesplan „spielen“. Nach „ZEIT NACHT“ gehen sie schlafen (Hinweis in den Bauaufträgen).
+- **Fahrräder** (neu, Schleifstein als Rad, liegende Kette als Rahmen; Palette nur angehängt): Parken C 6 Fahrräder in den
+  Grünstreifen (Autos stehen im Parkhaus), Parken B 4 Kinderfahrräder an der Spielstraße, Parken A und grau keine; außerdem
+  Gehweg Ost (3), Schulhof (4), Bahnhof (3), Jugendtreff (2), Markthalle (2), Wohngasse bei den kleinen Läden (2).
+  Autos und Bus stehen wie bisher passend zur Variante (Parken vor den Häusern / Parkstraße / Parkhaus, Bus an der Kreuzung).
+- **Fahrende Fahrzeuge: nicht eingebaut.** Minecraft kennt keine Autos, Busse oder Fahrräder als Fahrzeuge. Ein fahrendes Blockauto
+  müsste mit `/clone` Schritt für Schritt versetzt werden: ruckelig (ganze Blöcke), es kann Bewohner und Spieler einklemmen und
+  überschreibt, was im Weg steht. Das ist mit dem Export nicht zuverlässig. Laufende Bewohner haben laut Auftrag Vorrang.
+
+**Geprüft** (`test.html` 105 von 105, zwei neue Prüfungen):
+- Nur rufbare Arten in der Kette (kein `villager_v2`), jeder Bewohner hat genau einen Befehl.
+- Je Kombination mindestens 30 Bewohner unter freiem Himmel (in der fertigen Welt nachgeprüft), mindestens 4 nahe am Startpunkt,
+  Menschen an Gehwegen, Spielplatz, Haltestelle, Läden, Schule/Treffpunkt und Wohnhäusern; Fahrräder vollständig und auf festem
+  Boden, passend zur Mobilitätsvariante; alle Räume weiter zu Fuß erreichbar; nichts überschrieben.
+- **Amulet** mit der Ersatzwelt: 579 Einrichtungsblöcke ohne Abweichung (Schleifstein und Kette bekannt), Kette vom Knopf aus
+  80 Befehlsblöcke, 61 × `summon villager` (21 Kinder), 0 × `villager_v2`, Sperre mit Takt 20.
+- **Nicht geprüft:** in Minecraft Education selbst (hier nicht installiert). Insbesondere: wie viele Bewohner wann wohin laufen,
+  ob ein gerufener `villager` im Spiel als neuer Dorfbewohner erscheint, und wie flüssig der Rundgang mit rund 70 Figuren läuft.
+  Vor der Show: Ersatzwelt öffnen, nach 5–10 Sekunden zum Platz schauen. Fehlen Bewohner: Knopf „FIGUREN“ im Regieraum.
 
 ---
 
@@ -49,14 +93,14 @@ Abstimmungen, Soundboard und Filme sind unverändert.
 | Spielplatz | grün | nicht umgebaut, nur belebt: vier Kinder, zwei Erwachsene, zwei Kaninchen, eine Katze. |
 | übrige | alle | Figuren: Wartende an der Bushaltestelle, Fahrgäste an der Schwebebahn und am Flugtaxi, Passanten an Hauptstraße und Wohnstraße, Kinder in der Spielstraße (Parken B). |
 
-**Figuren** (höchstens 60, je nach Beschlüssen 25–52): Dorfbewohner (laufen umher), Kinder (Dorfbewohner als Kind), NPC als
+**Figuren** (Stand 26.11.; seit der Nachbesserung 03 höchstens 80, siehe oben): Dorfbewohner (laufen umher), Kinder (Dorfbewohner als Kind), NPC als
 Verkaufs- und Lehrpersonal (stehen an ihrem Platz und schauen zu den Spielern), Katzen, Kaninchen, Hühner. Keine aggressiven
 Kreaturen (die Welt steht weiter auf „friedlich“, keine natürlichen Spawns). Jede Figur steht beim Erscheinen frei
 (2 Blöcke Luft, fester Boden, kein Wasser).
 
 **Wie die Figuren in die Welt kommen** (ohne Handgriff, nur alte, stabile Befehle – die Befehlsblöcke der Welt haben Befehlsversion 13):
 1. Ein Befehlsblock unter dem Regieraum setzt beim ersten Öffnen einmal den Ticking-Bereich „stadt“ (wie der Knopf „EINMALIG“).
-2. Ein Wiederhol-Block prüft alle 2 Sekunden, ob die ganze Stadt geladen ist (Grundgestein an 25 Punkten lesbar).
+2. Ein Wiederhol-Block prüft jede Sekunde (bis 26.11.: alle 2 Sekunden), ob die ganze Stadt geladen ist (Grundgestein an 25 Punkten lesbar).
    Dann setzt er einen Merker (nie wieder) und startet die Figurenkette **genau einmal**.
 3. Die Kette (unter dem Regieraum) räumt alte Figuren weg und ruft jede Figur mit `summon`.
 4. **Notfall:** Im Regieraum (`/tp @s 8 50 -7`) steht beim Schild „FIGUREN“ ein Knopf im Boden – er ruft alle Figuren neu.

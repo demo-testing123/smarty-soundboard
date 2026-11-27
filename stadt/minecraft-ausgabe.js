@@ -177,7 +177,8 @@ export function alleBauauftraege() {
   const t = [`START IT SMART – Bauaufträge für Minecraft Education (Welt „${WELTNAME}“)`, '',
     'EINMAL VOR DER VORLESUNG', `   ${ALLGEMEIN.ticking}`, '   (hält die ganze Stadt geladen; 10 × 10 Chunks = die erlaubte Höchstgröße – geschieht beim ersten Öffnen auch von selbst)', `   ${ALLGEMEIN.ruhe}`, '',
     'BELEBUNG: Bewohner, Kinder, Verkaufspersonal und Tiere erscheinen beim ersten Öffnen von selbst, sobald die Stadt geladen ist.',
-    '   Falls nicht: im Regieraum der Knopf im Boden (Schild „FIGUREN“) ruft alle neu. Ein Bauauftrag von Hand setzt eine Fläche ohne Einrichtung.', '',
+    '   Falls nicht: im Regieraum der Knopf im Boden (Schild „FIGUREN“) ruft alle neu. Ein Bauauftrag von Hand setzt eine Fläche ohne Einrichtung.',
+    '   Die Bewohner laufen bei Tag umher (Weltzeit steht auf Mittag). Nach „ZEIT NACHT“ gehen sie schlafen – für belebte Straßen „ZEIT TAG“.', '',
     `START: draußen am ${START.titel} (${p3(START.stand)}); die Stadt ist so gebaut wie beim Export beschlossen.`, '',
     'REGIERAUM (Knöpfe für Ansichten und Bauaufträge, nur per Teleport erreichbar)', `   ${ALLGEMEIN.regieraum}`, `   zurück zum Start: /tp @s ${p3(START.stand)}`, '', 'ANSICHTEN'];
   for (const k of ANSICHTEN) t.push(`   ${KAMERAS[k].titel.padEnd(16)} ${tp(k)}`);
